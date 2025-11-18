@@ -70,7 +70,8 @@ Route::prefix('payment')->name('payment.')->group(function () {
     Route::post('/subscription/change', [PaymentController::class, 'changePlan'])->name('subscription.change');
 
     // Payment history
-    Route::get('/payment/history', [PaymentController::class, 'paymentHistory'])->name('payment.history');
+    Route::get('/payment/history', [PaymentController::class, 'history'])->name('payment.history');
+    Route::get('/payment/history/filter', [PaymentController::class, 'filterPaymentHistory'])->name('payment.history.filter');
     Route::get('/subscription/status', [PaymentController::class, 'subscriptionStatus'])->name('subscription.status');
 
 });

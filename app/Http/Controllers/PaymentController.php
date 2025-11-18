@@ -335,23 +335,134 @@ class PaymentController extends Controller
     /**
      * Show payment history
      */
-    public function paymentHistory(Request $request)
+    public function history(Request $request)
     {
-        $user = $request->user();
-        $role = $user->getRoleNames()->first();
+        try {
+            $user = $request->user();
+            $role = $user->getRoleNames()->first();
 
-        $payments = $user->payments()
-            ->with('subscriptionPlan')
-            ->latest()
-            ->paginate(10);
+            $payments = $user->payments()
+                ->with(['subscriptionPlan'])
+                ->latest()
+                ->paginate(10)
+                ->through(function ($payment) {
+                    return [
+                        'id' => $payment->id,
+                        'amount' => $payment->amount,
+                        'currency' => $payment->currency,
+                        'status' => $payment->status,
+                        'paystack_reference' => $payment->paystack_reference,
+                        'description' => $payment->description,
+                        'plan_name' => $payment->subscriptionPlan?->name,
+                        'paid_at' => $payment->paid_at?->format('M j, Y g:i A'),
+                        'created_at' => $payment->created_at->format('M j, Y g:i A'),
+                        'formatted_amount' => $payment->currency . ' ' . number_format($payment->amount, 2),
+                        'is_subscription' => !is_null($payment->subscription_plan_id),
+                        'metadata' => $payment->metadata,
+                    ];
+                });
 
-        $currentSubscription = $user->current_subscription;
+            $totalSpent = $user->payments()
+                ->where('status', 'success')
+                ->sum('amount');
 
-        return Inertia::render('Payment/History', [
-            'payments' => $payments,
-            'current_subscription' => $currentSubscription,
-            'user_role' => $role,
-        ]);
+            $stats = [
+                'total_payments' => $user->payments()->count(),
+                'successful_payments' => $user->payments()->where('status', 'success')->count(),
+                'failed_payments' => $user->payments()->where('status', 'failed')->count(),
+                'pending_payments' => $user->payments()->where('status', 'pending')->count(),
+                'total_spent' => $totalSpent,
+            ];
+
+            return Inertia::render('Payment/History', [
+                'payments' => $payments,
+                'stats' => $stats,
+                'filters' => $request->only(['search', 'status', 'type']),
+                'user_role' => $role,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Payment history error: ' . $e->getMessage());
+
+            return Inertia::render('Payment/History', [
+                'payments' => [],
+                'stats' => [
+                    'total_payments' => 0,
+                    'successful_payments' => 0,
+                    'failed_payments' => 0,
+                    'pending_payments' => 0,
+                    'total_spent' => 0,
+                ],
+                'filters' => [],
+                'user_role' => $request->user()->getRoleNames()->first(),
+            ]);
+        }
+    }
+
+    /**
+     * Filter payment history (AJAX endpoint)
+     */
+    public function filterHistory(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            $query = $user->payments()->with(['subscriptionPlan']);
+
+            // Filter by status
+            if ($request->filled('status') && $request->status !== 'all') {
+                $query->where('status', $request->status);
+            }
+
+            // Filter by type
+            if ($request->filled('type')) {
+                if ($request->type === 'subscription') {
+                    $query->whereNotNull('subscription_plan_id');
+                } elseif ($request->type === 'one_time') {
+                    $query->whereNull('subscription_plan_id');
+                }
+            }
+
+            // Search by reference or description
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('paystack_reference', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('subscriptionPlan', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
+                });
+            }
+
+            $payments = $query->latest()
+                ->paginate(10)
+                ->through(function ($payment) {
+                    return [
+                        'id' => $payment->id,
+                        'amount' => $payment->amount,
+                        'currency' => $payment->currency,
+                        'status' => $payment->status,
+                        'paystack_reference' => $payment->paystack_reference,
+                        'description' => $payment->description,
+                        'plan_name' => $payment->subscriptionPlan?->name,
+                        'paid_at' => $payment->paid_at?->format('M j, Y g:i A'),
+                        'created_at' => $payment->created_at->format('M j, Y g:i A'),
+                        'formatted_amount' => $payment->currency . ' ' . number_format($payment->amount, 2),
+                        'is_subscription' => !is_null($payment->subscription_plan_id),
+                        'metadata' => $payment->metadata,
+                    ];
+                });
+
+            return response()->json([
+                'payments' => $payments,
+                'filters' => $request->only(['search', 'status', 'type'])
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Filter payment history error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to filter payments'], 500);
+        }
     }
 
     /**
