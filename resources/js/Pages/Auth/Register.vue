@@ -20,7 +20,7 @@
                 />
             </div>
             <h1 class="text-3xl font-bold text-gray-900">Welcome Back</h1>
-            <p class="text-gray-600 mt-2">Sign in to your AITutor account</p>
+            <p class="text-gray-600 mt-2">Sign in to your Olilearn account</p>
             </div>
 
       <h2 class="mt-6 text-center text-3xl font-bold text-gray-900">

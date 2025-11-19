@@ -11,6 +11,7 @@ use App\Models\CourseContent;
 use App\Models\ExamBoard;
 use App\Services\CourseGenerationService;
 use App\Services\ContentGenerationService;
+use App\Services\CourseNotificationService;
 use App\Services\ProgressTrackingService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -359,7 +360,12 @@ class CourseController extends Controller
             $request->score ?? null
         );
 
-        return redirect()->back()->with('success', 'Progress updated!');
+        // Check and send notifications if needed
+        $notificationService = app(CourseNotificationService::class);
+        $notificationService->checkAndSendDueSoonNotifications();
+
+        //return redirect()->back()->with('success', 'Progress updated!');
+        return response()->json(['success' => true]);
     }
 
     public function pauseCourse(Course $course)

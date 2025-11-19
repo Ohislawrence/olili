@@ -1,0 +1,200 @@
+<?php
+// app/Http/Controllers/FrontpageController.php
+
+namespace App\Http\Controllers;
+
+use App\Models\BlogPost;
+use App\Models\Course;
+use App\Models\SubscriptionPlan;
+use Inertia\Inertia;
+use Illuminate\Http\Request;
+
+class FrontpageController extends Controller
+{
+    public function features()
+    {
+        return Inertia::render('Frontpages/Features');
+    }
+
+    public function community()
+    {
+        return Inertia::render('Frontpages/Community');
+    }
+
+    public function about()
+    {
+        return Inertia::render('Frontpages/About');
+    }
+
+    public function pricing()
+{
+    $subscriptionPlans = SubscriptionPlan::active()
+        ->orderBy('sort_order')
+        ->get()
+        ->map(function ($plan) {
+            return [
+                'id' => $plan->id,
+                'name' => $plan->name,
+                'code' => $plan->code,
+                'description' => $plan->description,
+                'price' => $plan->price,
+                'currency' => $plan->currency,
+                'monthly_price' => $plan->monthly_price,
+                'yearly_price' => $plan->yearly_price,
+                'features' => $plan->features,
+                'max_courses' => $plan->max_courses,
+                'max_ai_requests_per_month' => $plan->max_ai_requests_per_month,
+                'ai_grading' => $plan->ai_grading,
+                'priority_support' => $plan->priority_support,
+                'is_active' => $plan->is_active,
+                'is_popular' => $plan->is_popular,
+                'sort_order' => $plan->sort_order,
+                'role' => $plan->role,
+                'tier' => $plan->tier,
+                'is_free' => $plan->isFree(),
+                'recommended_features' => $plan->getRecommendedFeatures(),
+            ];
+        });
+
+    return Inertia::render('Frontpages/Pricing', [
+        'subscriptionPlans' => $subscriptionPlans,
+    ]);
+}
+
+
+    public function help()
+    {
+        return Inertia::render('Frontpages/Help');
+    }
+
+    public function contact()
+    {
+        return Inertia::render('Frontpages/Contact');
+    }
+
+    public function faq()
+    {
+        return Inertia::render('Frontpages/Faq');
+    }
+
+    public function enterprise()
+    {
+        return Inertia::render('Frontpages/Enterprise');
+    }
+
+    /**
+     * Display blog index page
+     */
+    public function blogIndex(Request $request)
+    {
+        $query = BlogPost::with('author')
+            ->published()
+            ->orderBy('published_at', 'desc');
+
+        // Search functionality
+        if ($request->has('search')) {
+            $query->search($request->search);
+        }
+
+        // Filter by category
+        if ($request->has('category')) {
+            $query->byCategory($request->category);
+        }
+
+        $posts = $query->paginate(12);
+
+        return Inertia::render('Frontpages/Blog/Index', [
+            'posts' => $posts,
+            'filters' => $request->only(['search', 'category']),
+            'categories' => BlogPost::published()->distinct()->pluck('category'),
+            'featuredPosts' => BlogPost::with('author')
+                ->published()
+                ->orderBy('published_at', 'desc')
+                ->limit(3)
+                ->get()
+        ]);
+    }
+
+    /**
+     * Display blog post show page
+     */
+    public function blogShow($slug)
+    {
+        $post = BlogPost::with('author')
+            ->where('slug', $slug)
+            ->published()
+            ->firstOrFail();
+
+        // Get related posts
+        $relatedPosts = BlogPost::with('author')
+            ->published()
+            ->where('id', '!=', $post->id)
+            ->where('category', $post->category)
+            ->limit(3)
+            ->get();
+
+        // Get popular posts
+        $popularPosts = BlogPost::with('author')
+            ->published()
+            ->orderBy('published_at', 'desc')
+            ->limit(4)
+            ->get();
+
+        return Inertia::render('Frontpages/Blog/Show', [
+            'post' => $post,
+            'relatedPosts' => $relatedPosts,
+            'popularPosts' => $popularPosts,
+        ]);
+    }
+
+    /**
+     * Display courses index page
+     */
+    public function coursesIndex(Request $request)
+    {
+        $query = Course::with(['modules', 'examBoard'])
+            ->active()
+            ->withProgress();
+
+        // Filter by subject
+        if ($request->has('subject')) {
+            $query->bySubject($request->subject);
+        }
+
+        // Filter by level
+        if ($request->has('level')) {
+            $query->byLevel($request->level);
+        }
+
+        $courses = $query->paginate(12);
+
+        return Inertia::render('Frontpages/Courses/Index', [
+            'courses' => $courses,
+            'filters' => $request->only(['subject', 'level']),
+            'subjects' => Course::active()->distinct()->pluck('subject'),
+            'levels' => Course::active()->distinct()->pluck('level'),
+        ]);
+    }
+
+    /**
+     * Display course show page
+     */
+    public function courseShow($id)
+    {
+        $course = Course::with(['modules', 'examBoard', 'modules.topics'])
+            ->withProgress()
+            ->findOrFail($id);
+
+        $relatedCourses = Course::with(['modules'])
+            ->active()
+            ->where('id', '!=', $course->id)
+            ->where('subject', $course->subject)
+            ->limit(3)
+            ->get();
+
+        return Inertia::render('Frontpages/Courses/Show', [
+            'course' => $course,
+            'relatedCourses' => $relatedCourses,
+        ]);
+    }
+}

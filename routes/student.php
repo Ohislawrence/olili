@@ -18,7 +18,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
     // Courses
     Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
-    Route::middleware(['subscription:unlimited_ai_learning'])->get('/courses/create', [CourseController::class, 'create'])->name('courses.create');
+    Route::middleware(['subscription:create_course'])->get('/courses/create', [CourseController::class, 'create'])->name('courses.create');
     Route::middleware(['subscription:create_course'])->post('/courses', [CourseController::class, 'store'])->name('courses.store');
     Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
     Route::post('/courses/{course}/start', [CourseController::class, 'startCourse'])->name('courses.start');

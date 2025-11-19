@@ -6,13 +6,14 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Inertia\Inertia;
 
 class CheckSubscription
 {
     /**
      * Handle an incoming request.
      */
-    public function handle(Request $request, Closure $next, string $feature = null): Response
+    public function handle(Request $request, Closure $next, ?string $feature = null): Response
     {
         $user = $request->user();
 
@@ -25,7 +26,8 @@ class CheckSubscription
             return $next($request);
         }
 
-        $subscription = $user->currentSubscription();
+        // FIX: Use the accessor to get the model, not the relationship
+        $subscription = $user->current_subscription;
 
         // Define free features based on user role
         $freeFeatures = $this->getFreeFeaturesByRole($user);
@@ -80,10 +82,12 @@ class CheckSubscription
         // Check if feature exists in plan
         if (!$subscription->hasFeature($feature)) {
             return false;
+        }else{
+            return true;
         }
 
         // Role-specific feature validation
-        return $this->validateRoleSpecificFeature($user, $subscription, $feature);
+        //return $this->validateRoleSpecificFeature($user, $subscription, $feature);
     }
 
     /**
@@ -111,7 +115,8 @@ class CheckSubscription
     protected function validateStudentFeature($plan, string $feature): bool
     {
         $studentFeatures = [
-            'unlimited_ai_learning' => ['pro', 'premium'],
+            'create_course' => ['basic','pro', 'premium'],
+            'unlimited_ai_learning' => ['basic','pro', 'premium'],
             'full_course_library' => ['pro', 'premium'],
             'advanced_explanations' => ['pro', 'premium'],
             'voice_explanations' => ['pro', 'premium'],
@@ -173,7 +178,6 @@ class CheckSubscription
             'custom_slas' => ['enterprise'],
         ];
 
-        // FIXED: Correct parameter order - feature first, then feature map, then plan code
         return $this->checkFeatureInPlan($feature, $orgFeatures, $plan->code);
     }
 
@@ -295,7 +299,12 @@ class CheckSubscription
             ], 403);
         }
 
-        return redirect()->route('pricing')
+        // For Inertia requests
+        if ($request->header('X-Inertia')) {
+            return Inertia::location(route('payment.pricing'));
+        }
+
+        return redirect()->route('payment.pricing')
             ->with('error', $message);
     }
 
@@ -311,7 +320,12 @@ class CheckSubscription
             ], 403);
         }
 
-        return redirect()->route('pricing')
+        // For Inertia requests
+        if ($request->header('X-Inertia')) {
+            return Inertia::location(route('payment.pricing'));
+        }
+
+        return redirect()->route('payment.pricing')
             ->with('error', $message);
     }
 
@@ -336,6 +350,7 @@ class CheckSubscription
             ], 429);
         }
 
+        // For Inertia, use session flash
         return back()->with('error', $message);
     }
 }

@@ -1,0 +1,17 @@
+{
+    "name": "Olilearn Tutor",
+    "short_name": "Olilearn",
+    "start_url": "/",
+    "background_color": "#6777ef",
+    "description": "Your personal AI tutor that grows with you",
+    "display": "fullscreen",
+    "theme_color": "#50C878",
+    "icons": [
+        {
+            "src": "/logo-olilearn.PNG",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}

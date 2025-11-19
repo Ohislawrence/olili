@@ -35,7 +35,7 @@
       class="absolute text-sm font-medium"
       :class="textColor"
     >
-      {{ progress }}%
+      {{ Math.round(progress) }}%
     </span>
   </div>
 </template>

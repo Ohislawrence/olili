@@ -202,4 +202,22 @@ class Course extends Model
     {
         return $this->learning_objectives ?? [];
     }
+
+    public function sendDueNotification(): void
+    {
+        if ($this->status !== 'active') {
+            return;
+        }
+
+        $notificationService = app(\App\Services\CourseNotificationService::class);
+
+        if ($this->target_completion_date->isFuture()) {
+            $daysRemaining = now()->diffInDays($this->target_completion_date);
+            if ($daysRemaining <= 7) {
+                $notificationService->sendDueSoonNotification($this, $daysRemaining);
+            }
+        } else {
+            $notificationService->sendImmediateOverdueNotification($this);
+        }
+    }
 }

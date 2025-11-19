@@ -4,22 +4,39 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\BlogController;
+use App\Http\Controllers\FrontpageController;
 use App\Http\Controllers\LoginHistoryController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Test\TestingController;
+use App\Http\Controllers\WelcomeController;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
+// Public routes
+Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
-Route::get('/pricing', function () {
-    return Inertia::render('Pricing');
-});
+// Frontpage routes
+Route::get('/features', [FrontpageController::class, 'features'])->name('features');
+Route::get('/community', [FrontpageController::class, 'community'])->name('community');
+Route::get('/about', [FrontpageController::class, 'about'])->name('about');
+Route::get('/pricing', [FrontpageController::class, 'pricing'])->name('pricing');
+Route::get('/help', [FrontpageController::class, 'help'])->name('help');
+Route::get('/contact', [FrontpageController::class, 'contact'])->name('contact');
+Route::get('/faq', [FrontpageController::class, 'faq'])->name('faq');
+
+Route::get('/course', [FrontpageController::class, 'coursesIndex'])->name('courses.index');
+Route::get('/course/{course:slug}', [FrontpageController::class, 'courseShow'])->name('courses.show');
+
+Route::get('/enterprise', [FrontpageController::class, 'enterprise'])->name('enterprise');
+
+// Blog routes (using FrontpagesController)
+Route::get('/blog', [FrontpageController::class, 'blogIndex'])->name('blog.index');
+Route::get('/blog/{slug}', [FrontpageController::class, 'blogShow'])->name('blog.show');
+
+// Courses routes
+Route::get('/courses', [FrontpageController::class, 'coursesIndex'])->name('courses.index');
+Route::get('/courses/{id}', [FrontpageController::class, 'courseShow'])->name('courses.show');
+
+
 
 Route::get('/dashboard', function () {
     if (auth()->check()) {
@@ -70,7 +87,7 @@ Route::prefix('payment')->name('payment.')->group(function () {
     Route::post('/subscription/change', [PaymentController::class, 'changePlan'])->name('subscription.change');
 
     // Payment history
-    Route::get('/payment/history', [PaymentController::class, 'history'])->name('payment.history');
+    Route::get('/payment/history', [PaymentController::class, 'paymentHistory'])->name('payment.history');
     Route::get('/payment/history/filter', [PaymentController::class, 'filterPaymentHistory'])->name('payment.history.filter');
     Route::get('/subscription/status', [PaymentController::class, 'subscriptionStatus'])->name('subscription.status');
 

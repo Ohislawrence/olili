@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\AiAnalyticsController;
 use App\Http\Controllers\Admin\SystemSettingsController;
 use App\Http\Controllers\Admin\SubscriptionPlanController;
 use App\Http\Controllers\Admin\SubscriptionController;
+use App\Http\Controllers\Admin\BlogController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware([
@@ -104,4 +105,11 @@ Route::middleware([
     Route::delete('/subscriptions/{subscription}', [SubscriptionController::class, 'destroy'])->name('subscriptions.destroy');
     Route::post('/subscriptions/{subscription}/cancel', [SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
     Route::post('/subscriptions/{subscription}/renew', [SubscriptionController::class, 'renew'])->name('subscriptions.renew');
+
+    // blog posts
+    Route::get('/blog/create', [BlogController::class, 'create'])->name('blog.create');
+    Route::post('/blog', [BlogController::class, 'store'])->name('blog.store');
+    Route::get('/blog/{blog}/edit', [BlogController::class, 'edit'])->name('blog.edit');
+    Route::put('/blog/{blog}', [BlogController::class, 'update'])->name('blog.update');
+    Route::delete('/blog/{blog}', [BlogController::class, 'destroy'])->name('blog.destroy');
 });

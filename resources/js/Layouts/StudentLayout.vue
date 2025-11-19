@@ -273,11 +273,12 @@
     </div>
   </div>
   <PageLoader :visible="loading" :message="loaderMessage" />
+  <FlashMessages />
 </template>
 
 <script setup>
 import { ref, onMounted,watch } from 'vue'
-import { router,usePage } from '@inertiajs/vue3'
+import { router,usePage,Head } from '@inertiajs/vue3'
 import { Link } from '@inertiajs/vue3'
 import Dropdown from '@/Components/Dropdown.vue'
 import DropdownLink from '@/Components/DropdownLink.vue'
@@ -298,7 +299,10 @@ import {
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
 } from '@heroicons/vue/24/outline'
+import FlashMessages from '@/Components/FlashMessages.vue'
 
+
+const page = usePage()
 const loading = ref(false)
 const loaderMessage = ref('')
 
@@ -336,18 +340,21 @@ router.on('finish', () => {
   loading.value = false
 })
 
-watch(
-  () => usePage().props.flash,
-  (flash) => {
-    if (flash.error || flash.success) {
-      setTimeout(() => {
-        usePage().props.flash.error = null
-        usePage().props.flash.success = null
-      }, 5000)
+// Watch for flash messages and show toasts
+watch(() => page.props.flash, (flash) => {
+    if (flash.error) {
+        // Show error toast
+        if (window.showToast) {
+            window.showToast(flash.error, 'error')
+        }
     }
-  },
-  { deep: true, immediate: true }
-)
+    if (flash.success) {
+        // Show success toast
+        if (window.showToast) {
+            window.showToast(flash.success, 'success')
+        }
+    }
+}, { deep: true })
 </script>
 
 <style scoped>

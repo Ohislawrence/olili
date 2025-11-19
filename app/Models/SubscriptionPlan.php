@@ -32,9 +32,14 @@ class SubscriptionPlan extends Model
     protected $casts = [
         'price' => 'decimal:2',
         'features' => 'array',
+        'billing_cycle_days' => 'integer',
+        'max_courses' => 'integer',
+        'max_ai_requests_per_month' => 'integer',
         'ai_grading' => 'boolean',
         'priority_support' => 'boolean',
         'is_active' => 'boolean',
+        'is_popular' => 'boolean',
+        'sort_order' => 'integer',
     ];
 
     protected $appends = ['formatted_price','monthly_price','yearly_price'];
@@ -53,7 +58,12 @@ class SubscriptionPlan extends Model
     const TIER_GROWTH = 'growth';
     const TIER_ENTERPRISE = 'enterprise';
 
-    // Relationships
+        // Relationships
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);
@@ -127,6 +137,11 @@ class SubscriptionPlan extends Model
     public function hasFeature(string $feature): bool
     {
         return in_array($feature, $this->features ?? []);
+    }
+
+    public function scopePopular($query)
+    {
+        return $query->where('is_popular', true);
     }
 
     public function isFree(): bool
