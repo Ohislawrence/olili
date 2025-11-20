@@ -26,8 +26,6 @@ return new class extends Migration
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
 
-            $table->index(['course_id', 'order']);
-            $table->index(['course_id', 'type']);
         });
     }
 

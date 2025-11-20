@@ -23,9 +23,7 @@
                         </span>
                     </h1>
                     <p class="text-xl md:text-2xl mb-12 text-gray-800 max-w-3xl mx-auto animate-fade-in-up" style="animation-delay: 0.3s;">
-                        Olilearn does more than help you find the right tutor.
-                        We accompany you on your learning journey with artificial intelligence,
-                        digital tools, and personalized follow-up.
+                        Olilearn is your AI learning companion: Create custom paths, get instant answers, and master any subject with personalized guidance..
                     </p>
                     <div class="flex flex-col sm:flex-row gap-6 justify-center animate-fade-in-up" style="animation-delay: 0.6s;">
                         <Link
