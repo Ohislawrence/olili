@@ -1,5 +1,12 @@
 <template>
+    <MetaTags
+        title="Blogs"
+        description="Stay upto date with Olilearn, get deals too."
+        image="/images/olingolearn.png"
+        type="article"
+    />
     <AppLayout>
+        <Head title="Blogpost Updates" />
         <!-- Header -->
         <section class="relative py-20 bg-gradient-to-br from-emerald-600 to-teal-600 text-white">
             <div class="absolute inset-0 bg-black/15"></div>
@@ -240,6 +247,7 @@
 import { Link, router, Head } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import AppLayout from '@/Layouts/GuestLayout.vue';
+import MetaTags from '@/Components/MetaTags.vue';
 
 const props = defineProps({
     posts: Object,

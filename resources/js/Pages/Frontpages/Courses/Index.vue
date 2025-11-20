@@ -1,6 +1,13 @@
 <!-- resources/js/Pages/frontpages/courses/Index.vue -->
 <template>
+    <MetaTags
+        title="See Our Courses"
+        description="These are some of the courses you can start with ."
+        image="/images/olingolearn.png"
+        type="article"
+    />
     <AppLayout>
+        <Head title="Courses you can choose from" />
         <!-- Header -->
         <section class="relative py-20 bg-gradient-to-br from-emerald-600 to-teal-600 text-white">
             <div class="absolute inset-0 bg-black/20"></div>
@@ -358,6 +365,7 @@
 import { Link, router,Head } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import AppLayout from '@/Layouts/GuestLayout.vue';
+import MetaTags from '@/Components/MetaTags.vue';
 
 const props = defineProps({
     courses: Object,

@@ -1,5 +1,11 @@
 <template>
+    <MetaTags
+        title="About Olilearn"
+        description="Learn how Olilearn revolutionizes education with AI-powered personalized learning for students, parents, and tutors."
+        image="/images/olingolearn.png"
+    />
     <AppLayout>
+        <Head title="Your personal AI tutor that grows with you" />
         <!-- Hero Section -->
         <section class="relative py-20 bg-gradient-to-br from-emerald-600 to-teal-600 text-white overflow-hidden">
             <!-- Background Elements -->
@@ -285,6 +291,7 @@
 <script setup>
 import { Link, Head } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/GuestLayout.vue';
+import MetaTags from '@/Components/MetaTags.vue';
 import {
     AcademicCapIcon,
     ChatBubbleLeftRightIcon,

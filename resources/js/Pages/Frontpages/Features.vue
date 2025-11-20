@@ -366,6 +366,7 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/GuestLayout.vue'
+import MetaTags from '@/Components/MetaTags.vue';
 import {
     AcademicCapIcon,
     LightBulbIcon,

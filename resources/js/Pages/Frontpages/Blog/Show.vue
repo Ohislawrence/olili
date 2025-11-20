@@ -1,4 +1,10 @@
 <template>
+    <MetaTags
+        :title="post.title"
+        :description="post.excerpt"
+        :image="post.image_url"
+        type="article"
+    />
     <AppLayout>
         <Head :title="`${post.title}`" />
 
@@ -195,6 +201,7 @@
 import { Link, Head } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import AppLayout from '@/Layouts/GuestLayout.vue';
+import MetaTags from '@/Components/MetaTags.vue';
 
 const props = defineProps({
     post: Object,
