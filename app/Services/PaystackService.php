@@ -706,6 +706,12 @@ class PaystackService
         return $user->currentSubscription;
     }
 
+    public function getUserSubscriptionStatus(User $user): ?Subscription
+    {
+        ($user->currentSubscription) ? "Active" : "Inactive";
+        return $user->currentSubscription;
+    }
+
     /**
      * Check if user can upgrade/downgrade plan
      */

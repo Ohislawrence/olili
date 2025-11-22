@@ -32,6 +32,7 @@ class DashboardController extends Controller
         ]);
     }
 
+
     private function getDashboardStats()
     {
         $totalStudents = User::role('student')->count();

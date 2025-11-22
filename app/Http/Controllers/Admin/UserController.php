@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
+use Lab404\Impersonate\Services\ImpersonateManager;
 
 class UserController extends Controller
 {
@@ -152,53 +153,57 @@ class UserController extends Controller
     public function show(User $user)
     {
         $user->load([
-    'roles',
-    'currentSubscription.plan',
-    'activeSubscription.plan',
-]);
-
-// Load role-specific relationships
-if ($user->hasRole('student')) {
-    $user->load([
-        'studentProfile.examBoard',
-        'courses' => function ($query) {
-            $query->withCount([
-                'outlines',
-                'outlines as completed_outlines_count' => function ($q) {
-                    $q->where('is_completed', true);
-                }
-            ]);
+            'roles',
+            'currentSubscription.plan',
+            'activeSubscription.plan',
+            'subscriptions.plan',
+            'loginHistories' => function ($query) {
+            $query->latest()->limit(5);
         },
-        'quizAttempts.quiz',
-        'progressTracking',
-    ]);
-}
+        ]);
 
-if ($user->hasRole('tutor')) {
+    // Load role-specific relationships
+    if ($user->hasRole('student')) {
+        $user->load([
+            'studentProfile.examBoard',
+            'courses' => function ($query) {
+                $query->withCount([
+                    'outlines',
+                    'outlines as completed_outlines_count' => function ($q) {
+                        $q->where('is_completed', true);
+                    }
+                ]);
+            },
+            'quizAttempts.quiz',
+            'progressTracking',
+        ]);
+    }
+
+    if ($user->hasRole('tutor')) {
+        $user->load([
+            'tutorProfile',
+            'courses.students',
+            'students.progressTracking',
+        ]);
+    }
+
+    if ($user->hasRole('organization')) {
+        $user->load([
+            'organizationProfile',
+            'tutors.tutorProfile',
+            'students.studentProfile',
+        ]);
+    }
+
+    // Load common relationships for all roles
     $user->load([
-        'tutorProfile',
-        'courses.students',
-        'students.progressTracking',
+        'aiUsageLogs' => function ($query) {
+            $query->latest()->limit(10);
+        },
+        'chatSessions' => function ($query) {
+            $query->latest()->limit(5);
+        },
     ]);
-}
-
-if ($user->hasRole('organization')) {
-    $user->load([
-        'organizationProfile',
-        'tutors.tutorProfile',
-        'students.studentProfile',
-    ]);
-}
-
-// Load common relationships for all roles
-$user->load([
-    'aiUsageLogs' => function ($query) {
-        $query->latest()->limit(10);
-    },
-    'chatSessions' => function ($query) {
-        $query->latest()->limit(5);
-    },
-]);
 
         $stats = [
             'total_courses' => $user->courses->count(),
@@ -207,6 +212,7 @@ $user->load([
             'average_quiz_score' => $user->quizAttempts->avg('percentage'),
             'total_chat_sessions' => $user->chatSessions->count(),
             'total_logins' => $user->login_histories_count,
+            'total_payments' => $user->payments()->where('status', 'success')->sum('amount'),
         ];
 
         $loginStats = $this->loginTrackerService->getUserLoginStats($user);
@@ -339,16 +345,46 @@ $user->load([
         return redirect()->back()->with('success', 'User account unlocked successfully.');
     }
 
-    public function impersonate(User $user)
+    public function impersonate(User $user, ImpersonateManager $impersonate)
     {
         if (!auth()->user()->hasRole('admin')) {
-            return redirect()->back()->with('error', 'Only administrators can impersonate users.');
+            return back()->with('error', 'Only administrators can impersonate users.');
+        }
+
+        if ($impersonate->isImpersonating()) {
+            return back()->with('error', 'Already impersonating a user.');
+        }
+
+        if (!$user->canBeImpersonated()) {
+            return back()->with('error', 'This user cannot be impersonated.');
         }
 
         auth()->user()->impersonate($user);
 
-        return redirect()->route('student.dashboard')
-            ->with('success', "Now impersonating {$user->name}.");
+        // Use Inertia location redirect to avoid middleware issues
+        return Inertia::location(route('student.dashboard'));
+    }
+
+    public function leaveImpersonate(ImpersonateManager $impersonate)
+    {
+        if (!$impersonate->isImpersonating()) {
+            return redirect()->route('admin.dashboard')
+                ->with('error', 'Not currently impersonating any user.');
+        }
+
+        $impersonatedUser = auth()->user();
+
+        // Get the return URL from session or default to admin dashboard
+        $returnUrl = session()->get('impersonate.return_to', route('admin.dashboard'));
+
+        // Leave impersonation
+        auth()->user()->leaveImpersonation();
+
+        // Clear the session data
+        session()->forget('impersonate.return_to');
+
+        return redirect()->to($returnUrl)
+            ->with('success', "Stopped impersonating {$impersonatedUser->name}.");
     }
 
     public function updatePassword(Request $request, User $user)
@@ -427,5 +463,168 @@ $user->load([
         }
 
         return redirect()->back()->with('success', $message);
+    }
+
+
+
+    public function paymentHistory(User $user)
+    {
+        try {
+            $role = $user->getRoleNames()->first();
+
+            // Check if user has any payments
+            $paymentCount = $user->payments()->count();
+
+            if ($paymentCount > 0) {
+                $samplePayment = $user->payments()->first();
+            }
+
+            $payments = $user->payments()
+                ->with(['subscriptionPlan'])
+                ->latest()
+                ->paginate(10);
+
+            // Transform the payments with safe access
+            $transformedPayments = $payments->through(function ($payment) {
+
+                $planName = 'N/A';
+                if ($payment->subscriptionPlan) {
+                    $planName = $payment->subscriptionPlan->name;
+                }
+
+                return [
+                    'id' => $payment->id,
+                    'amount' => $payment->amount,
+                    'currency' => $payment->currency,
+                    'status' => $payment->status,
+                    'reference' => $payment->reference,
+                    'description' => $payment->description,
+                    'plan_name' => $planName,
+                    'paid_at' => $payment->paid_at?->format('M j, Y g:i A'),
+                    'created_at' => $payment->created_at->format('M j, Y g:i A'),
+                    'formatted_amount' => $payment->currency . ' ' . number_format($payment->amount, 2),
+                    'is_subscription' => !is_null($payment->subscription_plan_id),
+                    'metadata' => $payment->metadata,
+                ];
+            });
+
+            $totalSpent = $user->payments()
+                ->where('status', 'success')
+                ->sum('amount');
+
+            $stats = [
+                'total_payments' => $paymentCount,
+                'successful_payments' => $user->payments()->where('status', 'success')->count(),
+                'failed_payments' => $user->payments()->where('status', 'failed')->count(),
+                'pending_payments' => $user->payments()->where('status', 'pending')->count(),
+                'total_spent' => $totalSpent,
+            ];
+
+
+
+            return Inertia::render('Admin/Users/PaymentHistory', [
+                'payments' => $transformedPayments,
+                'stats' => $stats,
+                'filters' => $user->only(['search', 'status', 'type']),
+                'user_role' => $role,
+                'user' => $user,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Payment history error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+
+            return Inertia::render('Admin/Users/PaymentHistory', [
+                'payments' => [
+                    'data' => [],
+                    'links' => [],
+                    'meta' => [
+                        'current_page' => 1,
+                        'from' => null,
+                        'last_page' => 1,
+                        'links' => [],
+                        'path' => url()->current(),
+                        'per_page' => 10,
+                        'to' => null,
+                        'total' => 0,
+                    ]
+                ],
+                'stats' => [
+                    'total_payments' => 0,
+                    'successful_payments' => 0,
+                    'failed_payments' => 0,
+                    'pending_payments' => 0,
+                    'total_spent' => 0,
+                ],
+                'filters' => $user->only(['search', 'status', 'type']),
+                'user_role' => $user()->getRoleNames()->first(),
+            ]);
+        }
+    }
+
+    /**
+     * Filter payment history (AJAX endpoint)
+     */
+    public function filterHistory(Request $request, User $user)
+    {
+        try {
+            $user = $request->user();
+
+            $query = $user->payments()->with(['subscriptionPlan']);
+
+            // Filter by status
+            if ($request->filled('status') && $request->status !== 'all') {
+                $query->where('status', $request->status);
+            }
+
+            // Filter by type
+            if ($request->filled('type')) {
+                if ($request->type === 'subscription') {
+                    $query->whereNotNull('subscription_plan_id');
+                } elseif ($request->type === 'one_time') {
+                    $query->whereNull('subscription_plan_id');
+                }
+            }
+
+            // Search by reference or description
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('reference', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('subscriptionPlan', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
+                });
+            }
+
+            $payments = $query->latest()
+                ->paginate(10)
+                ->through(function ($payment) {
+                    return [
+                        'id' => $payment->id,
+                        'amount' => $payment->amount,
+                        'currency' => $payment->currency,
+                        'status' => $payment->status,
+                        'reference' => $payment->reference,
+                        'description' => $payment->description,
+                        'plan_name' => $payment->subscriptionPlan?->name ?? 'N/A',
+                        'paid_at' => $payment->paid_at?->format('M j, Y g:i A'),
+                        'created_at' => $payment->created_at->format('M j, Y g:i A'),
+                        'formatted_amount' => $payment->currency . ' ' . number_format($payment->amount, 2),
+                        'is_subscription' => !is_null($payment->subscription_plan_id),
+                        'metadata' => $payment->metadata,
+                    ];
+                });
+
+            return response()->json([
+                'payments' => $payments,
+                'filters' => $request->only(['search', 'status', 'type'])
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Filter payment history error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to filter payments'], 500);
+        }
     }
 }

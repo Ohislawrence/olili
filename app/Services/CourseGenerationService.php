@@ -175,7 +175,6 @@ class CourseGenerationService
                             "key_concepts": ["concept1", "concept2"],
                             "resources": ["resource1", "resource2"],
                             "has_quiz": true,
-                            "has_project": true
                         }
                     ]
                 }
@@ -251,7 +250,7 @@ class CourseGenerationService
                         'key_concepts' => $topicData['key_concepts'] ?? [],
                         'resources' => $topicData['resources'] ?? [],
                         'has_quiz' => $topicData['has_quiz'] ?? false,
-                        'has_project' => $topicData['has_project'] ?? false,
+                        'has_project' =>  false,
                     ]);
 
                     $savedItems[] = $topic;

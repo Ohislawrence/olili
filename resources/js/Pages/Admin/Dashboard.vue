@@ -307,6 +307,10 @@ import {
   PlusCircleIcon,
   CpuChipIcon,
   Cog6ToothIcon,
+  ComputerDesktopIcon,
+  GlobeAltIcon,
+  DevicePhoneMobileIcon,
+  ClockIcon
 } from '@heroicons/vue/24/outline'
 import StatsCard from '@/Components/Admin/StatsCard.vue'
 import UsageChart from '@/Components/Admin/UsageChart.vue'
@@ -319,6 +323,7 @@ const props = defineProps({
   recentActivity: Object,
   aiUsage: Object,
   systemHealth: Object,
+  loginStats: Object,
 })
 
 const chartPeriod = ref('7d')

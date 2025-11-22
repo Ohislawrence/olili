@@ -522,6 +522,27 @@
                 >
                   Impersonate User
                 </button>
+                <!-- Impersonation banner (show when impersonating) -->
+    <div
+      v-if="$page.props.auth.impersonating"
+      class="bg-yellow-100 border-b border-yellow-200 py-2 px-4"
+    >
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <ExclamationTriangleIcon class="h-5 w-5 text-yellow-600 mr-2" />
+          <span class="text-sm text-yellow-800">
+            You are currently impersonating {{ $page.props.auth.user.name }}
+          </span>
+        </div>
+        <button
+          @click="leaveImpersonation"
+          class="inline-flex items-center px-3 py-1 text-xs font-medium rounded bg-yellow-600 text-white hover:bg-yellow-700"
+        >
+          <ArrowLeftIcon class="h-3 w-3 mr-1" />
+          Stop Impersonating
+        </button>
+      </div>
+    </div>
                 <button
                   v-if="user.current_subscription"
                   @click="cancelSubscription"
@@ -541,13 +562,13 @@
                 <div>
                   <p class="text-sm font-medium text-gray-500">Total Logins</p>
                   <p class="text-2xl font-semibold text-gray-900">
-                    {{ loginStats.total_logins || 0 }}
+                    {{ loginStats.total_logins_30d || 0 }}
                   </p>
                 </div>
                 <div>
                   <p class="text-sm font-medium text-gray-500">Success Rate</p>
                   <p class="text-2xl font-semibold text-gray-900">
-                    {{ loginStats.success_rate || 0 }}%
+                    {{ loginStats.success_rate_30d || 0 }}%
                   </p>
                 </div>
                 <div>
@@ -557,9 +578,9 @@
                   </p>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-gray-500">Unique IPs</p>
+                  <p class="text-sm font-medium text-gray-500">Unique Locations</p>
                   <p class="text-2xl font-semibold text-gray-900">
-                    {{ loginStats.unique_ips || 0 }}
+                    {{ loginStats.unique_locations || 0 }}
                   </p>
                 </div>
               </div>
@@ -569,6 +590,7 @@
             <div class="bg-white shadow rounded-lg">
               <div class="px-6 py-4 border-b border-gray-200">
                 <h3 class="text-lg font-semibold text-gray-900">Subscription History</h3>
+
               </div>
               <div class="p-6">
                 <div v-if="user.subscriptions?.length" class="space-y-3">
@@ -616,6 +638,7 @@
 import { Head, Link, router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import StatsCard from '@/Components/Admin/StatsCard.vue'
+import { EyeIcon, ExclamationTriangleIcon, ArrowLeftIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   user: Object,
@@ -730,6 +753,10 @@ const impersonate = () => {
   if (confirm('Are you sure you want to impersonate this user?')) {
     router.post(route('admin.users.impersonate', props.user.id))
   }
+}
+
+const leaveImpersonation = () => {
+  router.post(route('admin.impersonate.leave'))
 }
 
 const cancelSubscription = () => {

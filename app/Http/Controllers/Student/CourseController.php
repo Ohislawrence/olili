@@ -4,6 +4,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\CapstoneProject;
 use App\Models\Course;
 use App\Models\Module;
 use App\Models\CourseOutline;
@@ -266,7 +267,7 @@ class CourseController extends Controller
         $courseStats = $this->progressService->calculateCourseProgress($course);
 
         return Inertia::render('Student/Courses/Learn', [
-            'course' => $course,
+            'course' => $course->load('capstoneProject'),
             'current_topic' => $currentTopic->load('contents'),
             'course_structure' => $courseStructure,
             'current_module' => $currentTopic->module,
@@ -472,6 +473,34 @@ class CourseController extends Controller
 
         return redirect()->route('student.courses.show', $module->course_id)
             ->with('success', "Module '{$module->title}' completed successfully!");
+    }
+
+    public function submit(CapstoneProject $capstoneProject, Request $request)
+    {
+        //$this->authorize('update', $capstoneProject);
+
+        $request->validate([
+            'submission' => 'required|string|min:100',
+            'files' => 'nullable|array',
+            'files.*' => 'file|max:10240', // 10MB max
+        ]);
+
+        $filePaths = [];
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                $path = $file->store('capstone-submissions/' . $capstoneProject->id, 'public');
+                $filePaths[] = [
+                    'name' => $file->getClientOriginalName(),
+                    'path' => $path,
+                    'size' => $file->getSize(),
+                ];
+            }
+        }
+
+        $capstoneProject->submitProject($request->submission, $filePaths);
+
+        return redirect()->route('student.capstone-projects.show', $capstoneProject->id)
+            ->with('success', 'Project submitted successfully! It will be graded soon.');
     }
 
     private function getPopularSubjects()

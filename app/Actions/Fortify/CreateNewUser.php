@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 use Laravel\Jetstream\Jetstream;
+use App\Mail\WelcomeStudentMail;
+use Illuminate\Support\Facades\Mail;
 
 class CreateNewUser implements CreatesNewUsers
 {
@@ -87,6 +89,9 @@ class CreateNewUser implements CreatesNewUsers
         // Assign first tier subscription plan for the role
         $this->assignStarterSubscription($user, $input['role']);
 
+        if($input['role'] == 'student'){
+            Mail::to($user->email)->queue(new WelcomeStudentMail($user));
+        }
         return $user;
     }
 

@@ -29,13 +29,13 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <StatsCard
             title="Total Logins"
-            :value="loginStats.total_logins"
+            :value="loginStats.total_logins_30d"
             icon="users"
             color="blue"
           />
           <StatsCard
             title="Success Rate"
-            :value="`${loginStats.success_rate}%`"
+            :value="`${loginStats.success_rate_30d}%`"
             icon="academic-cap"
             color="green"
           />
@@ -97,7 +97,7 @@
                     {{ login.ip_address }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {{ login.getLocation() }}
+                    {{ getLocation(login) }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <div class="flex items-center">
@@ -121,7 +121,7 @@
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {{ login.getSessionDurationFormatted() }}
+                    {{ formatSessionDuration(login) }}
                   </td>
                 </tr>
               </tbody>
@@ -158,5 +158,32 @@ const formatDateTime = (dateString) => {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+const getLocation = (login) => {
+  if (login.city && login.country) {
+    return `${login.city}, ${login.country}`
+  }
+  return login.country || 'Unknown'
+}
+
+const formatSessionDuration = (login) => {
+  if (!login.session_duration_seconds) {
+    return 'Active'
+  }
+
+  const hours = Math.floor(login.session_duration_seconds / 3600)
+  const minutes = Math.floor((login.session_duration_seconds % 3600) / 60)
+  const seconds = login.session_duration_seconds % 60
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m ${seconds}s`
+  }
+
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`
+  }
+
+  return `${seconds}s`
 }
 </script>

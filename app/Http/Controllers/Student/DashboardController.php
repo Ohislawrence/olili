@@ -45,7 +45,7 @@ class DashboardController extends Controller
                 'upcoming_deadlines' => $upcomingDeadlines,
                 'learning_analytics' => $learningAnalytics,
                 'student_profile' => $studentProfile,
-                'current_subscription' => $currentSubscription, // Add this
+                'current_subscription' => $currentSubscription, 
             ]);
         } catch (\Exception $e) {
             // Log the error and return safe defaults

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -43,9 +44,16 @@ class HandleInertiaRequests extends Middleware
                     'email' => $request->user()->email,
                     'profile_photo_url' => $request->user()->profile_photo_url,
                 ] : null,
+                'impersonating' => session()->has('impersonator_id'),
             ],
             'flash' => [
                 'message' => fn () => $request->session()->get('message')
+            ],
+            'stats' => [
+                'total_tutors' => User::role('tutor')->count(),
+                'total_organisation' => User::role('organisation')->count(),
+                'total_students' => User::role('student')->count(),
+                'ai_cost_today' => fn () => $request->session()->get('message'),
             ],
         ]);
     }

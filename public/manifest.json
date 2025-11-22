@@ -1,17 +1,16 @@
 {
-    "name": "Olilearn Tutor",
+    "name": "Olilearn",
     "short_name": "Olilearn",
-    "start_url": "/",
-    "background_color": "#6777ef",
-    "description": "Your personal AI tutor that grows with you",
+    "background_color": "#50C878",
     "display": "fullscreen",
-    "theme_color": "#50C878",
+    "description": "Olilearn is an AI-powered learning companion where students, parents, and tutors can create custom learning paths, ask questions in real time, and get reminders and feedback to master any subject.",
+    "theme_color": "#6c9108ff",
+    "start_url": "/",
     "icons": [
         {
-            "src": "/logo-olilearn.PNG",
+            "src": "logo-olilearn.PNG",
             "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any maskable"
+            "type": "image/png"
         }
     ]
 }

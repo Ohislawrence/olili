@@ -274,6 +274,7 @@
   </div>
   <PageLoader :visible="loading" :message="loaderMessage" />
   <FlashMessages />
+  <MobileBottomNav />
 </template>
 
 <script setup>
@@ -283,7 +284,7 @@ import { Link } from '@inertiajs/vue3'
 import Dropdown from '@/Components/Dropdown.vue'
 import DropdownLink from '@/Components/DropdownLink.vue'
 import NavLink from '@/Components/NavLink.vue'
-import PageLoader from "@/Components/PageLoader.vue"
+//import PageLoader from "@/Components/PageLoader.vue"
 import {
   HomeIcon,
   BookOpenIcon,
@@ -300,6 +301,7 @@ import {
   ChevronDoubleRightIcon,
 } from '@heroicons/vue/24/outline'
 import FlashMessages from '@/Components/FlashMessages.vue'
+import MobileBottomNav from '@/Components/Student/MobileBottomNav.vue'
 
 
 const page = usePage()

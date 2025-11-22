@@ -10,6 +10,8 @@ use App\Http\Controllers\LoginHistoryController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Test\TestingController;
 use App\Http\Controllers\WelcomeController;
+use App\Mail\WelcomeStudentMail;
+use Illuminate\Support\Facades\Mail;
 
 // Public routes
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
@@ -93,3 +95,13 @@ Route::prefix('payment')->name('payment.')->group(function () {
 
 });
 
+
+Route::get('/test-queue-email', function () {
+    $user = App\Models\User::first();
+
+    //\App\Mail\WelcomeStudentMail::dispatch($user);
+    // or
+    Mail::to($user->email)->queue(new WelcomeStudentMail($user));
+
+    return "Email queued! Check your queue worker.";
+});

@@ -1,0 +1,41 @@
+/* resources/views/vendor/mail/html/themes/emerald.css */
+
+/* Header */
+.header {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    border-bottom: none !important;
+}
+
+/* Buttons */
+.button {
+    background-color: #059669 !important;
+    border-color: #059669 !important;
+    color: #ffffff !important;
+}
+
+.button:hover {
+    background-color: #047857 !important;
+    border-color: #047857 !important;
+}
+
+/* Panels */
+.panel {
+    border-left-color: #059669 !important;
+    background-color: #f0fdf4 !important;
+}
+
+/* Links */
+a {
+    color: #059669 !important;
+}
+
+/* Text colors */
+.greeting {
+    color: #059669 !important;
+}
+
+.footer {
+    background-color: #f9fafb !important;
+    border-top-color: #e5e7eb !important;
+    color: #6b7280 !important;
+}

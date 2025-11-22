@@ -50,24 +50,6 @@
                   ></div>
                 </div>
               </div>
-              <!-- Detailed Progress Stats
-              <div class="grid grid-cols-2 gap-3 text-sm">
-                <div class="text-center p-3 bg-emerald-50 rounded-lg border border-emerald-100">
-                  <div class="font-bold text-emerald-700 text-lg">{{ courseStats.completed_modules || 0 }}/{{ courseStats.total_modules || 0 }}</div>
-                  <div class="text-emerald-600 text-xs">Modules</div>
-                  <div class="text-emerald-500 text-xs font-medium mt-1">
-                    {{ Math.round(courseStats.module_completion_percentage || 0) }}%
-                  </div>
-                </div>
-                <div class="text-center p-3 bg-teal-50 rounded-lg border border-teal-100">
-                  <div class="font-bold text-teal-700 text-lg">{{ courseStats.completed_topics || 0 }}/{{ courseStats.total_topics || 0 }}</div>
-                  <div class="text-teal-600 text-xs">Topics</div>
-                  <div class="text-teal-500 text-xs font-medium mt-1">
-                    {{ Math.round(courseStats.topic_completion_percentage || 0) }}%
-                  </div>
-                </div>
-                </div>
-              </div>-->
             </div>
           </div>
           <!-- Course Structure - Hierarchical with Dropdowns -->
@@ -252,7 +234,7 @@
                     <div class="flex-1">
                       <div class="flex items-center space-x-3 mb-2">
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
-                          Topic {{ getTopicNumber(current_topic) }}
+                          {{ getOutlineTypeLabel(current_topic.type) }} {{ getTopicNumber(current_topic) }}
                         </span>
                         <span class="text-sm text-gray-500 flex items-center">
                           <ClockIcon class="h-4 w-4 mr-1" />
@@ -380,7 +362,7 @@
                     <AcademicCapIcon class="mx-auto h-16 w-16 text-gray-300 mb-4" />
                     <h3 class="text-lg font-semibold text-gray-900 mb-2">Ready to Learn?</h3>
                     <p class="text-gray-500 mb-6 max-w-md mx-auto">
-                      Generate personalized learning content for this topic. Our AI will create engaging materials tailored to your learning style.
+                      Generate personalized learning content for this topic. Olilearn AI will create engaging materials tailored to your learning style.
                     </p>
                     <button
                       @click="generateContent(current_topic)"
@@ -392,6 +374,7 @@
                     </button>
                   </div>
                 </div>
+
                 <!-- Learning Objectives Tab -->
                 <div v-if="activeTab === 'objectives'" class="space-y-6">
                   <div v-if="current_topic.learning_objectives?.length">
@@ -434,8 +417,10 @@
                     </div>
                   </div>
                 </div>
+
                 <!-- Quiz Tab -->
-                <div v-if="activeTab === 'quiz' && current_topic.has_quiz" class="space-y-6">
+                <div v-if="activeTab === 'quiz'" class="space-y-6">
+                  <!-- Quiz content remains the same as in your original code -->
                   <!-- Quiz Overview State -->
                   <div v-if="quizState === 'overview' && current_topic.quiz" class="space-y-6">
                     <!-- Quiz Header -->
@@ -712,9 +697,9 @@
                   <!-- Generate Quiz State -->
                   <div v-else-if="!current_topic.quiz" class="text-center py-12">
                     <QuestionMarkCircleIcon class="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">No Quiz Available</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Ready to start this quiz?</h3>
                     <p class="text-gray-500 mb-6 max-w-md mx-auto">
-                      Generate a quiz for this topic to test your understanding.
+                      Get the quiz for this topic to test your understanding.
                     </p>
                     <button
                       @click="generateQuiz(current_topic)"
@@ -726,8 +711,10 @@
                     </button>
                   </div>
                 </div>
+
                 <!-- Project Tab -->
-                <div v-if="activeTab === 'project' && current_topic.has_project" class="space-y-6">
+                <div v-if="activeTab === 'project'" class="space-y-6">
+                  <!-- Project content remains the same as in your original code -->
                   <div class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-6">
                     <div class="flex items-start justify-between mb-4">
                       <div class="flex-1">
@@ -753,11 +740,11 @@
                       <BriefcaseIcon class="h-12 w-12 text-purple-400 ml-4 flex-shrink-0" />
                     </div>
                     <!-- Project Requirements -->
-                    <div v-if="current_topic.project_requirements" class="bg-white rounded-xl border border-purple-100 p-4 mb-4 shadow-sm">
+                    <div v-if="course.capstone_project.requirements" class="bg-white rounded-xl border border-purple-100 p-4 mb-4 shadow-sm">
                       <h4 class="font-semibold text-gray-900 mb-3">Project Requirements</h4>
                       <div class="space-y-2">
                         <div
-                          v-for="(requirement, index) in current_topic.project_requirements"
+                          v-for="(requirement, index) in course.capstone_project.requirements"
                           :key="index"
                           class="flex items-start"
                         >
@@ -857,47 +844,111 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- Requirements Tab -->
+                <div v-if="activeTab === 'requirements'" class="space-y-6">
+                <div class="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-6">
+                    <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Project Requirements</h3>
+                        <p class="text-gray-600 mb-4">
+                        Review the project requirements to understand what needs to be delivered for this project.
+                        </p>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                        <div class="text-center p-3 bg-white rounded-lg border border-blue-100">
+                            <div class="font-bold text-blue-700">{{ current_topic.estimated_duration_minutes }}min</div>
+                            <div class="text-blue-600">Estimated Time</div>
+                        </div>
+                        <div class="text-center p-3 bg-white rounded-lg border border-blue-100">
+                            <div class="font-bold text-blue-700">Hands-on</div>
+                            <div class="text-blue-600">Project Type</div>
+                        </div>
+                        <div class="text-center p-3 bg-white rounded-lg border border-blue-100">
+                            <div class="font-bold text-blue-700">Required</div>
+                            <div class="text-blue-600">Completion</div>
+                        </div>
+                        </div>
+                    </div>
+                    <ClipboardDocumentListIcon class="h-12 w-12 text-blue-400 ml-4 flex-shrink-0" />
+                    </div>
+                    
+                    <!-- Project Requirements Content -->
+                    <div v-if="current_topic.project_requirements && current_topic.project_requirements.length" class="bg-white rounded-xl border border-blue-100 p-4 mb-4 shadow-sm">
+                    <h4 class="font-semibold text-gray-900 mb-3">Project Requirements</h4>
+                    <div class="space-y-3">
+                        <div
+                        v-for="(requirement, index) in current_topic.project_requirements"
+                        :key="index"
+                        class="flex items-start p-3 bg-blue-50 rounded-lg"
+                        >
+                        <CheckCircleIcon class="h-4 w-4 text-blue-500 mr-2 mt-1 flex-shrink-0" />
+                        <div>
+                            <span class="font-medium text-gray-900">{{ requirement }}</span>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
+
+                    <!-- Generate Requirements Button -->
+                    <div v-else class="text-center py-8">
+                    <ClipboardDocumentListIcon class="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">No Requirements Available</h3>
+                    <p class="text-gray-500 mb-6 max-w-md mx-auto">
+                        Generate project requirements to understand what needs to be delivered for this project.
+                    </p>
+                    <button
+                        @click="generateRequirements(current_topic)"
+                        :disabled="requirementsLoading"
+                        class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <ClipboardDocumentListIcon class="h-5 w-5 mr-2" />
+                        {{ requirementsLoading ? 'Generating Requirements...' : 'Generate Requirements' }}
+                    </button>
+                    </div>
+                </div>
+                </div>
               </div>
             </div>
             <!-- Navigation Footer - Moved Mark as Complete button here -->
             <div class="mt-8 flex justify-between items-center">
-              <button
+            <button
                 v-if="hasPreviousTopic"
                 @click="goToPreviousTopic"
                 class="inline-flex items-center px-6 py-3 border border-emerald-300 text-emerald-700 font-medium rounded-lg hover:bg-emerald-50 transition-colors"
-              >
+            >
                 <ChevronLeftIcon class="h-4 w-4 mr-2" />
                 Previous Topic
-              </button>
-              <div v-else></div>
-              <div class="flex items-center space-x-4">
+            </button>
+            <div v-else></div>
+            <div class="flex items-center space-x-4">
                 <!-- Mark as Complete Button - Moved here -->
                 <button
-                  v-if="!current_topic.is_completed"
-                  @click="markAsComplete"
-                  :disabled="markCompleteLoading"
-                  class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                v-if="!current_topic.is_completed"
+                @click="markAsComplete"
+                :disabled="!canMarkAsComplete || markCompleteLoading"
+                class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed relative group"
+                :title="!canMarkAsComplete ? getDisabledReason : ''"
                 >
-                  <CheckCircleIcon class="h-4 w-4 mr-2" />
-                  {{ markCompleteLoading ? 'Marking...' : 'Mark as Complete' }}
+                <CheckCircleIcon class="h-4 w-4 mr-2" />
+                {{ markCompleteLoading ? 'Marking...' : 'Mark as Complete' }}
                 </button>
                 <button
-                  v-else
-                  disabled
-                  class="inline-flex items-center px-6 py-3 bg-gray-400 text-white font-medium rounded-lg cursor-not-allowed"
+                v-else
+                disabled
+                class="inline-flex items-center px-6 py-3 bg-gray-400 text-white font-medium rounded-lg cursor-not-allowed"
                 >
-                  <CheckCircleIcon class="h-4 w-4 mr-2" />
-                  Completed
+                <CheckCircleIcon class="h-4 w-4 mr-2" />
+                Completed
                 </button>
                 <button
-                  v-if="hasNextTopic"
-                  @click="goToNextTopic"
-                  class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+                v-if="hasNextTopic"
+                @click="goToNextTopic"
+                class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
                 >
-                  Next Topic
-                  <ChevronRightIcon class="h-4 w-4 ml-2" />
+                Next Topic
+                <ChevronRightIcon class="h-4 w-4 ml-2" />
                 </button>
-              </div>
+            </div>
             </div>
           </div>
         </main>
@@ -917,8 +968,9 @@
     </div>
   </StudentLayout>
 </template>
+
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
 import StudentLayout from '@/Layouts/StudentLayout.vue'
 import { Head, Link } from '@inertiajs/vue3'
@@ -946,14 +998,15 @@ import {
   ArrowDownTrayIcon,
   PauseCircleIcon,
   StopCircleIcon,
-  SpeakerWaveIcon,
 } from '@heroicons/vue/24/outline'
+
 const props = defineProps({
   course: Object,
   course_structure: Array,
   current_topic: Object,
   course_stats: Object,
 })
+
 // Reactive state
 const mobileSidebarOpen = ref(false)
 const markCompleteLoading = ref(false)
@@ -961,6 +1014,7 @@ const contentLoading = ref(false)
 const quizLoading = ref(false)
 const activeTab = ref('content')
 const expandedModules = ref({})
+
 // Quiz state
 const quizState = ref('overview') // 'overview', 'active', 'results'
 const currentQuizAttempt = ref(null)
@@ -970,13 +1024,16 @@ const userAnswers = ref([])
 const timeRemaining = ref(0)
 const quizResults = ref(null)
 const timerInterval = ref(null)
+
 // Project state
 const projectState = ref('overview')
 const projectSubmission = ref('')
 const projectFile = ref(null)
+
 // Time tracking
 const startTime = ref(null)
 const currentSessionTime = ref(0)
+
 // Audio playback state
 const isPlaying = ref(false)
 const audioProgress = ref('0:00')
@@ -984,10 +1041,12 @@ const audioDuration = ref('0:00')
 const audioProgressPercentage = ref(0)
 const currentAudio = ref(null)
 const speechSynthesis = ref(null)
+
 // Check if browser supports speech synthesis
 const hasAudioSupport = computed(() => {
   return 'speechSynthesis' in window
 })
+
 // Initialize expanded modules - expand current module
 onMounted(() => {
   if (props.current_topic?.module_id) {
@@ -996,6 +1055,7 @@ onMounted(() => {
   // Start time tracking
   startTimeTracking()
 })
+
 // Clean up timer on unmount
 onUnmounted(() => {
   if (timerInterval.value) {
@@ -1003,46 +1063,98 @@ onUnmounted(() => {
   }
   recordTimeSpent()
 })
+
+// Get outline type label
+const getOutlineTypeLabel = (type) => {
+  const labels = {
+    topic: 'Topic',
+    quiz: 'Quiz',
+    project: 'Project'
+  }
+  return labels[type] || 'Topic'
+}
+
 // Filtered tabs based on topic type
 const filteredTabs = computed(() => {
-  const baseTabs = [
-    {
+  const outlineType = props.current_topic.type || 'topic'
+  
+  // Start with an empty array instead of baseTabs
+  const tabs = []
+
+  // Add tabs based on outline type
+  if (outlineType === 'topic') {
+    tabs.push({
       id: 'content',
       name: 'Content',
       icon: BookOpenIcon,
       badge: props.current_topic.contents?.length || '0',
       badgeClass: 'bg-emerald-100 text-emerald-800'
-    },
-    {
+    })
+    
+    tabs.push({
       id: 'objectives',
       name: 'Learning Guide',
       icon: ListBulletIcon,
       badge: (props.current_topic.learning_objectives?.length || 0) + (props.current_topic.key_concepts?.length || 0),
       badgeClass: 'bg-purple-100 text-purple-800'
+    })
+    
+    // Add quiz tab only if topic has quiz and is not a capstone
+    if (props.current_topic.has_quiz && !props.current_topic.is_capstone) {
+      tabs.push({
+        id: 'quiz',
+        name: 'Quiz',
+        icon: ClipboardDocumentListIcon,
+        badge: props.current_topic.has_quiz ? 'Available' : 'None',
+        badgeClass: props.current_topic.has_quiz ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-800'
+      })
     }
-  ]
-  // Add quiz tab only if topic has quiz and is not a capstone
-  if (props.current_topic.has_quiz && !props.current_topic.is_capstone) {
-    baseTabs.push({
+    
+    // Add project tab only if topic has project
+    if (props.current_topic.has_project) {
+      tabs.push({
+        id: 'project',
+        name: 'Project',
+        icon: BriefcaseIcon,
+        badge: props.current_topic.has_project ? 'Available' : 'None',
+        badgeClass: props.current_topic.has_project ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
+      })
+    }
+  } 
+  else if (outlineType === 'quiz') {
+    // For quiz type, only show quiz tab (no learning guide)
+    tabs.push({
       id: 'quiz',
       name: 'Quiz',
       icon: ClipboardDocumentListIcon,
-      badge: props.current_topic.has_quiz ? 'Available' : 'None',
+      badge: 'Available',
       badgeClass: props.current_topic.has_quiz ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-800'
     })
-  }
-  // Add project tab only if topic has project
-  if (props.current_topic.has_project) {
-    baseTabs.push({
+  } 
+  else if (outlineType === 'project') {
+    // For project type, show project tab, learning guide, and requirements tab
+    tabs.push({
       id: 'project',
       name: 'Project',
       icon: BriefcaseIcon,
       badge: props.current_topic.has_project ? 'Available' : 'None',
       badgeClass: props.current_topic.has_project ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
     })
+    
+    tabs.push({
+      id: 'objectives',
+      name: 'Learning Guide',
+      icon: ListBulletIcon,
+      badge: (props.current_topic.learning_objectives?.length || 0) + (props.current_topic.key_concepts?.length || 0),
+      badgeClass: 'bg-purple-100 text-purple-800'
+    })
+    
+    
   }
-  return baseTabs
+
+  return tabs
 })
+
 // Helper Functions
 const formatStudyTime = (minutes) => {
   if (!minutes || minutes === 0) return '0m'
@@ -1053,11 +1165,13 @@ const formatStudyTime = (minutes) => {
   }
   return `${mins}m`
 }
+
 const formatTime = (seconds) => {
   const minutes = Math.floor(seconds / 60)
   const remainingSeconds = seconds % 60
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
 }
+
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString('en-US', {
     month: 'short',
@@ -1067,6 +1181,7 @@ const formatDate = (dateString) => {
     minute: '2-digit'
   })
 }
+
 const getStatusClass = (status) => {
   const classes = {
     draft: 'bg-gray-100 text-gray-800',
@@ -1076,6 +1191,7 @@ const getStatusClass = (status) => {
   }
   return classes[status] || 'bg-gray-100 text-gray-800'
 }
+
 const getTopicNumber = (topic) => {
   const module = props.course_structure.find(m =>
     m.topics.some(t => t.id === topic.id)
@@ -1086,17 +1202,21 @@ const getTopicNumber = (topic) => {
   }
   return '1.1'
 }
+
 const getModuleTopicCount = (module) => {
   return module.topics?.length || 0
 }
+
 const getModuleProgress = (module) => {
   return module.topics?.filter(topic => topic.is_completed).length || 0
 }
+
 const calculateModuleCompletion = (module) => {
   const completedTopics = module.topics.filter(topic => topic.is_completed).length
   const totalTopics = module.topics.length
   return totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0
 }
+
 // Time tracking functions
 const startTimeTracking = () => {
   startTime.value = new Date()
@@ -1108,6 +1228,7 @@ const startTimeTracking = () => {
     }
   }, 60000) // Update every minute
 }
+
 const recordTimeSpent = async () => {
   if (currentSessionTime.value > 0) {
     try {
@@ -1129,6 +1250,7 @@ const recordTimeSpent = async () => {
     }
   }
 }
+
 // Computed properties
 const courseStats = computed(() => props.course_stats || {})
 const current_module = computed(() => {
@@ -1144,6 +1266,7 @@ const currentTopicIndex = computed(() =>
 )
 const hasPreviousTopic = computed(() => currentTopicIndex.value > 0)
 const hasNextTopic = computed(() => currentTopicIndex.value < allTopics.value.length - 1)
+
 // Progress computed properties
 const progressByActivity = computed(() => {
   if (!props.course.progress_tracking) return null
@@ -1162,6 +1285,7 @@ const progressByActivity = computed(() => {
     ...stats
   }))
 })
+
 // Quiz computed properties
 const currentAttemptsCount = computed(() => {
   return props.current_topic.quiz?.attempts?.length || 0
@@ -1183,6 +1307,7 @@ const currentQuestion = computed(() => {
   if (!props.current_topic.quiz || !props.current_topic.quiz.questions) return null
   return props.current_topic.quiz.questions[currentQuestionIndex.value]
 })
+
 // Navigation methods
 const selectTopic = (topic) => {
   // Record time spent on current topic before navigating
@@ -1194,21 +1319,25 @@ const selectTopic = (topic) => {
     mobileSidebarOpen.value = false
   })
 }
+
 const toggleModule = (moduleId) => {
   expandedModules.value[moduleId] = !expandedModules.value[moduleId]
 }
+
 const goToPreviousTopic = () => {
   if (hasPreviousTopic.value) {
     const previousTopic = allTopics.value[currentTopicIndex.value - 1]
     selectTopic(previousTopic)
   }
 }
+
 const goToNextTopic = () => {
   if (hasNextTopic.value) {
     const nextTopic = allTopics.value[currentTopicIndex.value + 1]
     selectTopic(nextTopic)
   }
 }
+
 const markAsComplete = async () => {
   markCompleteLoading.value = true
   try {
@@ -1230,6 +1359,7 @@ const markAsComplete = async () => {
     markCompleteLoading.value = false
   }
 }
+
 const generateContent = async (topic) => {
   contentLoading.value = true
   try {
@@ -1252,6 +1382,7 @@ const generateContent = async (topic) => {
     contentLoading.value = false
   }
 }
+
 function formatContent(content) {
   if (!content) return ""
   marked.setOptions({
@@ -1264,6 +1395,7 @@ function formatContent(content) {
   const html = marked.parse(cleaned)
   return DOMPurify.sanitize(html)
 }
+
 // Quiz methods
 const startQuiz = async () => {
   if (!canAttemptQuiz.value) return
@@ -1302,6 +1434,7 @@ const startQuiz = async () => {
     quizLoading.value = false
   }
 }
+
 const startTimer = (duration) => {
   timeRemaining.value = duration
   timerInterval.value = setInterval(() => {
@@ -1312,22 +1445,26 @@ const startTimer = (duration) => {
     }
   }, 1000)
 }
+
 const selectAnswer = (answer) => {
   selectedAnswer.value = answer
   userAnswers.value[currentQuestionIndex.value] = answer
 }
+
 const nextQuestion = () => {
   if (currentQuestionIndex.value < props.current_topic.quiz.questions.length - 1) {
     currentQuestionIndex.value++
     selectedAnswer.value = userAnswers.value[currentQuestionIndex.value] || null
   }
 }
+
 const previousQuestion = () => {
   if (currentQuestionIndex.value > 0) {
     currentQuestionIndex.value--
     selectedAnswer.value = userAnswers.value[currentQuestionIndex.value] || null
   }
 }
+
 const submitQuiz = async () => {
   if (timerInterval.value) {
     clearInterval(timerInterval.value);
@@ -1383,14 +1520,17 @@ const submitQuiz = async () => {
     quizLoading.value = false;
   }
 }
+
 const retakeQuiz = () => {
   quizState.value = 'overview'
   quizResults.value = null
   currentQuizAttempt.value = null
 }
+
 const viewAttemptResults = (attempt) => {
   alert(`Viewing results for attempt ${attempt.attempt_number}. This would show detailed results.`)
 }
+
 const generateQuiz = async (topic) => {
   quizLoading.value = true
   try {
@@ -1413,18 +1553,22 @@ const generateQuiz = async (topic) => {
     quizLoading.value = false
   }
 }
+
 // Project methods
 const startProject = () => {
   projectState.value = 'active'
 }
+
 const cancelProject = () => {
   projectState.value = 'overview'
   projectSubmission.value = ''
   projectFile.value = null
 }
+
 const handleProjectFileUpload = (event) => {
   projectFile.value = event.target.files[0]
 }
+
 const submitProject = async () => {
   try {
     const formData = new FormData()
@@ -1455,6 +1599,7 @@ const submitProject = async () => {
     alert('Failed to submit project. Please try again.')
   }
 }
+
 const downloadProjectResources = () => {
   // Implementation for downloading project resources
   if (props.current_topic.project_resources) {
@@ -1462,6 +1607,31 @@ const downloadProjectResources = () => {
     console.log('Downloading project resources')
   }
 }
+
+// Criteria methods
+const generateCriteria = async (topic) => {
+  criteriaLoading.value = true
+  try {
+    await router.post(route('student.outlines.generate-criteria', {
+      course: props.course.id,
+      outline: topic.id
+    }), {}, {
+      onSuccess: () => {
+        router.reload()
+      },
+      onError: (errors) => {
+        console.error('Failed to generate criteria:', errors)
+        alert('Failed to generate criteria. Please try again.')
+      }
+    })
+  } catch (error) {
+    console.error('Error generating criteria:', error)
+    alert('An error occurred while generating criteria.')
+  } finally {
+    criteriaLoading.value = false
+  }
+}
+
 // Shuffle function
 const shuffleArray = (array) => {
   const shuffled = [...array]
@@ -1471,24 +1641,29 @@ const shuffleArray = (array) => {
   }
   return shuffled
 }
+
 // Computed property for shuffled options
 const shuffledOptions = computed(() => {
   if (!currentQuestion.value?.options) return []
   return shuffleArray(currentQuestion.value.options)
 })
+
 const hasAudioContent = computed(() => {
   return props.current_topic.contents?.length > 0 && hasAudioSupport.value
 })
+
 // Initialize speech synthesis
 onMounted(() => {
   if (hasAudioSupport.value) {
     speechSynthesis.value = window.speechSynthesis
   }
 })
+
 // Clean up audio on unmount
 onUnmounted(() => {
   stopAudioPlayback()
 })
+
 // Audio playback methods
 const playContentAudio = (content) => {
   if (!hasAudioSupport.value) {
@@ -1499,6 +1674,7 @@ const playContentAudio = (content) => {
   const text = extractTextFromHTML(formatContent(content.content))
   speakText(text)
 }
+
 const toggleAudioPlayback = () => {
   if (!hasAudioSupport.value) {
     alert('Your browser does not support text-to-speech functionality.')
@@ -1510,6 +1686,7 @@ const toggleAudioPlayback = () => {
     playAllContentAudio()
   }
 }
+
 const playAllContentAudio = () => {
   if (!props.current_topic.contents?.length) return
 
@@ -1519,6 +1696,7 @@ const playAllContentAudio = () => {
 
   speakText(allText)
 }
+
 const speakText = (text) => {
   if (!text.trim()) return
   const utterance = new SpeechSynthesisUtterance(text)
@@ -1556,18 +1734,21 @@ const speakText = (text) => {
   currentAudio.value = utterance
   speechSynthesis.value.speak(utterance)
 }
+
 const pauseAudioPlayback = () => {
   if (speechSynthesis.value && isPlaying.value) {
     speechSynthesis.value.pause()
     isPlaying.value = false
   }
 }
+
 const resumeAudioPlayback = () => {
   if (speechSynthesis.value && currentAudio.value) {
     speechSynthesis.value.resume()
     isPlaying.value = true
   }
 }
+
 const stopAudioPlayback = () => {
   if (speechSynthesis.value) {
     speechSynthesis.value.cancel()
@@ -1576,6 +1757,7 @@ const stopAudioPlayback = () => {
     audioProgress.value = '0:00'
   }
 }
+
 const updateAudioProgress = () => {
   // This is a simplified progress update
   // In a real implementation, you might want more precise timing
@@ -1596,19 +1778,89 @@ const updateAudioProgress = () => {
     }, 1000)
   }
 }
+
 // Helper functions
 const extractTextFromHTML = (html) => {
   const tempDiv = document.createElement('div')
   tempDiv.innerHTML = html
   return tempDiv.textContent || tempDiv.innerText || ''
 }
+
 const estimateReadTime = (content) => {
   const text = extractTextFromHTML(content)
   const wordCount = text.split(/\s+/).length
   const minutes = Math.ceil(wordCount / 200) // 200 words per minute
   return minutes
 }
+
+// Set default active tab based on available tabs
+const setDefaultActiveTab = () => {
+  const outlineType = props.current_topic.type || 'topic'
+  const tabs = filteredTabs.value
+
+  if (tabs.length > 0) {
+    activeTab.value = tabs[0].id
+  }
+}
+
+const canMarkAsComplete = computed(() => {
+  const outlineType = props.current_topic.type || 'topic'
+
+  if (outlineType === 'topic') {
+    // For topics: require content to be generated and viewed
+    return props.current_topic.contents?.length > 0
+  }
+  else if (outlineType === 'quiz') {
+    // For quizzes: require a passing attempt
+    const hasPassedAttempt = props.current_topic.quiz?.attempts?.some(attempt => attempt.is_passed)
+    return hasPassedAttempt || false
+  }
+  else if (outlineType === 'project') {
+    // For projects: require at least one approved submission
+    const hasApprovedSubmission = props.current_topic.project_submissions?.some(submission => submission.status === 'approved')
+    return hasApprovedSubmission || props.current_topic.project_submissions?.length > 0
+  }
+
+  return false
+})
+
+// Computed property to get reason why marking as complete is disabled
+const getDisabledReason = computed(() => {
+  const outlineType = props.current_topic.type || 'topic'
+  
+  if (outlineType === 'topic') {
+    return 'Complete the content to mark as complete'
+  } 
+  else if (outlineType === 'quiz') {
+    return 'Pass the quiz to mark as complete'
+  } 
+  else if (outlineType === 'project') {
+    return 'Submit the project to mark as complete'
+  }
+  
+  return 'Complete the requirements to mark as complete'
+})
+
+// Initialize expanded modules - expand current module
+onMounted(() => {
+  if (props.current_topic?.module_id) {
+    expandedModules.value[props.current_topic.module_id] = true
+  }
+  // Set default active tab based on available tabs
+  setDefaultActiveTab()
+  // Start time tracking
+  startTimeTracking()
+})
+
+// Watch for topic changes and update active tab
+watch(() => props.current_topic, () => {
+  setDefaultActiveTab()
+}, { immediate: true })
+
+
+
 </script>
+
 <style scoped>
 .prose {
   max-width: none;

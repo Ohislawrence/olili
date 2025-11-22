@@ -111,8 +111,12 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => env('MAIL_FROM_ADDRESS', 'hello@olilearn.com'),
+        'name' => env('MAIL_FROM_NAME', 'Olilearn'),
     ],
+
+    'custom_themes' => [
+    'default' => resource_path('views/vendor/mail/html/themes/emerald.css'),
+],
 
 ];

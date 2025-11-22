@@ -80,6 +80,7 @@ class LoginTrackerService
                 'average_session_duration' => $this->calculateAverageSessionDuration($successfulLogins),
                 'most_common_device' => $this->getMostCommonValue($recentLogins, 'device_type'),
                 'most_common_browser' => $this->getMostCommonValue($recentLogins, 'browser'),
+                'consecutive_days' => $this->calculateConsecutiveDays($user),
             ];
         });
     }
@@ -133,5 +134,35 @@ class LoginTrackerService
 
         // Example email notification (uncomment if you have email setup)
         // Mail::to($user->email)->send(new SecurityAlertMail($user, $suspiciousActivities));
+    }
+
+    private function calculateConsecutiveDays(User $user)
+    {
+        $logins = $user->loginHistories()
+            ->where('was_successful', true)
+            ->orderBy('login_at', 'desc')
+            ->get();
+
+        if ($logins->isEmpty()) {
+            return 0;
+        }
+
+        $consecutive = 1;
+        $currentDate = $logins->first()->login_at->startOfDay();
+
+        foreach ($logins->skip(1) as $login) {
+            $loginDate = $login->login_at->startOfDay();
+            $diffInDays = $currentDate->diffInDays($loginDate);
+
+            if ($diffInDays === 1) {
+                $consecutive++;
+                $currentDate = $loginDate;
+            } else if ($diffInDays > 1) {
+                break;
+            }
+            // If diffInDays === 0, it's the same day, so we skip
+        }
+
+        return $consecutive;
     }
 }

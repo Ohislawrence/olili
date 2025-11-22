@@ -33,8 +33,9 @@ Route::middleware([
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
     Route::post('/users/{user}/impersonate', [UserController::class, 'impersonate'])->name('users.impersonate');
+    Route::post('/impersonate/leave', [UserController::class, 'leaveImpersonate'])->name('impersonate.leave');
     Route::get('/users/{user}/login-history', [UserController::class, 'loginHistory'])->name('users.login-history');
-    Route::get('/users/{user}/payment-history', [UserController::class, 'loginHistory'])->name('users.payment-history');
+    Route::get('/users/{user}/payment-history', [UserController::class, 'paymentHistory'])->name('users.payment-history');
 
     // Course Management
     Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');

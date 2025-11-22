@@ -48,7 +48,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     // Chat
     Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
     Route::get('/chat/create', [ChatController::class, 'create'])->name('chat.create');
-    Route::middleware([ 'subscription:ai_request'])->post('/chat', [ChatController::class, 'store'])->name('chat.store');
+    Route::middleware([ 'subscription:basic_chat'])->post('/chat', [ChatController::class, 'store'])->name('chat.store');
     //Route::get('/chat/{course}', [ChatController::class, 'showFromCourse'])->name('chat.showFromCourse');
     Route::get('/chat/{chatSession}', [ChatController::class, 'show'])->name('chat.show');
     Route::post('/chat/{chatSession}/send-message', [ChatController::class, 'sendMessage'])->name('chat.send-message');

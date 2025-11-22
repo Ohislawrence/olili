@@ -29,7 +29,8 @@ class CourseDueSoonNotification extends Notification implements ShouldQueue
             ->line("Your course '{$this->course->title}' is due in {$this->daysRemaining} days.")
             ->line("Please continue working on it to complete before the deadline.")
             ->action('Continue Course', url("/courses/{$this->course->id}"))
-            ->line('Thank you for using our platform!');
+            ->line('Thank you for using Olilearn!')
+            ->salutation('Best Regards,\nThe ' . config('app.name') . ' Team');
     }
 
     public function toArray($notifiable): array
