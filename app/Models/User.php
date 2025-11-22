@@ -13,7 +13,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Http;
-use Lab404\Impersonate\Models\Impersonate;
+
 
 
 class User extends Authenticatable
@@ -26,7 +26,7 @@ class User extends Authenticatable
     use HasProfilePhoto;
     use Notifiable;
     use TwoFactorAuthenticatable;
-    use Impersonate;
+    
 
     /**
      * The attributes that are mass assignable.
