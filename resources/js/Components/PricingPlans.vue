@@ -306,10 +306,11 @@ const filteredPlans = computed(() => {
         .sort((a, b) => a.sort_order - b.sort_order);
 });
 
+
 // Price formatting
 const formatPrice = (price) => {
     if (price === 0) return 'Free';
-    return `₦${parseFloat(price).toFixed(0)}`;
+    return `₦${new Intl.NumberFormat('en-NG').format(parseFloat(price))}`;
 };
 
 const calculateSavings = (plan) => {

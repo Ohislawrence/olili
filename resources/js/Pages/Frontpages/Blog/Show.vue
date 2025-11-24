@@ -53,7 +53,7 @@
                         <div class="mb-8 rounded-2xl overflow-hidden shadow-sm">
                             <img
                                 v-if="post.image_url"
-                                :src="post.image_url"
+                                :src="'/storage/' + post.image_url"
                                 :alt="post.title"
                                 class="w-full h-64 md:h-96 object-cover"
                             />

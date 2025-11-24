@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\SystemSettingsController;
 use App\Http\Controllers\Admin\SubscriptionPlanController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\BlogController;
+use App\Http\Controllers\Admin\BlogPostController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware([
@@ -107,10 +108,13 @@ Route::middleware([
     Route::post('/subscriptions/{subscription}/cancel', [SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
     Route::post('/subscriptions/{subscription}/renew', [SubscriptionController::class, 'renew'])->name('subscriptions.renew');
 
-    // blog posts
-    Route::get('/blog/create', [BlogController::class, 'create'])->name('blog.create');
-    Route::post('/blog', [BlogController::class, 'store'])->name('blog.store');
-    Route::get('/blog/{blog}/edit', [BlogController::class, 'edit'])->name('blog.edit');
-    Route::put('/blog/{blog}', [BlogController::class, 'update'])->name('blog.update');
-    Route::delete('/blog/{blog}', [BlogController::class, 'destroy'])->name('blog.destroy');
+    // Blog Posts Routes
+    Route::get('/blog-posts', [BlogPostController::class, 'index'])->name('blog-posts.index');
+    Route::get('/blog-posts/create', [BlogPostController::class, 'create'])->name('blog-posts.create');
+    Route::post('/blog-posts', [BlogPostController::class, 'store'])->name('blog-posts.store');
+    Route::get('/blog-posts/{blogPost}', [BlogPostController::class, 'show'])->name('blog-posts.show');
+    Route::get('/blog-posts/{blogPost}/edit', [BlogPostController::class, 'edit'])->name('blog-posts.edit');
+    Route::put('/blog-posts/{blogPost}', [BlogPostController::class, 'update'])->name('blog-posts.update');
+    Route::delete('/blog-posts/{blogPost}', [BlogPostController::class, 'destroy'])->name('blog-posts.destroy');
+    Route::post('/blog-posts/{blogPost}/toggle-publish', [BlogPostController::class, 'togglePublish'])->name('blog-posts.toggle-publish');
 });

@@ -119,6 +119,24 @@
         <!-- AI-Powered Learning Section -->
         <section class="py-24 bg-gradient-to-br from-slate-50 to-emerald-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Centered Heading -->
+                <div class="text-center mb-16">
+                    <div class="inline-flex items-center px-4 py-2 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-700 text-sm font-medium mb-6">
+                        <span class="w-2 h-2 bg-emerald-500 rounded-full mr-2"></span>
+                        AI Intelligence
+                    </div>
+                    <h2 class="text-4xl font-bold text-gray-900 mb-4">
+                        Adaptive Learning
+                        <span class="block text-emerald-700 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                            That Knows You
+                        </span>
+                    </h2>
+                    <p class="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
+                        Our AI continuously analyzes your learning patterns, strengths, and areas for improvement
+                        to deliver a truly personalized educational experience.
+                    </p>
+                </div>
+
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                     <!-- Visual Representation -->
                     <div class="relative">
@@ -161,28 +179,13 @@
 
                     <!-- Content -->
                     <div>
-                        <div class="inline-flex items-center px-4 py-2 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-700 text-sm font-medium mb-6">
-                            <span class="w-2 h-2 bg-emerald-500 rounded-full mr-2"></span>
-                            AI Intelligence
-                        </div>
-                        <h2 class="text-4xl font-bold text-gray-900 mb-6">
-                            Adaptive Learning
-                            <span class="block text-emerald-700 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                                That Knows You
-                            </span>
-                        </h2>
-                        <p class="text-xl text-gray-700 mb-8 leading-relaxed">
-                            Our AI continuously analyzes your learning patterns, strengths, and areas for improvement
-                            to deliver a truly personalized educational experience.
-                        </p>
-
                         <div class="space-y-6">
                             <div
                                 v-for="(aiFeature, index) in aiFeatures"
                                 :key="aiFeature.title"
                                 class="flex items-start space-x-4 group"
                             >
-                                <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 transform transition-transform group-hover:scale-110">
+                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white transform transition-transform group-hover:scale-110">
                                     <span class="text-xl">{{ aiFeature.icon }}</span>
                                 </div>
                                 <div>
@@ -231,35 +234,38 @@
         <!-- For Tutors Section -->
         <section class="py-24 bg-gradient-to-br from-slate-50 to-emerald-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Centered Heading -->
+                <div class="text-center mb-16">
+                    <div class="inline-flex items-center px-4 py-2 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-700 text-sm font-medium mb-6">
+                        <span class="w-2 h-2 bg-emerald-500 rounded-full mr-2"></span>
+                        For Educators
+                    </div>
+                    <h2 class="text-4xl font-bold text-gray-900 mb-4">
+                        Teaching
+                        <span class="block text-emerald-700 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                            Made Powerful
+                        </span>
+                    </h2>
+                    <p class="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
+                        Empower your teaching with AI tools that handle administrative tasks,
+                        provide insights, and help you create exceptional learning experiences.
+                    </p>
+                </div>
+
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                     <!-- Content -->
                     <div>
-                        <div class="inline-flex items-center px-4 py-2 rounded-full bg-orange-100 border border-orange-200 text-orange-700 text-sm font-medium mb-6">
-                            <span class="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
-                            For Educators
-                        </div>
-                        <h2 class="text-4xl font-bold text-gray-900 mb-6">
-                            Teaching
-                            <span class="block text-orange-700 bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                                Made Powerful
-                            </span>
-                        </h2>
-                        <p class="text-xl text-gray-700 mb-8 leading-relaxed">
-                            Empower your teaching with AI tools that handle administrative tasks,
-                            provide insights, and help you create exceptional learning experiences.
-                        </p>
-
                         <div class="space-y-6">
                             <div
                                 v-for="(tutorFeature, index) in tutorFeatures"
                                 :key="tutorFeature.title"
                                 class="flex items-start space-x-4 group"
                             >
-                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white transform transition-transform group-hover:scale-110">
+                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white transform transition-transform group-hover:scale-110">
                                     <span class="text-xl">{{ tutorFeature.icon }}</span>
                                 </div>
                                 <div>
-                                    <h4 class="text-lg font-semibold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors">
                                         {{ tutorFeature.title }}
                                     </h4>
                                     <p class="text-gray-700">{{ tutorFeature.description }}</p>
@@ -270,26 +276,26 @@
 
                     <!-- Visual -->
                     <div class="order-1 lg:order-2">
-                        <div class="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-8 text-white relative overflow-hidden">
+                        <div class="bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-8 text-white relative overflow-hidden">
                             <div class="absolute top-0 left-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 -translate-x-16"></div>
                             <div class="absolute bottom-0 right-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 translate-x-12"></div>
 
                             <div class="relative z-10">
                                 <div class="text-6xl mb-6">👨‍🏫</div>
                                 <h3 class="text-2xl font-bold mb-4">Teaching Power Tools</h3>
-                                <p class="text-orange-100 mb-6">
+                                <p class="text-emerald-100 mb-6">
                                     Advanced tools to create engaging content, track student progress, and focus on what you do best - teaching.
                                 </p>
                                 <div class="space-y-3">
-                                    <div class="flex items-center text-orange-100">
+                                    <div class="flex items-center text-emerald-100">
                                         <CheckCircleIcon class="h-5 w-5 mr-3" />
                                         AI-assisted course creation
                                     </div>
-                                    <div class="flex items-center text-orange-100">
+                                    <div class="flex items-center text-emerald-100">
                                         <CheckCircleIcon class="h-5 w-5 mr-3" />
                                         Automated grading & feedback
                                     </div>
-                                    <div class="flex items-center text-orange-100">
+                                    <div class="flex items-center text-emerald-100">
                                         <CheckCircleIcon class="h-5 w-5 mr-3" />
                                         Detailed student analytics
                                     </div>
@@ -447,24 +453,24 @@ const mainFeatures = [
 
 const aiFeatures = [
     {
-        icon: '🔍',
-        title: 'Learning Pattern Recognition',
-        description: 'AI analyzes how you learn best and optimizes content delivery accordingly.'
+        icon: "🧠",
+        title: "Personalized Learning Paths",
+        description: "AI creates custom courses that adapt to your learning style, pace, and knowledge gaps for optimal progress."
     },
     {
-        icon: '📈',
-        title: 'Predictive Analytics',
-        description: 'Forecast learning outcomes and identify potential challenges before they occur.'
+        icon: "💬",
+        title: "24/7 AI Tutor Support",
+        description: "Get instant answers and explanations anytime you're stuck. Your AI tutor understands your course context."
     },
     {
-        icon: '🎨',
-        title: 'Content Personalization',
-        description: 'Automatically tailor learning materials to match your preferences and level.'
+        icon: "📈",
+        title: "Progress Intelligence",
+        description: "Smart analytics track your learning patterns and automatically adjust content difficulty and focus areas."
     },
     {
-        icon: '⚡',
-        title: 'Real-time Adaptation',
-        description: 'Instant adjustments based on your performance and engagement levels.'
+        icon: "🔄",
+        title: "Adaptive Assessments",
+        description: "Quizzes and projects that evolve based on your performance, ensuring you master each concept thoroughly."
     }
 ]
 
@@ -513,24 +519,24 @@ const studentFeatures = [
 
 const tutorFeatures = [
     {
-        icon: '🚀',
-        title: 'Course Creation Studio',
-        description: 'Drag-and-drop interface with AI assistance for creating engaging courses.'
+        icon: "📚",
+        title: "AI Course Creation",
+        description: "Create personalized learning paths and course materials in minutes with AI assistance tailored to each student's needs."
     },
     {
-        icon: '📝',
-        title: 'Automated Assessment',
-        description: 'AI-powered grading and feedback generation for student assignments.'
+        icon: "🤖",
+        title: "Smart Tutoring Assistant",
+        description: "Let our AI handle routine questions while you focus on complex concepts and personalized guidance."
     },
     {
-        icon: '📈',
-        title: 'Student Analytics',
-        description: 'Comprehensive dashboards showing student progress and engagement metrics.'
+        icon: "📊",
+        title: "Progress Analytics",
+        description: "Get detailed insights into student performance, learning patterns, and areas needing improvement."
     },
     {
-        icon: '💼',
-        title: 'Monetization Tools',
-        description: 'Easy setup for course sales, subscriptions, and payment processing.'
+        icon: "⚡",
+        title: "Automated Assessment",
+        description: "Generate quizzes and projects automatically, with AI-powered grading and personalized feedback."
     }
 ]
 

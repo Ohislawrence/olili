@@ -102,4 +102,10 @@ class BlogPost extends Model
     {
         return $this->is_published && $this->published_at <= now();
     }
+
+    public function getReadingTimeAttribute()
+    {
+        $wordCount = str_word_count(strip_tags($this->content));
+        return ceil($wordCount / 200); // Average reading speed: 200 words per minute
+    }
 }

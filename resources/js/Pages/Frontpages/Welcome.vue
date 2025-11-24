@@ -235,17 +235,17 @@
                 <div class="text-center mb-16">
                     <div class="inline-flex items-center px-4 py-2 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-700 text-sm font-medium mb-4">
                         <span class="w-2 h-2 bg-emerald-500 rounded-full mr-2"></span>
-                        Simple Process
+                        Simple Learning Journey
                     </div>
                     <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                        HOW IT
+                        HOW OLLILEARN
                         <span class="block text-emerald-700 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">WORKS</span>
                     </h2>
                     <p class="text-xl text-gray-800 max-w-2xl mx-auto">
-                        Get started with Olilearn in just three simple steps.
+                        Your personalized AI-powered learning journey starts here. Master any subject with your own AI tutor.
                     </p>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
                     <div
                         v-for="(step, index) in howItWorks"
                         :key="index"
@@ -260,6 +260,22 @@
                         <h3 class="text-2xl font-bold text-gray-900 mb-4">{{ step.title }}</h3>
                         <p class="text-gray-700 leading-relaxed">{{ step.description }}</p>
                     </div>
+                </div>
+                
+                <!-- Start Now Button -->
+                <div class="text-center">
+                    <Link
+                        :href="route('register')"
+                        class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-lg rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl shadow-lg"
+                    >
+                        <span>Start Learning Now</span>
+                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                        </svg>
+                    </Link>
+                    <p class="text-gray-600 mt-4 text-sm">
+                        Join thousands of students already mastering subjects with Olilearn
+                    </p>
                 </div>
             </div>
         </section>
@@ -544,20 +560,20 @@ const features = [
 const howItWorks = [
     {
         number: '1',
-        title: 'Sign Up & Assessment',
-        description: 'Create your account and take our AI-powered assessment to understand your current level and learning preferences.'
+        title: 'Create Your Learning Path',
+        description: 'Sign up and create custom courses tailored to your learning goals. Our AI helps build personalized learning paths for any subject.'
     },
     {
         number: '2',
-        title: 'Get Personalized Plan',
-        description: 'Receive a customized learning path with recommended courses and activities tailored to your goals.'
+        title: 'Learn with AI Tutor',
+        description: 'Ask questions in real-time and get instant explanations. Your AI tutor provides personalized guidance and feedback throughout your journey.'
     },
     {
         number: '3',
-        title: 'Learn & Grow',
-        description: 'Start learning with AI guidance, track your progress, and achieve your learning objectives faster.'
+        title: 'Master Through Practice',
+        description: 'Reinforce your knowledge with interactive quizzes and hands-on projects. Track your progress and get reminders to stay on course.'
     }
-];
+]
 
 const communityTopics = [
     {
