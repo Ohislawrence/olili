@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\FrontpageController;
 use App\Http\Controllers\LoginHistoryController;
@@ -94,6 +95,12 @@ Route::prefix('payment')->name('payment.')->group(function () {
     Route::get('/subscription/status', [PaymentController::class, 'subscriptionStatus'])->name('subscription.status');
 
 });
+
+Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->name('social.redirect');
+
+Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->name('social.callback');
+
+Route::post('/auth/{provider}/unlink', [SocialAuthController::class, 'unlinkAccount'])->name('social.unlink')->middleware(['auth']);
 
 
 Route::get('/test-queue-email', function () {

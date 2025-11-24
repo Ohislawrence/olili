@@ -15,6 +15,7 @@ use Laravel\Fortify\Contracts\CreatesNewUsers;
 use Laravel\Jetstream\Jetstream;
 use App\Mail\WelcomeStudentMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class CreateNewUser implements CreatesNewUsers
 {
@@ -22,14 +23,21 @@ class CreateNewUser implements CreatesNewUsers
 
     public function create(array $input): User
     {
+        // Check if this is a social registration (has social data)
+        $isSocialRegistration = isset($input['social_provider']) && isset($input['social_id']);
+
         // Enhanced validation for role-based registration
         $validationRules = [
             'role' => ['required', 'in:student,tutor,organization'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => $this->passwordRules(),
             'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['accepted', 'required'] : '',
         ];
+
+        // Only require password for non-social registrations
+        if (!$isSocialRegistration) {
+            $validationRules['password'] = $this->passwordRules();
+        }
 
         // Role-specific validation rules
         switch ($input['role']) {
@@ -72,13 +80,16 @@ class CreateNewUser implements CreatesNewUsers
 
         Validator::make($input, $validationRules)->validate();
 
+        // Set password for social vs regular registration
+        if ($isSocialRegistration) {
+            // Generate random password for social registrations
+            $userData['password'] = Hash::make(Str::random(32));
+            $userData['email_verified_at'] = now(); // Social emails are typically verified
+        } else {
+            $userData['password'] = Hash::make($input['password']);
+        }
         // Create user
-        $user = User::create([
-            'name' => $input['name'],
-            'email' => $input['email'],
-            'password' => Hash::make($input['password']),
-            'phone' => $input['phone'] ?? null,
-        ]);
+        $user = User::create($userData);
 
         // Assign role based on selection
         $user->assignRole($input['role']);
@@ -89,17 +100,30 @@ class CreateNewUser implements CreatesNewUsers
         // Assign first tier subscription plan for the role
         $this->assignStarterSubscription($user, $input['role']);
 
+        // Create social account if this is a social registration
+        if ($isSocialRegistration) {
+            SocialAccount::create([
+                'user_id' => $user->id,
+                'provider' => $input['social_provider'],
+                'provider_id' => $input['social_id'],
+                'token' => $input['social_token'] ?? null,
+                'refresh_token' => $input['social_refresh_token'] ?? null,
+                'expires_at' => isset($input['social_expires_in']) ? now()->addSeconds($input['social_expires_in']) : null,
+                'provider_data' => $input['social_user_data'] ?? null,
+            ]);
+        }
+
         if($input['role'] == 'student'){
             Mail::to($user->email)->queue(new WelcomeStudentMail($user));
         }
         return $user;
     }
 
-    protected function createRoleProfile(User $user, array $input): void
+    protected function createRoleProfile(User $user, array $input, bool $isSocialRegistration = false): void
     {
         switch ($input['role']) {
             case 'student':
-                $this->createStudentProfile($user, $input);
+                $this->createStudentProfile($user, $input, $isSocialRegistration);
                 break;
 
             case 'tutor':
@@ -112,17 +136,30 @@ class CreateNewUser implements CreatesNewUsers
         }
     }
 
-    protected function createStudentProfile(User $user, array $input): void
+    protected function createStudentProfile(User $user, array $input, bool $isSocialRegistration = false): void
     {
-        $profileData = [
-            'user_id' => $user->id,
-            'current_level' => $input['current_level'] ?? 'beginner',
-            'target_level' => $input['target_level'] ?? 'intermediate',
-            'target_completion_date' => $input['target_completion_date'] ?? now()->addMonths(6),
-            'weekly_study_hours' => $input['weekly_study_hours'] ?? 5,
-            'learning_goals' => $input['learning_goals'] ?? [],
-            'learning_preferences' => $input['learning_preferences'] ?? [],
-        ];
+        // Set default values for social registrations
+        if ($isSocialRegistration) {
+            $profileData = [
+                'user_id' => $user->id,
+                'current_level' => 'beginner',
+                'target_level' => 'intermediate',
+                'target_completion_date' => now()->addMonths(3),
+                'weekly_study_hours' => '5', // 5-7 hours
+                'learning_goals' => ['exam_preparation'], // Exam Preparation
+                'learning_preferences' => ['reading'], // Reading
+            ];
+        } else {
+            $profileData = [
+                'user_id' => $user->id,
+                'current_level' => $input['current_level'] ?? 'beginner',
+                'target_level' => $input['target_level'] ?? 'intermediate',
+                'target_completion_date' => $input['target_completion_date'] ?? now()->addMonths(6),
+                'weekly_study_hours' => $input['weekly_study_hours'] ?? 5,
+                'learning_goals' => $input['learning_goals'] ?? [],
+                'learning_preferences' => $input['learning_preferences'] ?? [],
+            ];
+        }
 
         // Add exam board if provided
         if (isset($input['exam_board_id']) && !empty($input['exam_board_id'])) {

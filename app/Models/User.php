@@ -44,6 +44,9 @@ class User extends Authenticatable
         'is_active',
         'last_login_at',
         'preferences',
+        'provider', 
+        'provider_id', 
+        'provider_token', 
     ];
 
     /**
@@ -727,6 +730,16 @@ class User extends Authenticatable
     {
         // Only admins can impersonate
         return $this->hasRole('admin');
+    }
+
+    public function socialAccounts()
+    {
+        return $this->hasMany(SocialAccount::class);
+    }
+
+    public function hasSocialAccount(string $provider): bool
+    {
+        return $this->socialAccounts()->where('provider', $provider)->exists();
     }
 
 }

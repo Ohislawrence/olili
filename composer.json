@@ -13,7 +13,11 @@
         "laravel/framework": "^12.0",
         "laravel/jetstream": "^5.3",
         "laravel/sanctum": "^4.0",
+        "laravel/socialite": "*",
         "laravel/tinker": "^2.10.1",
+        "socialiteproviders/facebook": "*",
+        "socialiteproviders/github": "*",
+        "socialiteproviders/google": "*",
         "spatie/laravel-permission": "^6.21",
         "tightenco/ziggy": "^2.0",
         "yabacon/paystack-php": "^2.2"

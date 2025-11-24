@@ -10,9 +10,17 @@ use App\Actions\Fortify\CreateNewUser;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
+use App\Services\SocialAuthService;
 
 class RegisterController extends Controller
 {
+
+    protected $socialAuthService;
+
+    public function __construct(SocialAuthService $socialAuthService)
+    {
+        $this->socialAuthService = $socialAuthService;
+    }
     /**
      * Show the registration form.
      *
@@ -25,6 +33,7 @@ class RegisterController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name', 'code', 'country']),
             'hasTermsAndPrivacyPolicyFeature' => \Laravel\Jetstream\Jetstream::hasTermsAndPrivacyPolicyFeature(),
+            'availableProviders' => $this->socialAuthService->getAvailableProviders(),
         ]);
     }
     /**
