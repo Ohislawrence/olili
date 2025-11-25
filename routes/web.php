@@ -99,9 +99,8 @@ Route::prefix('payment')->name('payment.')->group(function () {
 Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->name('social.redirect');
 
 Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->name('social.callback');
-
 Route::post('/auth/{provider}/unlink', [SocialAuthController::class, 'unlinkAccount'])->name('social.unlink')->middleware(['auth']);
-
+Route::post('/auth/{provider}/link', [SocialAuthController::class, 'linkAccount'])->name('social.link');
 
 Route::get('/test-queue-email', function () {
     $user = App\Models\User::first();

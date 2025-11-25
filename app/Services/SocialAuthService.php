@@ -24,7 +24,7 @@ class SocialAuthService
             'token_url' => 'https://github.com/login/oauth/access_token',
             'user_url' => 'https://api.github.com/user',
             'scopes' => ['user:email'],
-            'user_agent' => 'YourAppName', // GitHub requires User-Agent
+            'user_agent' => 'Olilearn', // GitHub requires User-Agent
         ],
         'facebook' => [
             'auth_url' => 'https://www.facebook.com/v19.0/dialog/oauth',
@@ -73,9 +73,9 @@ class SocialAuthService
         ]);
 
         $url = $config['auth_url'] . '?' . http_build_query($params);
-        
+
         Log::info("Social login redirect", ['provider' => $provider, 'url' => $url]);
-        
+
         return redirect($url);
     }
 
@@ -95,12 +95,12 @@ class SocialAuthService
 
         // Get access token
         $tokenData = $this->getAccessToken($provider, $requestData['code']);
-        
+
         // Get user info
         $userData = $this->getUserInfo($provider, $tokenData['access_token']);
-        
-        // Find or create user
-        return $this->findOrCreateUser($provider, $userData, $tokenData);
+
+        // Find existing user - don't create new ones
+        return $this->findExistingUser($provider, $userData, $tokenData);
     }
 
     protected function getAccessToken(string $provider, string $code): array
@@ -251,20 +251,23 @@ class SocialAuthService
         return null;
     }
 
-    protected function findOrCreateUser(string $provider, array $userData, array $tokenData)
+    /**
+     * Find existing user - DO NOT create new users
+     */
+    protected function findExistingUser(string $provider, array $userData, array $tokenData)
     {
         // Validate required user data
         if (empty($userData['email'])) {
             throw new \Exception('Email address is required but not provided by the provider');
         }
 
-        // Check if social account exists
+        // First, check if social account exists
         $socialAccount = SocialAccount::where('provider', $provider)
             ->where('provider_id', $userData['id'])
             ->first();
 
         if ($socialAccount) {
-            // Update token information
+            // Update token information for existing social account
             $socialAccount->update([
                 'token' => $tokenData['access_token'],
                 'refresh_token' => $tokenData['refresh_token'] ?? null,
@@ -272,52 +275,47 @@ class SocialAuthService
                 'provider_data' => $userData,
             ]);
 
+            Log::info('User signed in via existing social account', [
+                'user_id' => $socialAccount->user_id,
+                'provider' => $provider,
+                'provider_id' => $userData['id'],
+            ]);
+
             return $socialAccount->user;
         }
 
-        // Check if user exists by email
+        // Check if user exists by email (but doesn't have this social account linked)
         $user = User::where('email', $userData['email'])->first();
 
-        if (!$user) {
-            // Create new user
-            $user = User::create([
-                'name' => $userData['name'] ?? 'User',
-                'email' => $userData['email'],
-                'password' => Hash::make(Str::random(32)),
-                'email_verified_at' => $userData['email_verified'] ? now() : null,
-                'profile_photo_path' => $userData['avatar'] ?? null,
-            ]);
-
-            // Assign student role by default
-            if (method_exists($user, 'assignRole')) {
-                $user->assignRole('student');
-            }
-
-            Log::info('New user created via social login', [
+        if ($user) {
+            // User exists but social account is not linked - link it now
+            SocialAccount::create([
                 'user_id' => $user->id,
                 'provider' => $provider,
-                'email' => $user->email,
+                'provider_id' => $userData['id'],
+                'token' => $tokenData['access_token'],
+                'refresh_token' => $tokenData['refresh_token'] ?? null,
+                'expires_at' => isset($tokenData['expires_in']) ? now()->addSeconds($tokenData['expires_in']) : null,
+                'provider_data' => $userData,
             ]);
+
+            Log::info('Social account linked to existing user', [
+                'user_id' => $user->id,
+                'provider' => $provider,
+                'provider_id' => $userData['id'],
+            ]);
+
+            return $user;
         }
 
-        // Create social account
-        SocialAccount::create([
-            'user_id' => $user->id,
+        // User doesn't exist - throw exception
+        Log::warning('Social login attempt for non-existent user', [
             'provider' => $provider,
-            'provider_id' => $userData['id'],
-            'token' => $tokenData['access_token'],
-            'refresh_token' => $tokenData['refresh_token'] ?? null,
-            'expires_at' => isset($tokenData['expires_in']) ? now()->addSeconds($tokenData['expires_in']) : null,
-            'provider_data' => $userData,
-        ]);
-
-        Log::info('Social account linked', [
-            'user_id' => $user->id,
-            'provider' => $provider,
+            'email' => $userData['email'],
             'provider_id' => $userData['id'],
         ]);
 
-        return $user;
+        throw new \Exception('No account found with this email address. Please register first.');
     }
 
     protected function verifyState(string $state)
@@ -340,7 +338,7 @@ class SocialAuthService
     protected function validateProviderConfig(string $provider)
     {
         $requiredConfig = ['client_id', 'client_secret', 'redirect'];
-        
+
         foreach ($requiredConfig as $config) {
             if (empty(config("services.{$provider}.{$config}"))) {
                 throw new \Exception("Missing configuration for {$provider}: {$config}");
@@ -359,7 +357,7 @@ class SocialAuthService
     public function getAvailableProviders(): array
     {
         $providers = [];
-        
+
         foreach (array_keys($this->providers) as $provider) {
             try {
                 $this->validateProviderConfig($provider);
@@ -369,7 +367,48 @@ class SocialAuthService
                 continue;
             }
         }
-        
+
         return $providers;
+    }
+
+    /**
+     * Link a social account to an existing user
+     */
+    public function linkAccount(User $user, string $provider, array $userData, array $tokenData): void
+    {
+        // Check if social account already exists for this provider
+        $existingAccount = SocialAccount::where('provider', $provider)
+            ->where('provider_id', $userData['id'])
+            ->first();
+
+        if ($existingAccount) {
+            if ($existingAccount->user_id !== $user->id) {
+                throw new \Exception('This social account is already linked to another user.');
+            }
+            // Update existing account
+            $existingAccount->update([
+                'token' => $tokenData['access_token'],
+                'refresh_token' => $tokenData['refresh_token'] ?? null,
+                'expires_at' => isset($tokenData['expires_in']) ? now()->addSeconds($tokenData['expires_in']) : null,
+                'provider_data' => $userData,
+            ]);
+        } else {
+            // Create new social account link
+            SocialAccount::create([
+                'user_id' => $user->id,
+                'provider' => $provider,
+                'provider_id' => $userData['id'],
+                'token' => $tokenData['access_token'],
+                'refresh_token' => $tokenData['refresh_token'] ?? null,
+                'expires_at' => isset($tokenData['expires_in']) ? now()->addSeconds($tokenData['expires_in']) : null,
+                'provider_data' => $userData,
+            ]);
+        }
+
+        Log::info('Social account linked manually', [
+            'user_id' => $user->id,
+            'provider' => $provider,
+            'provider_id' => $userData['id'],
+        ]);
     }
 }

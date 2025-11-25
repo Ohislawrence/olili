@@ -22,20 +22,34 @@ class SocialAuthController extends Controller
         try {
             return $this->socialAuthService->redirect($provider);
         } catch (\Exception $e) {
-            Log::error("Social redirect error for {$provider}: " . $e->getMessage());
-            
-            return redirect()->route('login')
-                ->withErrors([
-                    'email' => $this->getUserFriendlyError($e->getMessage(), $provider)
-                ]);
+            Log::error("Social redirect error: " . $e->getMessage());
+            return redirect()->route('login')->withErrors([
+                'email' => 'Failed to initiate social login.'
+            ]);
         }
     }
 
     public function callback(string $provider, Request $request)
     {
         try {
+            // Check for error parameters from provider
+            if ($request->has('error')) {
+                $error = $request->get('error');
+                $errorDescription = $request->get('error_description', 'Unknown error');
+
+                Log::error("OAuth error from {$provider}", [
+                    'error' => $error,
+                    'error_description' => $errorDescription,
+                ]);
+
+                return redirect()->route('login')
+                    ->withErrors([
+                        'email' => $this->getOAuthErrorDescription($error, $provider)
+                    ]);
+            }
+
             $user = $this->socialAuthService->handleCallback($provider, $request->all());
-            
+
             Auth::login($user, true);
 
             // Record login history
@@ -50,7 +64,7 @@ class SocialAuthController extends Controller
 
         } catch (\Exception $e) {
             Log::error("Social callback error for {$provider}: " . $e->getMessage());
-            
+
             return redirect()->route('login')
                 ->withErrors([
                     'email' => $this->getUserFriendlyError($e->getMessage(), $provider)
@@ -61,21 +75,39 @@ class SocialAuthController extends Controller
     public function unlinkAccount(string $provider)
     {
         $user = Auth::user();
-        
+
         $socialAccount = $user->socialAccounts()->where('provider', $provider)->first();
-        
+
         if ($socialAccount) {
             $socialAccount->delete();
-            
+
             Log::info('Social account unlinked', [
                 'user_id' => $user->id,
                 'provider' => $provider,
             ]);
-            
+
             return back()->with('status', ucfirst($provider) . ' account unlinked successfully.');
         }
-        
+
         return back()->withErrors(['email' => 'No linked account found for ' . ucfirst($provider)]);
+    }
+
+    /**
+     * Get user-friendly OAuth error descriptions
+     */
+    protected function getOAuthErrorDescription(string $error, string $provider): string
+    {
+        $errorMessages = [
+            'access_denied' => 'You denied access to your ' . ucfirst($provider) . ' account.',
+            'invalid_scope' => 'The requested scope is invalid.',
+            'unauthorized_client' => 'This application is not authorized to use ' . ucfirst($provider) . ' login.',
+            'unsupported_response_type' => 'The response type is not supported.',
+            'invalid_request' => 'The request was invalid.',
+            'server_error' => ucfirst($provider) . ' encountered a server error. Please try again.',
+            'temporarily_unavailable' => ucfirst($provider) . ' service is temporarily unavailable.',
+        ];
+
+        return $errorMessages[$error] ?? 'An error occurred during ' . ucfirst($provider) . ' authentication. Please try again.';
     }
 
     /**
@@ -83,6 +115,10 @@ class SocialAuthController extends Controller
      */
     protected function getUserFriendlyError(string $error, string $provider): string
     {
+        if (str_contains($error, 'No account found')) {
+            return 'No account found with this email address. Please register first or use a different login method.';
+        }
+
         if (str_contains($error, 'configuration')) {
             return 'Social login is not properly configured. Please contact support.';
         }
@@ -95,6 +131,44 @@ class SocialAuthController extends Controller
             return 'Login session expired. Please try again.';
         }
 
+        if (str_contains($error, 'access token')) {
+            return 'Failed to authenticate with ' . ucfirst($provider) . '. Please try again.';
+        }
+
         return 'Failed to authenticate with ' . ucfirst($provider) . '. Please try again.';
+    }
+
+    /**
+     * Link a social account to the current user
+     */
+    public function linkAccount(string $provider, Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            // Check for error parameters from provider
+            if ($request->has('error')) {
+                $error = $request->get('error');
+                return back()->withErrors([
+                    'email' => $this->getOAuthErrorDescription($error, $provider)
+                ]);
+            }
+
+            // Get access token and user info
+            $tokenData = $this->socialAuthService->getAccessToken($provider, $request->get('code'));
+            $userData = $this->socialAuthService->getUserInfo($provider, $tokenData['access_token']);
+
+            // Link the account
+            $this->socialAuthService->linkAccount($user, $provider, $userData, $tokenData);
+
+            return back()->with('status', ucfirst($provider) . ' account linked successfully!');
+
+        } catch (\Exception $e) {
+            Log::error("Social account linking error for {$provider}: " . $e->getMessage());
+
+            return back()->withErrors([
+                'email' => $this->getUserFriendlyError($e->getMessage(), $provider)
+            ]);
+        }
     }
 }
