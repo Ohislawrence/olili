@@ -176,14 +176,7 @@
 
         <!-- Quick Actions -->
         <div class="p-4 border-t border-gray-200 bg-white space-y-3">
-          <Link
-            :href="route('student.chat.index', { course: course.id, topic: currentTopic.id })"
-            class="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-            @click="$emit('close')"
-          >
-            <ChatBubbleLeftRightIcon class="h-4 w-4 mr-2" />
-            Ask AI Tutor
-          </Link>
+
 
           <div class="grid grid-cols-2 gap-2">
             <button

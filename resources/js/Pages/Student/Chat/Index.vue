@@ -10,7 +10,7 @@
             <div>
               <h1 class="text-2xl font-bold text-gray-900">Chat Sessions</h1>
               <p class="mt-1 text-sm text-gray-600">
-                Manage your conversations with the AI tutor
+                Manage your conversations with the AI tutor for your courses
               </p>
             </div>
             <Link
@@ -28,6 +28,9 @@
           <div class="flex flex-col sm:flex-row gap-4">
             <!-- Course Filter -->
             <div class="w-full sm:w-48">
+              <label class="block text-xs font-medium text-gray-700 mb-1">
+                Filter by Course:
+              </label>
               <select
                 v-model="filters.course_id"
                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
@@ -147,7 +150,7 @@
             <ChatBubbleLeftRightIcon class="mx-auto h-12 w-12 text-gray-400" />
             <h3 class="mt-2 text-sm font-semibold text-gray-900">No chat sessions</h3>
             <p class="mt-1 text-sm text-gray-500">
-              {{ filters.course_id || filters.active_only ? 'No sessions match your filters.' : 'Start a new conversation with your AI tutor.' }}
+              {{ filters.course_id || filters.active_only ? 'No sessions match your filters.' : 'Start a new conversation with your AI tutor for any of your courses.' }}
             </p>
             <div class="mt-6">
               <Link

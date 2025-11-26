@@ -267,7 +267,7 @@ class CourseController extends Controller
         $courseStats = $this->progressService->calculateCourseProgress($course);
 
         return Inertia::render('Student/Courses/Learn', [
-            'course' => $course->load('capstoneProject'),
+            'course' => $course->load(['capstoneProject','modules']),
             'current_topic' => $currentTopic->load('contents'),
             'course_structure' => $courseStructure,
             'current_module' => $currentTopic->module,
@@ -538,4 +538,6 @@ class CourseController extends Controller
             'expert' => 'Expert',
         ];
     }
+
+
 }

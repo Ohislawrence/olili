@@ -323,17 +323,7 @@
                         </span>
                       </Link>
 
-                      <Link
-                        :href="route('student.chat.create')"
-                        class="flex flex-col items-center p-4 border border-gray-200 rounded-xl hover:bg-emerald-50 transition-colors group"
-                      >
-                        <div class="p-2 bg-emerald-100 rounded-lg group-hover:bg-emerald-200 transition-colors">
-                          <ChatBubbleLeftRightIcon class="h-8 w-8 text-emerald-600" />
-                        </div>
-                        <span class="mt-2 text-sm font-semibold text-gray-900">
-                          Ask AI Tutor
-                        </span>
-                      </Link>
+
 
                       <Link
                         :href="route('student.quizzes.index')"

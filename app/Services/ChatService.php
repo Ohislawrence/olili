@@ -276,7 +276,7 @@ class ChatService
     /**
      * Build context parameters for a given outline ID
      */
-    protected function buildContextParameters($outlineId): array
+    public function buildContextParameters($outlineId): array
     {
         if (!$outlineId) {
             return [];

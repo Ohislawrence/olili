@@ -34,7 +34,32 @@
                 </p>
               </div>
 
-              <!-- Subject - Searchable Dropdown -->
+              <!-- Exam Board -->
+              <div>
+                <label for="exam_board_id" class="block text-sm font-medium text-gray-700 mb-1">
+                  Exam Board (Optional)
+                </label>
+                <select
+                  id="exam_board_id"
+                  v-model="form.exam_board_id"
+                  @change="onExamBoardChange"
+                  class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
+                >
+                  <option value="">No specific exam board</option>
+                  <option
+                    v-for="examBoard in exam_boards"
+                    :key="examBoard.id"
+                    :value="examBoard.id"
+                  >
+                    {{ examBoard.name }}
+                  </option>
+                </select>
+                <p class="mt-1 text-sm text-gray-500">
+                  Selecting an exam board will show relevant subjects for that board
+                </p>
+              </div>
+
+              <!-- Subject - Dynamic Dropdown based on Exam Board -->
               <div>
                 <label for="subject" class="block text-sm font-medium text-gray-700 mb-1">
                   Subject *
@@ -47,10 +72,11 @@
                       type="text"
                       required
                       class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 pr-10 py-2.5 px-3"
-                      placeholder="Search or select a subject"
+                      :placeholder="subjectPlaceholder"
                       @focus="showDropdown = true"
                       @input="filterSubjects"
                       @blur="onSubjectBlur"
+                      :disabled="availableSubjects.length === 0"
                     />
                     <div class="absolute inset-y-0 right-0 flex items-center pr-3">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor" :class="{ 'transform rotate-180': showDropdown }" @click="showDropdown = !showDropdown">
@@ -59,6 +85,7 @@
                     </div>
                   </div>
 
+                  <!-- Dropdown for subjects -->
                   <div
                     v-if="showDropdown && filteredSubjects.length > 0"
                     class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-lg py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm scrollbar-custom"
@@ -81,8 +108,9 @@
                       </span>
                     </div>
 
+                    <!-- Custom subject option (only shown when no exam board is selected) -->
                     <div
-                      v-if="subjectInput && !filteredSubjects.includes(subjectInput)"
+                      v-if="!form.exam_board_id && subjectInput && !filteredSubjects.includes(subjectInput)"
                       class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-emerald-50 border-t border-gray-100"
                       @click="selectCustomSubject"
                     >
@@ -91,9 +119,20 @@
                       </span>
                     </div>
                   </div>
+
+                  <!-- No subjects available message -->
+                  <div
+                    v-if="showDropdown && availableSubjects.length === 0"
+                    class="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-lg py-3 px-3 text-sm text-gray-500 border border-gray-200"
+                  >
+                    Please select an exam board first to see available subjects
+                  </div>
                 </div>
                 <p v-if="form.errors.subject" class="mt-1 text-sm text-red-600">
                   {{ form.errors.subject }}
+                </p>
+                <p class="mt-1 text-sm text-gray-500" v-if="selectedExamBoardName">
+                  Subjects for: {{ selectedExamBoardName }}
                 </p>
               </div>
 
@@ -160,27 +199,6 @@
                 </p>
               </div>
 
-              <!-- Exam Board -->
-              <div>
-                <label for="exam_board_id" class="block text-sm font-medium text-gray-700 mb-1">
-                  Exam Board (Optional)
-                </label>
-                <select
-                  id="exam_board_id"
-                  v-model="form.exam_board_id"
-                  class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
-                >
-                  <option value="">No specific exam board</option>
-                  <option
-                    v-for="examBoard in exam_boards"
-                    :key="examBoard.id"
-                    :value="examBoard.id"
-                  >
-                    {{ examBoard.name }}
-                  </option>
-                </select>
-              </div>
-
               <!-- Description -->
               <div>
                 <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
@@ -234,21 +252,7 @@
                 </button>
               </div>
 
-              <!-- Student Profile Info -->
-              <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-100">
-                <h3 class="text-sm font-semibold text-emerald-800 mb-2">Student Profile</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-emerald-700">
-                  <div>
-                    <span class="font-medium">Current Level:</span> {{ student_profile?.current_level }}
-                  </div>
-                  <div>
-                    <span class="font-medium">Learning Style:</span> {{ student_profile?.learning_style }}
-                  </div>
-                  <div>
-                    <span class="font-medium">Pace:</span> {{ student_profile?.preferred_pace }}
-                  </div>
-                </div>
-              </div>
+
             </div>
 
             <!-- Form Actions -->
@@ -287,11 +291,11 @@
             </div>
             <div class="ml-3">
               <h3 class="text-sm font-semibold text-emerald-800">
-                AI-Powered Course Generation
+                Olilearn Course Generation
               </h3>
               <div class="mt-2 text-sm text-emerald-700">
                 <p>
-                  Our AI will create a personalized learning path based on:
+                  Olilearn AI will create a personalized learning path based on:
                 </p>
                 <ul class="list-disc list-inside mt-1 space-y-1">
                   <li>Your current and target levels</li>
@@ -312,7 +316,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
 import StudentLayout from '@/Layouts/StudentLayout.vue'
 import { Head, Link } from '@inertiajs/vue3'
@@ -342,6 +346,9 @@ const subjectInput = ref('')
 const showDropdown = ref(false)
 const searchQuery = ref('')
 
+// Available subjects based on exam board selection
+const availableSubjects = ref([...props.subjects])
+
 // Set minimum date for completion date
 const minDate = computed(() => {
   const tomorrow = new Date()
@@ -349,17 +356,49 @@ const minDate = computed(() => {
   return tomorrow.toISOString().split('T')[0]
 })
 
+// Get selected exam board name
+const selectedExamBoardName = computed(() => {
+  if (!form.exam_board_id) return ''
+  const examBoard = props.exam_boards.find(eb => eb.id == form.exam_board_id)
+  return examBoard ? examBoard.name : ''
+})
+
+// Dynamic placeholder for subject input
+const subjectPlaceholder = computed(() => {
+  if (form.exam_board_id) {
+    return `Select a subject for ${selectedExamBoardName.value}`
+  }
+  return "Search or select a subject"
+})
+
 // Filter subjects based on search input
 const filteredSubjects = computed(() => {
   if (!searchQuery.value) {
-    return props.subjects
+    return availableSubjects.value
   }
 
   const query = searchQuery.value.toLowerCase()
-  return props.subjects.filter(subject =>
+  return availableSubjects.value.filter(subject =>
     subject.toLowerCase().includes(query)
   )
 })
+
+// Handle exam board change
+const onExamBoardChange = () => {
+  // Reset subject when exam board changes
+  form.subject = ''
+  subjectInput.value = ''
+  showDropdown.value = false
+
+  if (form.exam_board_id) {
+    // Get subjects for the selected exam board
+    const examBoard = props.exam_boards.find(eb => eb.id == form.exam_board_id)
+    availableSubjects.value = examBoard?.subjects || []
+  } else {
+    // No exam board selected, show all general subjects
+    availableSubjects.value = [...props.subjects]
+  }
+}
 
 // Filter subjects when input changes
 const filterSubjects = (event) => {
@@ -375,10 +414,12 @@ const selectSubject = (subject) => {
   searchQuery.value = ''
 }
 
-// Use custom subject
+// Use custom subject (only allowed when no exam board is selected)
 const selectCustomSubject = () => {
-  form.subject = subjectInput.value
-  showDropdown.value = false
+  if (!form.exam_board_id) {
+    form.subject = subjectInput.value
+    showDropdown.value = false
+  }
 }
 
 // Handle blur event with a delay to allow for click events

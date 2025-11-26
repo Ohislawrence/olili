@@ -5,14 +5,19 @@ namespace App\Services\Ai;
 
 class DeepSeekService extends BaseAiService
 {
-    protected function getProviderCode(): string
+    public function getProviderCode(): string
     {
         return 'deepseek';
     }
 
+    protected function getDefaultBaseUrl(): string
+    {
+        return 'https://api.deepseek.com/v1/chat/completions';
+    }
+
     protected function getBaseUrl(): string
     {
-        return $this->config['base_url'] ?? 'https://api.deepseek.com/v1/chat/completions';
+        return $this->provider->base_url ?? $this->getDefaultBaseUrl();
     }
 
     protected function formatPayload(array $messages, array $parameters = []): array

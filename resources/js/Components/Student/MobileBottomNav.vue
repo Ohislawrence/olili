@@ -1,90 +1,101 @@
 <template>
   <!-- Mobile Bottom Navigation -->
-  <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50 shadow-lg">
-    <div class="flex justify-around items-center h-18">
+  <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-200/60 md:hidden z-40 shadow-lg safe-area-inset-bottom">
+    <div class="flex justify-around items-center h-16 px-2">
       <!-- Dashboard -->
       <Link
         :href="route('student.dashboard')"
-        class="flex flex-col items-center justify-center w-16 h-16 transition-all duration-200 group"
-        :class="route().current('student.dashboard') ? 'text-emerald-600 scale-105' : 'text-gray-600 hover:text-emerald-500'"
+        class="flex flex-col items-center justify-center w-16 h-16 transition-all duration-200 group relative"
+        :class="route().current('student.dashboard') ? 'text-emerald-600' : 'text-gray-600 hover:text-emerald-500'"
       >
         <div class="relative">
-          <HomeIcon class="h-6 w-6 transition-transform duration-200 group-hover:scale-110" />
+          <HomeIcon class="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
           <div
             v-if="route().current('student.dashboard')"
-            class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"
+            class="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"
           ></div>
         </div>
-        <span class="text-xs mt-1 font-medium" :class="route().current('student.dashboard') ? 'text-emerald-600' : 'text-gray-600'">Home</span>
+        <span class="text-xs mt-1 font-medium transition-colors duration-200"
+              :class="route().current('student.dashboard') ? 'text-emerald-600' : 'text-gray-500 group-hover:text-emerald-600'">
+          Home
+        </span>
+        <div
+          v-if="route().current('student.dashboard')"
+          class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-emerald-500 rounded-full"
+        ></div>
       </Link>
 
       <!-- Courses -->
       <Link
         :href="route('student.courses.index')"
-        class="flex flex-col items-center justify-center w-16 h-16 transition-all duration-200 group"
-        :class="route().current('student.courses.*') ? 'text-emerald-600 scale-105' : 'text-gray-600 hover:text-emerald-500'"
+        class="flex flex-col items-center justify-center w-16 h-16 transition-all duration-200 group relative"
+        :class="route().current('student.courses.*') ? 'text-emerald-600' : 'text-gray-600 hover:text-emerald-500'"
       >
         <div class="relative">
-          <BookOpenIcon class="h-6 w-6 transition-transform duration-200 group-hover:scale-110" />
+          <BookOpenIcon class="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
           <div
             v-if="route().current('student.courses.*')"
-            class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"
+            class="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"
           ></div>
         </div>
-        <span class="text-xs mt-1 font-medium" :class="route().current('student.courses.*') ? 'text-emerald-600' : 'text-gray-600'">Courses</span>
+        <span class="text-xs mt-1 font-medium transition-colors duration-200"
+              :class="route().current('student.courses.*') ? 'text-emerald-600' : 'text-gray-500 group-hover:text-emerald-600'">
+          Courses
+        </span>
+        <div
+          v-if="route().current('student.courses.*')"
+          class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-emerald-500 rounded-full"
+        ></div>
       </Link>
 
-      <!-- AI Tutor -->
-      <Link
-        :href="route('student.chat.index')"
-        class="flex flex-col items-center justify-center w-16 h-16 transition-all duration-200 group"
-        :class="route().current('student.chat.index') ? 'text-emerald-600 scale-105' : 'text-gray-600 hover:text-emerald-500'"
-      >
-        <div class="relative">
-          <ChatBubbleLeftRightIcon class="h-6 w-6 transition-transform duration-200 group-hover:scale-110" />
-          <div
-            v-if="route().current('student.chat.index')"
-            class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"
-          ></div>
-        </div>
-        <span class="text-xs mt-1 font-medium" :class="route().current('student.chat.index') ? 'text-emerald-600' : 'text-gray-600'">AI Tutor</span>
-      </Link>
 
-      <!-- Progress -->
+
+      <!-- Quizzes -->
       <Link
         :href="route('student.quizzes.index')"
-        class="flex flex-col items-center justify-center w-16 h-16 transition-all duration-200 group"
-        :class="route().current('student.quizzes.index') ? 'text-emerald-600 scale-105' : 'text-gray-600 hover:text-emerald-500'"
+        class="flex flex-col items-center justify-center w-16 h-16 transition-all duration-200 group relative"
+        :class="route().current('student.quizzes.*') ? 'text-emerald-600' : 'text-gray-600 hover:text-emerald-500'"
       >
         <div class="relative">
-          <ChartBarIcon class="h-6 w-6 transition-transform duration-200 group-hover:scale-110" />
+          <ClipboardDocumentListIcon class="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
           <div
-            v-if="route().current('student.quizzes.index')"
-            class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"
+            v-if="route().current('student.quizzes.*')"
+            class="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"
           ></div>
         </div>
-        <span class="text-xs mt-1 font-medium" :class="route().current('student.quizzes.index') ? 'text-emerald-600' : 'text-gray-600'">Quizzes</span>
+        <span class="text-xs mt-1 font-medium transition-colors duration-200"
+              :class="route().current('student.quizzes.*') ? 'text-emerald-600' : 'text-gray-500 group-hover:text-emerald-600'">
+          Quizzes
+        </span>
+        <div
+          v-if="route().current('student.quizzes.*')"
+          class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-emerald-500 rounded-full"
+        ></div>
       </Link>
 
       <!-- Profile -->
       <Link
         :href="route('student.profile.show')"
-        class="flex flex-col items-center justify-center w-16 h-16 transition-all duration-200 group"
-        :class="route().current('student.profile.show') ? 'text-emerald-600 scale-105' : 'text-gray-600 hover:text-emerald-500'"
+        class="flex flex-col items-center justify-center w-16 h-16 transition-all duration-200 group relative"
+        :class="route().current('student.profile.*') ? 'text-emerald-600' : 'text-gray-600 hover:text-emerald-500'"
       >
         <div class="relative">
-          <UserIcon class="h-6 w-6 transition-transform duration-200 group-hover:scale-110" />
+          <UserIcon class="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
           <div
-            v-if="route().current('student.profile.show')"
-            class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"
+            v-if="route().current('student.profile.*')"
+            class="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"
           ></div>
         </div>
-        <span class="text-xs mt-1 font-medium" :class="route().current('student.profile.show') ? 'text-emerald-600' : 'text-gray-600'">Profile</span>
+        <span class="text-xs mt-1 font-medium transition-colors duration-200"
+              :class="route().current('student.profile.*') ? 'text-emerald-600' : 'text-gray-500 group-hover:text-emerald-600'">
+          Profile
+        </span>
+        <div
+          v-if="route().current('student.profile.*')"
+          class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-emerald-500 rounded-full"
+        ></div>
       </Link>
     </div>
-
-    <!-- Safe area spacer for iOS -->
-    <div class="h-safe-bottom bg-white"></div>
   </nav>
 </template>
 
@@ -94,34 +105,46 @@ import {
   HomeIcon,
   BookOpenIcon,
   ChatBubbleLeftRightIcon,
-  ChartBarIcon,
+  ClipboardDocumentListIcon,
   UserIcon,
 } from '@heroicons/vue/24/outline'
 </script>
 
 <style scoped>
 /* Safe area for iOS devices */
-.h-safe-bottom {
-  height: env(safe-area-inset-bottom);
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Enhanced active state */
+/* Enhanced hover effects */
+.group:hover .h-5 {
+  transform: scale(1.1);
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+  transition-property: color, background-color, border-color, transform, opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* Active state animation */
 .router-link-active {
   position: relative;
 }
 
-/* Custom active indicator with animation */
-.router-link-active::after {
+/* Improved active indicator */
+.router-link-active::before {
   content: '';
   position: absolute;
-  bottom: -1px;
+  top: -2px;
   left: 50%;
   transform: translateX(-50%);
   width: 24px;
-  height: 3px;
-  background: linear-gradient(to right, #059669, #0d9488);
-  border-radius: 2px;
-  animation: slideIn 0.3s ease-out;
+  height: 2px;
+  background: linear-gradient(to right, #10b981, #059669);
+  border-radius: 1px;
+  animation: slideIn 0.2s ease-out;
 }
 
 @keyframes slideIn {
@@ -135,13 +158,47 @@ import {
   }
 }
 
-/* Hover effects */
-.group:hover .h-6 {
-  transform: scale(1.15);
+/* Backdrop blur support */
+@supports (backdrop-filter: blur(12px)) {
+  nav {
+    backdrop-filter: blur(12px);
+    background-color: rgba(255, 255, 255, 0.85);
+  }
 }
 
-/* Ensure proper stacking */
-.fixed {
-  z-index: 50;
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* Better touch targets for mobile */
+@media (max-width: 768px) {
+  .h-16 {
+    min-height: 4rem;
+  }
+
+  .w-16 {
+    min-width: 4rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  nav {
+    background-color: rgba(15, 23, 42, 0.95);
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .text-gray-600 {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .text-gray-500 {
+    color: rgba(255, 255, 255, 0.6);
+  }
 }
 </style>

@@ -60,9 +60,28 @@ class ChatSession extends Model
         return $query->where('course_id', $courseId);
     }
 
+    // FIXED: Add scope for student's courses
+    public function scopeForStudent($query, $studentId)
+    {
+        return $query->where('user_id', $studentId);
+    }
+
     public function scopeRecent($query, $hours = 24)
     {
         return $query->where('last_activity_at', '>=', now()->subHours($hours));
+    }
+
+    // FIXED: Add scope for student's courses with course verification
+    public function scopeForStudentCourses($query, $studentId)
+    {
+        return $query->where('user_id', $studentId)
+            ->whereHas('course', function ($q) use ($studentId) {
+                $q->where('student_profile_id', function ($subQuery) use ($studentId) {
+                    $subQuery->select('id')
+                        ->from('student_profiles')
+                        ->where('user_id', $studentId);
+                });
+            });
     }
 
     // Methods
@@ -106,5 +125,11 @@ class ChatSession extends Model
             'messages_count' => $this->messages->count(),
             'last_activity' => $this->last_activity_at,
         ];
+    }
+
+    // FIXED: Check if session belongs to student
+    public function belongsToStudent($studentId)
+    {
+        return $this->user_id == $studentId;
     }
 }

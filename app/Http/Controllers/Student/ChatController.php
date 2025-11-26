@@ -26,12 +26,22 @@ class ChatController extends Controller
     {
         $student = auth()->user();
 
+        // FIXED: Get courses first to ensure we only show chats for courses the student owns
+        $courses = $student->courses()
+            ->where('status', 'active')
+            ->get(['courses.id', 'courses.title']);
+
+        // Build query with proper course filtering
         $query = ChatSession::with(['course', 'courseOutline.module', 'messages'])
-            ->where('user_id', $student->id);
+            ->where('user_id', $student->id)
+            ->whereIn('course_id', $courses->pluck('id')); // FIXED: Only show chats for student's courses
 
         // Filter by course
         if ($request->has('course_id') && $request->course_id) {
-            $query->where('course_id', $request->course_id);
+            // FIXED: Verify the course belongs to the student
+            if ($courses->contains('id', $request->course_id)) {
+                $query->where('course_id', $request->course_id);
+            }
         }
 
         // Filter by active sessions
@@ -42,11 +52,6 @@ class ChatController extends Controller
 
         $chatSessions = $query->latest()
             ->paginate(15);
-
-        // FIXED: Specify table name for id column to avoid ambiguity
-        $courses = $student->courses()
-            ->where('status', 'active')
-            ->get(['courses.id', 'courses.title']);
 
         return Inertia::render('Student/Chat/Index', [
             'chat_sessions' => $chatSessions,
@@ -59,7 +64,6 @@ class ChatController extends Controller
     {
         $student = auth()->user();
 
-
         $courseId = $request->get('course_id');
         $outlineId = $request->get('outline_id');
 
@@ -70,8 +74,10 @@ class ChatController extends Controller
 
         if ($courseId) {
             try {
-                $course = Course::where('id', $courseId)
-                    ->where('student_profile_id', $student->studentProfile->id)
+                // FIXED: Ensure the course belongs to the student
+                $course = $student->courses()
+                    ->where('courses.id', $courseId)
+                    ->where('status', 'active')
                     ->firstOrFail();
 
                 // Load modules and their topics
@@ -120,7 +126,7 @@ class ChatController extends Controller
             }
         }
 
-        // FIXED: Specify table name for id column to avoid ambiguity
+        // FIXED: Get only student's courses
         $courses = $student->courses()
             ->where('status', 'active')
             ->get(['courses.id', 'courses.title']);
@@ -145,10 +151,11 @@ class ChatController extends Controller
         ]);
 
         try {
-            // Verify course access if course_id is provided
+            // FIXED: Verify course access if course_id is provided
             if ($request->course_id) {
-                $course = Course::where('id', $request->course_id)
-                    ->where('student_profile_id', $student->studentProfile->id)
+                $course = $student->courses()
+                    ->where('courses.id', $request->course_id)
+                    ->where('status', 'active')
                     ->firstOrFail();
 
                 // Verify topic belongs to course through module if outline_id is provided
@@ -192,7 +199,10 @@ class ChatController extends Controller
 
     public function show(ChatSession $chatSession)
     {
-        //$this->authorize('view', $chatSession);
+        // FIXED: Add authorization to ensure student owns this chat session
+        if ($chatSession->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized access to this chat session.');
+        }
 
         try {
             $chatSession->load([
@@ -349,7 +359,6 @@ class ChatController extends Controller
     public function updateContext(ChatSession $chatSession, Request $request)
     {
         //$this->authorize('update', $chatSession);
-
         $request->validate([
             'outline_id' => 'nullable|exists:course_outlines,id',
         ]);
@@ -357,6 +366,7 @@ class ChatController extends Controller
         try {
             $topic = null;
             if ($request->outline_id) {
+
                 $topic = CourseOutline::where('id', $request->outline_id)
                     ->whereHas('module', function ($query) use ($chatSession) {
                         $query->where('course_id', $chatSession->course_id);
@@ -364,19 +374,12 @@ class ChatController extends Controller
                     ->with('module')
                     ->firstOrFail();
             }
-
             // Use the service to update context with proper parameters
             if ($topic) {
                 $contextParameters = $this->chatService->buildContextParameters($topic->id);
             } else {
                 $contextParameters = [];
             }
-
-            $chatSession->update([
-                'course_outline_id' => $request->outline_id,
-                'topic_context' => $topic?->title,
-                'context_parameters' => $contextParameters,
-            ]);
 
             return response()->json([
                 'success' => true,
@@ -389,11 +392,7 @@ class ChatController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Failed to update chat context', [
-                'chat_session_id' => $chatSession->id,
-                'outline_id' => $request->outline_id,
-                'error' => $e->getMessage()
-            ]);
+
 
             return response()->json([
                 'success' => false,
@@ -401,10 +400,12 @@ class ChatController extends Controller
             ], 500);
         }
     }
-
     public function closeSession(ChatSession $chatSession)
     {
-        //$this->authorize('update', $chatSession);
+        // FIXED: Add authorization
+        if ($chatSession->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
 
         try {
             $this->chatService->closeSession($chatSession);
@@ -468,29 +469,40 @@ class ChatController extends Controller
 
     public function getMessages(ChatSession $chatSession)
     {
-        //$this->authorize('view', $chatSession);
-
         try {
+            $student = auth()->user();
+
+            // Verify session belongs to user
+            if ($chatSession->user_id !== $student->id) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Chat session not found.',
+                ], 404);
+            }
+
             $messages = $chatSession->messages()
-                ->orderBy('created_at', 'desc')
+                ->orderBy('created_at', 'asc')
                 ->limit(50)
-                ->get()
-                ->reverse()
-                ->values();
+                ->get();
 
             return response()->json([
+                'success' => true,
                 'messages' => $messages,
+                'session' => [
+                    'course_outline_id' => $chatSession->course_outline_id,
+                    'topic_context' => $chatSession->topic_context,
+                ]
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error getting chat messages', [
-                'chat_session_id' => $chatSession->id,
+            Log::error('Failed to get chat messages', [
+                'session_id' => $chatSession->id,
                 'error' => $e->getMessage()
             ]);
 
             return response()->json([
-                'messages' => [],
-                'error' => 'Failed to load messages',
+                'success' => false,
+                'error' => 'Failed to load messages.',
             ], 500);
         }
     }
@@ -611,6 +623,47 @@ class ChatController extends Controller
             return response()->json([
                 'sessions' => [],
                 'error' => 'Failed to load active sessions',
+            ], 500);
+        }
+    }
+
+
+    public function initializePopupChat(Course $course)
+    {
+        $student = auth()->user();
+
+        try {
+            // Verify course access
+            $course = Course::where('id', $course->id)
+                ->where('student_profile_id', $student->studentProfile->id)
+                ->firstOrFail();
+
+            // Get or create active session
+            $session = $this->chatService->getOrCreateSession(
+                $student->id,
+                $course->id,
+                null
+            );
+
+            // Load minimal session data
+            $session->load(['messages' => function ($query) {
+                $query->orderBy('created_at', 'desc')->limit(20);
+            }]);
+
+            return response()->json([
+                'session' => $session,
+                'messages' => $session->messages->reverse()->values()
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error initializing popup chat', [
+                'course_id' => $course->id,
+                'user_id' => $student->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'error' => 'Failed to initialize chat'
             ], 500);
         }
     }

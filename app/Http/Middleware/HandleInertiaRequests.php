@@ -47,7 +47,9 @@ class HandleInertiaRequests extends Middleware
                 'impersonating' => session()->has('impersonator_id'),
             ],
             'flash' => [
-                'message' => fn () => $request->session()->get('message')
+                'message' => fn () => $request->session()->get('message'),
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
             ],
             'stats' => [
                 'total_tutors' => User::role('tutor')->count(),

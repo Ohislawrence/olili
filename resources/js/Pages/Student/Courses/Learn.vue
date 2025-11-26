@@ -157,14 +157,8 @@
           </div>
           <!-- Quick Actions - Enhanced -->
           <div class="p-4 border-t border-gray-200 bg-white space-y-3">
-            <Link
-              v-if="course.chat_sessions && course.chat_sessions.length > 0"
-              :href="route('student.chat.show', { chatSession: course.chat_sessions[0].id})"
-              class="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-            >
-              <ChatBubbleLeftRightIcon class="h-4 w-4 mr-2" />
-              Ask AI Tutor
-            </Link>
+
+
             <div class="grid grid-cols-2 gap-2">
               <button
                 v-if="hasPreviousTopic"
@@ -871,7 +865,7 @@
                     </div>
                     <ClipboardDocumentListIcon class="h-12 w-12 text-blue-400 ml-4 flex-shrink-0" />
                     </div>
-                    
+
                     <!-- Project Requirements Content -->
                     <div v-if="current_topic.project_requirements && current_topic.project_requirements.length" class="bg-white rounded-xl border border-blue-100 p-4 mb-4 shadow-sm">
                     <h4 class="font-semibold text-gray-900 mb-3">Project Requirements</h4>
@@ -953,6 +947,11 @@
           </div>
         </main>
       </div>
+      <CourseChatPopup
+            :course="course"
+            :available-topics="availableTopics"
+            :initial-session="chatSession"
+            />
       <!-- Mobile Sidebar Overlay -->
       <MobileSidebar
         :open="mobileSidebarOpen"
@@ -965,7 +964,9 @@
         @toggle-module="toggleModule"
         :expanded-modules="expandedModules"
       />
+
     </div>
+
   </StudentLayout>
 </template>
 
@@ -977,6 +978,7 @@ import { Head, Link } from '@inertiajs/vue3'
 import { marked } from "marked"
 import DOMPurify from "dompurify"
 import MobileSidebar from '@/Components/LearnMobileSidebar.vue'
+import CourseChatPopup from '@/Components/CourseChatPopup.vue'
 import {
   AcademicCapIcon,
   QuestionMarkCircleIcon,
@@ -1006,6 +1008,9 @@ const props = defineProps({
   current_topic: Object,
   course_stats: Object,
 })
+
+
+const chatSession = ref(null)
 
 // Reactive state
 const mobileSidebarOpen = ref(false)
@@ -1077,7 +1082,7 @@ const getOutlineTypeLabel = (type) => {
 // Filtered tabs based on topic type
 const filteredTabs = computed(() => {
   const outlineType = props.current_topic.type || 'topic'
-  
+
   // Start with an empty array instead of baseTabs
   const tabs = []
 
@@ -1090,7 +1095,7 @@ const filteredTabs = computed(() => {
       badge: props.current_topic.contents?.length || '0',
       badgeClass: 'bg-emerald-100 text-emerald-800'
     })
-    
+
     tabs.push({
       id: 'objectives',
       name: 'Learning Guide',
@@ -1098,7 +1103,7 @@ const filteredTabs = computed(() => {
       badge: (props.current_topic.learning_objectives?.length || 0) + (props.current_topic.key_concepts?.length || 0),
       badgeClass: 'bg-purple-100 text-purple-800'
     })
-    
+
     // Add quiz tab only if topic has quiz and is not a capstone
     if (props.current_topic.has_quiz && !props.current_topic.is_capstone) {
       tabs.push({
@@ -1109,7 +1114,7 @@ const filteredTabs = computed(() => {
         badgeClass: props.current_topic.has_quiz ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-800'
       })
     }
-    
+
     // Add project tab only if topic has project
     if (props.current_topic.has_project) {
       tabs.push({
@@ -1120,7 +1125,7 @@ const filteredTabs = computed(() => {
         badgeClass: props.current_topic.has_project ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
       })
     }
-  } 
+  }
   else if (outlineType === 'quiz') {
     // For quiz type, only show quiz tab (no learning guide)
     tabs.push({
@@ -1130,7 +1135,7 @@ const filteredTabs = computed(() => {
       badge: 'Available',
       badgeClass: props.current_topic.has_quiz ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-800'
     })
-  } 
+  }
   else if (outlineType === 'project') {
     // For project type, show project tab, learning guide, and requirements tab
     tabs.push({
@@ -1140,7 +1145,7 @@ const filteredTabs = computed(() => {
       badge: props.current_topic.has_project ? 'Available' : 'None',
       badgeClass: props.current_topic.has_project ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
     })
-    
+
     tabs.push({
       id: 'objectives',
       name: 'Learning Guide',
@@ -1148,8 +1153,8 @@ const filteredTabs = computed(() => {
       badge: (props.current_topic.learning_objectives?.length || 0) + (props.current_topic.key_concepts?.length || 0),
       badgeClass: 'bg-purple-100 text-purple-800'
     })
-    
-    
+
+
   }
 
   return tabs
@@ -1827,17 +1832,17 @@ const canMarkAsComplete = computed(() => {
 // Computed property to get reason why marking as complete is disabled
 const getDisabledReason = computed(() => {
   const outlineType = props.current_topic.type || 'topic'
-  
+
   if (outlineType === 'topic') {
     return 'Complete the content to mark as complete'
-  } 
+  }
   else if (outlineType === 'quiz') {
     return 'Pass the quiz to mark as complete'
-  } 
+  }
   else if (outlineType === 'project') {
     return 'Submit the project to mark as complete'
   }
-  
+
   return 'Complete the requirements to mark as complete'
 })
 
@@ -1857,8 +1862,106 @@ watch(() => props.current_topic, () => {
   setDefaultActiveTab()
 }, { immediate: true })
 
+onMounted(async () => {
+  // Pre-load chat session if needed
+  try {
+    const response = await axios.get(route('student.courses.chat.initialize', { course: props.course.id }))
+    chatSession.value = response.data.session
+  } catch (error) {
+    console.error('Failed to pre-load chat session:', error)
+  }
+})
 
 
+// Method to extract all topics from course structure
+const getAllTopics = () => {
+  try {
+    // Validate course_structure
+    if (!props.course_structure) {
+      console.warn('course_structure prop is not defined')
+      return []
+    }
+
+    if (!Array.isArray(props.course_structure)) {
+      console.warn('course_structure is not an array:', typeof props.course_structure)
+      return []
+    }
+
+    if (props.course_structure.length === 0) {
+      console.log('course_structure is empty array')
+      return []
+    }
+
+    const extractedTopics = []
+
+    // Loop through each module
+    props.course_structure.forEach((module, moduleIndex) => {
+      // Validate module
+      if (!module || typeof module !== 'object') {
+        console.warn(`Invalid module at index ${moduleIndex}`)
+        return
+      }
+
+      const moduleId = module.id || `module-${moduleIndex}`
+      const moduleTitle = module.title || `Module ${module.order || (moduleIndex + 1)}`
+
+      // Check if module has topics
+      if (!module.topics) {
+        console.warn(`Module ${moduleId} has no topics property`)
+        return
+      }
+
+      if (!Array.isArray(module.topics)) {
+        console.warn(`Module ${moduleId} topics is not an array:`, typeof module.topics)
+        return
+      }
+
+      // Process each topic in the module
+      module.topics.forEach((topic, topicIndex) => {
+        // Validate topic
+        if (!topic || typeof topic !== 'object') {
+          console.warn(`Invalid topic at index ${topicIndex} in module ${moduleId}`)
+          return
+        }
+
+        const topicId = topic.id || `topic-${moduleIndex}-${topicIndex}`
+        const topicTitle = topic.title || `Topic ${topic.order || (topicIndex + 1)}`
+
+        extractedTopics.push({
+          id: topicId,
+          title: topicTitle,
+          order: topic.order || (topicIndex + 1),
+          module_title: moduleTitle,
+          module_id: moduleId,
+          full_title: `${moduleTitle} → ${topicTitle}`,
+          description: topic.description || '',
+          type: topic.type || 'topic',
+          is_completed: topic.is_completed || false,
+          estimated_duration_minutes: topic.estimated_duration_minutes || 0,
+          has_quiz: topic.has_quiz || false,
+          has_project: topic.has_project || false
+        })
+      })
+    })
+
+    console.log(`Successfully extracted ${extractedTopics.length} topics from ${props.course_structure.length} modules`)
+    return extractedTopics
+
+  } catch (error) {
+    console.error('Unexpected error in getAllTopics:', error)
+    return []
+  }
+}
+
+// Computed property for reactive access
+const availableTopics = computed(() => {
+  return getAllTopics()
+})
+
+// You can also log the topics for debugging when the component mounts
+onMounted(() => {
+  console.log('Available topics:', availableTopics.value)
+})
 </script>
 
 <style scoped>
