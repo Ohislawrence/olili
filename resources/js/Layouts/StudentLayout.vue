@@ -33,7 +33,7 @@
 
       <!-- Success Message -->
       <div
-        v-if="$page.props.flash.success"
+        v-if="$page.props.flash.success || $page.props.flash.status ||  $page.props.flash.message"
         class="bg-green-50 border border-green-200 rounded-xl p-4 shadow-lg transition-all duration-300 animate-fade-in"
       >
         <div class="flex items-start">
@@ -44,7 +44,7 @@
           </div>
           <div class="ml-3 flex-1">
             <h3 class="text-sm font-medium text-green-800">
-              {{ $page.props.flash.success }}
+              {{ $page.props.flash.success || $page.props.flash.status ||  $page.props.flash.message}}
             </h3>
           </div>
           <div class="ml-auto pl-3">
@@ -198,10 +198,16 @@
             <!-- Right-side controls -->
             <div class="flex items-center space-x-2">
               <!-- Notifications -->
-              <button class="relative p-2.5 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50/80 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transform hover:scale-105 group">
+              <Link
+                :href="route('student.notifications.index')"
+                class="relative p-2.5 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50/80 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transform hover:scale-105 group"
+            >
                 <BellIcon class="h-5 w-5 transform group-hover:shake-animation" />
-                <span class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow-sm"></span>
-              </button>
+                <span
+                    v-if="unreadNotificationCount > 0"
+                    class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow-sm"
+                ></span>
+            </Link>
 
               <!-- Profile Dropdown -->
               <Dropdown align="right" width="48">
@@ -294,6 +300,7 @@ import {
   XMarkIcon,
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
+  RectangleStackIcon,
 } from '@heroicons/vue/24/outline'
 import MobileBottomNav from '@/Components/Student/MobileBottomNav.vue'
 
@@ -301,10 +308,11 @@ const page = usePage()
 const loading = ref(false)
 const showingNavigationDropdown = ref(false)
 const isSidebarCollapsed = ref(false)
+const unreadNotificationCount = ref(0)
 
 // Auto-hide flash messages after 5 seconds
 const autoHideFlash = () => {
-  if (page.props.flash.success || page.props.flash.error) {
+  if (page.props.flash.success || page.props.flash.error ||  props.flash.message ||  props.flash.status ) {
     setTimeout(() => {
       clearFlash()
     }, 5000)
@@ -339,7 +347,7 @@ const navigation = [
   { name: 'Dashboard', href: route('student.dashboard'), active: 'student.dashboard', icon: HomeIcon },
   { name: 'My Courses', href: route('student.courses.index'), active: 'student.courses.*', icon: BookOpenIcon },
   { name: 'Quizzes', href: route('student.quizzes.index'), active: 'student.quizzes.*', icon: ClipboardDocumentListIcon },
-  { name: 'Flash Card', href: route('student.flashcards.index'), active: 'student.flashcards.*', icon: ChatBubbleLeftRightIcon },
+  { name: 'Flash Card', href: route('student.flashcards.index'), active: 'student.flashcards.*', icon: RectangleStackIcon },
   { name: 'Profile', href: route('student.profile.show'), active: 'student.profile.*', icon: UserCircleIcon },
 ]
 
@@ -357,12 +365,30 @@ router.on('finish', () => {
 
 // Watch for flash messages and auto-hide them
 watch(() => page.props.flash, (newFlash, oldFlash) => {
-  if (newFlash.success || newFlash.error) {
+  if (newFlash.success || newFlash.error || newFlash.flash.status ||  newFlash.message) {
     nextTick(() => {
       autoHideFlash()
     })
   }
 }, { deep: true })
+
+// Fetch unread notification count
+const fetchUnreadCount = async () => {
+    try {
+        const response = await axios.get(route('student.notifications.unread-count'))
+        unreadNotificationCount.value = response.data.count
+    } catch (error) {
+        console.error('Failed to fetch unread notification count:', error)
+    }
+}
+
+// Fetch count on component mount
+onMounted(() => {
+    fetchUnreadCount()
+
+    // Optional: Refresh count every 30 seconds
+    setInterval(fetchUnreadCount, 30000)
+})
 </script>
 
 <style scoped>

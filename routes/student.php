@@ -1,6 +1,7 @@
 <?php
 // routes/student.php
 
+use App\Http\Controllers\Student\NotificationController;
 use App\Http\Controllers\Student\DashboardController;
 use App\Http\Controllers\Student\CourseController;
 use App\Http\Controllers\Student\QuizController;
@@ -71,6 +72,14 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::delete('/flashcards/{flashcardSet}', [FlashcardController::class, 'destroy'])->name('flashcards.destroy');
     Route::get('/courses/{course}/outlines', [FlashcardController::class, 'getCourseOutlines'])->name('courses.outlines');
     Route::post('/flashcards/{flashcardSet}/reset-progress', [FlashcardController::class, 'resetProgress'])->name('flashcards.reset-progress');
+
+     // Notification Routes
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::delete('/notifications', [NotificationController::class, 'clearAll'])->name('notifications.clear-all');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');

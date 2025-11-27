@@ -103,6 +103,7 @@ class SocialAuthService
         return $this->findExistingUser($provider, $userData, $tokenData);
     }
 
+
     protected function getAccessToken(string $provider, string $code): array
     {
         $config = $this->providers[$provider];
@@ -308,16 +309,49 @@ class SocialAuthService
             return $user;
         }
 
-        // User doesn't exist - throw exception
-        Log::warning('Social login attempt for non-existent user', [
-            'provider' => $provider,
-            'email' => $userData['email'],
-            'provider_id' => $userData['id'],
-        ]);
-
-        throw new \Exception('No account found with this email address. Please register first.');
+        // User doesn't exist - CREATE NEW USER with social data
+        return $this->createUserFromSocialData($provider, $userData, $tokenData);
     }
 
+    protected function createUserFromSocialData(string $provider, array $userData, array $tokenData)
+    {
+        try {
+            // Prepare data for user creation
+            $userInput = [
+                'name' => $userData['name'] ?? 'Social User',
+                'email' => $userData['email'],
+                'social_provider' => $provider,
+                'social_id' => $userData['id'],
+                'social_token' => $tokenData['access_token'],
+                'social_refresh_token' => $tokenData['refresh_token'] ?? null,
+                'social_expires_in' => $tokenData['expires_in'] ?? null,
+                'social_user_data' => $userData,
+                // Set default role - you might want to redirect to role selection instead
+                'role' => 'student',
+            ];
+
+            // Use Fortify's CreateNewUser action to create the user
+            $createNewUser = app(\App\Actions\Fortify\CreateNewUser::class);
+            $user = $createNewUser->create($userInput);
+
+            Log::info('New user created via social registration', [
+                'user_id' => $user->id,
+                'provider' => $provider,
+                'email' => $userData['email'],
+            ]);
+
+            return $user;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to create user from social data', [
+                'provider' => $provider,
+                'email' => $userData['email'],
+                'error' => $e->getMessage()
+            ]);
+
+            throw new \Exception('Failed to create user account: ' . $e->getMessage());
+        }
+    }
     protected function verifyState(string $state)
     {
         $sessionState = session('oauth_state');

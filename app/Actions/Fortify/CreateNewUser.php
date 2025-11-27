@@ -14,12 +14,14 @@ use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 use Laravel\Jetstream\Jetstream;
 use App\Mail\WelcomeStudentMail;
+use App\Models\SocialAccount;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class CreateNewUser implements CreatesNewUsers
 {
     use PasswordValidationRules;
+
 
     public function create(array $input): User
     {
@@ -78,7 +80,25 @@ class CreateNewUser implements CreatesNewUsers
                 break;
         }
 
-        Validator::make($input, $validationRules)->validate();
+        // For social registration, skip some validations
+        if ($isSocialRegistration) {
+            $validator = Validator::make($input, array_intersect_key($validationRules, [
+                'role' => true,
+                'name' => true,
+                'email' => true,
+                'terms' => true,
+            ]));
+        } else {
+            $validator = Validator::make($input, $validationRules);
+        }
+
+        $validator->validate();
+
+        // Prepare user data
+        $userData = [
+            'name' => $input['name'],
+            'email' => $input['email'],
+        ];
 
         // Set password for social vs regular registration
         if ($isSocialRegistration) {
@@ -88,6 +108,7 @@ class CreateNewUser implements CreatesNewUsers
         } else {
             $userData['password'] = Hash::make($input['password']);
         }
+
         // Create user
         $user = User::create($userData);
 
@@ -95,7 +116,7 @@ class CreateNewUser implements CreatesNewUsers
         $user->assignRole($input['role']);
 
         // Create role-specific profile
-        $this->createRoleProfile($user, $input);
+        $this->createRoleProfile($user, $input, $isSocialRegistration);
 
         // Assign first tier subscription plan for the role
         $this->assignStarterSubscription($user, $input['role']);
@@ -116,6 +137,7 @@ class CreateNewUser implements CreatesNewUsers
         if($input['role'] == 'student'){
             Mail::to($user->email)->queue(new WelcomeStudentMail($user));
         }
+
         return $user;
     }
 
