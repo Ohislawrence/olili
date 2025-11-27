@@ -26,7 +26,7 @@ class User extends Authenticatable
     use HasProfilePhoto;
     use Notifiable;
     use TwoFactorAuthenticatable;
-    
+
 
     /**
      * The attributes that are mass assignable.
@@ -44,9 +44,15 @@ class User extends Authenticatable
         'is_active',
         'last_login_at',
         'preferences',
-        'provider', 
-        'provider_id', 
-        'provider_token', 
+        'provider',
+        'provider_id',
+        'provider_token',
+        'consecutive_login_days',
+        'failed_login_attempts',
+        'account_locked_until',
+        'last_login_ip',
+        'login_count',
+        'last_failed_login_at',
     ];
 
     /**
@@ -85,6 +91,10 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'preferences' => 'array',
             'is_active' => 'boolean',
+            'consecutive_login_days' => 'integer',
+            'failed_login_attempts' => 'integer',
+            'account_locked_until' => 'datetime',
+            'login_count' => 'integer',
         ];
     }
 
@@ -202,22 +212,28 @@ class User extends Authenticatable
         ]);
 
         if ($wasSuccessful) {
-            $this->update([
+            // Ensure all fields have proper default values
+            $updateData = [
                 'last_login_at' => now(),
                 'last_login_ip' => $ipAddress,
-                'login_count' => $this->login_count + 1,
+                'login_count' => ($this->login_count ?? 0) + 1,
                 'consecutive_login_days' => $this->calculateConsecutiveLoginDays(),
                 'failed_login_attempts' => 0, // Reset failed attempts on successful login
                 'account_locked_until' => null, // Unlock account
-            ]);
+            ];
+
+            $this->update($updateData);
         } else {
-            $this->increment('failed_login_attempts');
+            $this->increment('failed_login_attempts', 1, [
+                'failed_login_attempts' => $this->failed_login_attempts ?? 0
+            ]);
+
             $this->update([
                 'last_failed_login_at' => now(),
             ]);
 
             // Lock account after 5 failed attempts for 30 minutes
-            if ($this->failed_login_attempts >= 5) {
+            if (($this->failed_login_attempts ?? 0) >= 5) {
                 $this->update([
                     'account_locked_until' => now()->addMinutes(30),
                 ]);
@@ -288,10 +304,13 @@ class User extends Authenticatable
         $yesterday = now()->subDay()->startOfDay();
         $lastLoginDate = $lastLogin->startOfDay();
 
+        // Get current consecutive days, default to 0 if null
+        $currentConsecutiveDays = $this->consecutive_login_days ?? 0;
+
         if ($lastLoginDate->equalTo($yesterday)) {
-            return $this->consecutive_login_days + 1;
+            return $currentConsecutiveDays + 1;
         } elseif ($lastLoginDate->equalTo(now()->startOfDay())) {
-            return $this->consecutive_login_days; // Same day login
+            return $currentConsecutiveDays; // Same day login
         } else {
             return 1; // Break in consecutive days
         }
