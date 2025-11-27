@@ -26,7 +26,7 @@ class CreateNewUser implements CreatesNewUsers
     public function create(array $input): User
     {
         // Check if this is a social registration (has social data)
-        $isSocialRegistration = isset($input['social_provider']) && isset($input['social_id']);
+        $isSocialRegistration = isset($input['provider']) && isset($input['provider_id']);
 
         // Enhanced validation for role-based registration
         $validationRules = [
@@ -125,9 +125,9 @@ class CreateNewUser implements CreatesNewUsers
         if ($isSocialRegistration) {
             SocialAccount::create([
                 'user_id' => $user->id,
-                'provider' => $input['social_provider'],
-                'provider_id' => $input['social_id'],
-                'token' => $input['social_token'] ?? null,
+                'provider' => $input['provider'],
+                'provider_id' => $input['provider_id'],
+                'token' => $input['provider_token'] ?? null,
                 'refresh_token' => $input['social_refresh_token'] ?? null,
                 'expires_at' => isset($input['social_expires_in']) ? now()->addSeconds($input['social_expires_in']) : null,
                 'provider_data' => $input['social_user_data'] ?? null,

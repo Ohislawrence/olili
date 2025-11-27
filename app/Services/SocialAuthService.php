@@ -320,9 +320,9 @@ class SocialAuthService
             $userInput = [
                 'name' => $userData['name'] ?? 'Social User',
                 'email' => $userData['email'],
-                'social_provider' => $provider,
-                'social_id' => $userData['id'],
-                'social_token' => $tokenData['access_token'],
+                'provider' => $provider,
+                'provider_id' => $userData['id'],
+                'provider_token' => $tokenData['access_token'],
                 'social_refresh_token' => $tokenData['refresh_token'] ?? null,
                 'social_expires_in' => $tokenData['expires_in'] ?? null,
                 'social_user_data' => $userData,
