@@ -1,7 +1,6 @@
 <!-- resources/js/Pages/Admin/Users/Index.vue -->
 <template>
-    <AdminLayout>
-  <div class="min-h-screen bg-gray-50">
+  <AdminLayout>
     <Head title="User Management" />
 
     <div class="py-6">
@@ -70,8 +69,7 @@
         </div>
       </div>
     </div>
-  </div>
-    </AdminLayout>
+  </AdminLayout>
 </template>
 
 <script setup>
