@@ -1,5 +1,5 @@
 <template>
-  <Head title="Join AITutor" />
+  <Head title="Join Olilearn" />
 
   <!-- Background Elements -->
   <div class="fixed inset-0 overflow-hidden pointer-events-none">
