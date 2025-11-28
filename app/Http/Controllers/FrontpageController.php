@@ -15,9 +15,9 @@ class FrontpageController extends Controller
     {
         return Inertia::render('Frontpages/Features', [
             'meta' => [
-                'title' => 'OliLearn - Learn Anything With AI',
-                'description' => 'Your AI tutor for any subject.',
-                'image' => asset('images/og-image.png'),
+                'title' => 'Powerful Features for Smart Learning',
+                'description' => 'Discover how Olilearn combines artificial intelligence with proven learning methodologies to create the most effective and engaging educational experience.',
+                'image' => asset('olilearn-main.png'),
                 'url' => url()->current(),
             ]
         ]);
@@ -29,7 +29,7 @@ class FrontpageController extends Controller
             'meta' => [
                 'title' => 'OliLearn - Learn Anything With AI',
                 'description' => 'Your AI tutor for any subject.',
-                'image' => asset('images/og-image.png'),
+                'image' => asset('olilearn-main.png'),
                 'url' => url()->current(),
             ]
         ]);
@@ -39,9 +39,9 @@ class FrontpageController extends Controller
     {
         return Inertia::render('Frontpages/About', [
             'meta' => [
-                'title' => 'OliLearn - Learn Anything With AI',
-                'description' => 'Your AI tutor for any subject.',
-                'image' => asset('images/og-image.png'),
+                'title' => 'Revolutionizing Education with AI',
+                'description' => 'We believe everyone deserves access to personalized, effective learning. Olilearn combines cutting-edge artificial intelligence with proven educational methodologies to make this vision a reality.',
+                'image' => asset('olilearn-main.png'),
                 'url' => url()->current(),
             ]
         ]);
@@ -79,9 +79,9 @@ class FrontpageController extends Controller
 
     return Inertia::render('Frontpages/Pricing', [
         'subscriptionPlans' => $subscriptionPlans, 'meta' => [
-                'title' => 'OliLearn - Learn Anything With AI',
-                'description' => 'Your AI tutor for any subject.',
-                'image' => asset('images/og-image.png'),
+                'title' => 'Choose Your Perfect Plan',
+                'description' => 'Select the ideal plan for your learning journey. All plans include our core AI features and personalized learning tools.',
+                'image' => asset('olilearn-main.png'),
                 'url' => url()->current(),
             ]
         ]
@@ -95,7 +95,7 @@ class FrontpageController extends Controller
             'meta' => [
                 'title' => 'OliLearn - Learn Anything With AI',
                 'description' => 'Your AI tutor for any subject.',
-                'image' => asset('images/og-image.png'),
+                'image' => asset('olilearn-main.png'),
                 'url' => url()->current(),
             ]
         ]);
@@ -107,7 +107,7 @@ class FrontpageController extends Controller
             'meta' => [
                 'title' => 'OliLearn - Learn Anything With AI',
                 'description' => 'Your AI tutor for any subject.',
-                'image' => asset('images/og-image.png'),
+                'image' => asset('olilearn-main.png'),
                 'url' => url()->current(),
             ]
         ]);
@@ -119,7 +119,7 @@ class FrontpageController extends Controller
             'meta' => [
                 'title' => 'OliLearn - Learn Anything With AI',
                 'description' => 'Your AI tutor for any subject.',
-                'image' => asset('images/og-image.png'),
+                'image' => asset('olilearn-main.png'),
                 'url' => url()->current(),
             ]
         ]);
@@ -131,7 +131,7 @@ class FrontpageController extends Controller
             'meta' => [
                 'title' => 'OliLearn - Learn Anything With AI',
                 'description' => 'Your AI tutor for any subject.',
-                'image' => asset('images/og-image.png'),
+                'image' => asset('olilearn-main.png'),
                 'url' => url()->current(),
             ]
         ]);
@@ -163,9 +163,9 @@ class FrontpageController extends Controller
             'filters' => $request->only(['search', 'category']),
             'categories' => BlogPost::published()->distinct()->pluck('category'),
             'meta' => [
-                'title' => 'OliLearn - Learn Anything With AI',
-                'description' => 'Your AI tutor for any subject.',
-                'image' => asset('images/og-image.png'),
+                'title' => 'Our Blog',
+                'description' => 'Insights, tips, and news about AI-powered learning and education technology',
+                'image' => asset('olilearn-main.png'),
                 'url' => url()->current(),
             ],
             'featuredPosts' => BlogPost::with('author')
@@ -206,9 +206,9 @@ class FrontpageController extends Controller
             'relatedPosts' => $relatedPosts,
             'popularPosts' => $popularPosts,
             'meta' => [
-                'title' => 'OliLearn - Learn Anything With AI',
-                'description' => 'Your AI tutor for any subject.',
-                'image' => asset('images/og-image.png'),
+                'title' => $post->title,
+                'description' => $post->excerpt,
+                'image' => '/storage/'. $post->image_url,
                 'url' => url()->current(),
             ]
         ]);
@@ -241,9 +241,9 @@ class FrontpageController extends Controller
             'subjects' => Course::active()->distinct()->pluck('subject'),
             'levels' => Course::active()->distinct()->pluck('level'),
             'meta' => [
-                'title' => 'OliLearn - Learn Anything With AI',
-                'description' => 'Your AI tutor for any subject.',
-                'image' => asset('images/og-image.png'),
+                'title' => 'Explore Courses',
+                'description' => 'Discover our AI-powered courses designed to help you learn smarter and faster.',
+                'image' => asset('olilearn-main.png'),
                 'url' => url()->current(),
             ]
         ]);
@@ -268,9 +268,9 @@ class FrontpageController extends Controller
         return Inertia::render('Frontpages/Courses/Show', [
             'course' => $course,
             'relatedCourses' => $relatedCourses,'meta' => [
-                'title' => 'OliLearn - Learn Anything With AI',
-                'description' => 'Your AI tutor for any subject.',
-                'image' => asset('images/og-image.png'),
+                'title' => $course->title,
+                'description' => $course->description,
+                'image' => asset('olilearn-main.png'),
                 'url' => url()->current(),
             ]
         ]);
