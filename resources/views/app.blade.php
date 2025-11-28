@@ -23,6 +23,7 @@
         <meta property="og:image" content="{{ $page['props']['meta']['image'] ?? '' }}" />
         <meta property="og:url" content="{{ $page['props']['meta']['url'] ?? url()->current() }}" />
         <meta property="og:type" content="website" />
+        <meta property="og:logo" content="{{asset('logo-olilearn.PNG')}}" />
 
     </head>
     <body class="font-sans antialiased">

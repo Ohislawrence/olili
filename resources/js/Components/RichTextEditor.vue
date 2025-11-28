@@ -137,6 +137,29 @@
         H3
       </button>
 
+      <!-- Links -->
+      <div class="w-px h-6 bg-gray-300 mx-1"></div>
+      <button
+        @click="setLink"
+        :class="[
+          'p-2 rounded hover:bg-gray-200 transition-colors',
+          editor.isActive('link') ? 'bg-gray-300' : ''
+        ]"
+        type="button"
+        title="Add Link"
+      >
+        <LinkIcon class="h-4 w-4" />
+      </button>
+      <button
+        v-if="editor && editor.isActive('link')"
+        @click="editor.chain().focus().unsetLink().run()"
+        class="p-2 rounded hover:bg-gray-200 transition-colors"
+        type="button"
+        title="Remove Link"
+      >
+        <LinkOffIcon class="h-4 w-4" />
+      </button>
+
       <!-- Blockquote -->
       <div class="w-px h-6 bg-gray-300 mx-1"></div>
       <button
@@ -225,6 +248,49 @@
       </button>
     </div>
 
+    <!-- Link Dialog -->
+    <div v-if="showLinkDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <h3 class="text-lg font-semibold mb-4">Add Link</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
+            <input
+              v-model="linkUrl"
+              type="url"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              placeholder="https://example.com"
+              @keyup.enter="confirmLink"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Text (optional)</label>
+            <input
+              v-model="linkText"
+              type="text"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              placeholder="Link text"
+              @keyup.enter="confirmLink"
+            />
+          </div>
+          <div class="flex justify-end space-x-2">
+            <button
+              @click="cancelLink"
+              class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              @click="confirmLink"
+              class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors"
+            >
+              Add Link
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Image Upload Progress -->
     <div v-if="uploadProgress > 0 && uploadProgress < 100" class="bg-blue-50 border-t border-blue-200 px-4 py-2">
       <div class="flex items-center justify-between text-sm">
@@ -263,6 +329,7 @@ import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import TextAlign from '@tiptap/extension-text-align'
 import Image from '@tiptap/extension-image'
+import Link from '@tiptap/extension-link'
 import { watch, onUnmounted, ref } from 'vue'
 import { 
   BoldIcon, 
@@ -322,6 +389,22 @@ const AlignRightIcon = {
   `
 }
 
+const LinkIcon = {
+  template: `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+    </svg>
+  `
+}
+
+const LinkOffIcon = {
+  template: `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 15.75L10.5 12.75m-3.172-3.172a4.5 4.5 0 015.656 0M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+    </svg>
+  `
+}
+
 const props = defineProps({
   modelValue: {
     type: String,
@@ -349,6 +432,9 @@ const emit = defineEmits(['update:modelValue', 'imageUploaded'])
 
 const imageInput = ref(null)
 const uploadProgress = ref(0)
+const showLinkDialog = ref(false)
+const linkUrl = ref('')
+const linkText = ref('')
 
 const editor = useEditor({
   content: props.modelValue,
@@ -360,6 +446,12 @@ const editor = useEditor({
     Image.configure({
       HTMLAttributes: {
         class: 'editor-image',
+      },
+    }),
+    Link.configure({
+      openOnClick: false,
+      HTMLAttributes: {
+        class: 'editor-link',
       },
     }),
   ],
@@ -375,6 +467,58 @@ const editor = useEditor({
     }
   },
 })
+
+// Link functionality
+const setLink = () => {
+  if (editor.value.isActive('link')) {
+    // If already a link, extract current URL for editing
+    const existingLink = editor.value.getAttributes('link')
+    linkUrl.value = existingLink.href || ''
+    
+    // Get selected text
+    const { from, to } = editor.value.state.selection
+    if (from !== to) {
+      linkText.value = editor.value.state.doc.textBetween(from, to, ' ')
+    } else {
+      linkText.value = ''
+    }
+  } else {
+    // New link - get selected text
+    const { from, to } = editor.value.state.selection
+    if (from !== to) {
+      linkText.value = editor.value.state.doc.textBetween(from, to, ' ')
+    } else {
+      linkText.value = ''
+    }
+    linkUrl.value = ''
+  }
+  showLinkDialog.value = true
+}
+
+const confirmLink = () => {
+  if (linkUrl.value) {
+    // Add protocol if missing
+    let url = linkUrl.value
+    if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('mailto:') && !url.startsWith('tel:')) {
+      url = 'https://' + url
+    }
+
+    if (linkText.value && !editor.value.state.selection.empty) {
+      // Replace selected text with link
+      editor.value.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+    } else {
+      // Insert or update link
+      editor.value.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+    }
+  }
+  cancelLink()
+}
+
+const cancelLink = () => {
+  showLinkDialog.value = false
+  linkUrl.value = ''
+  linkText.value = ''
+}
 
 // Image upload functionality
 const triggerImageUpload = () => {
@@ -517,6 +661,10 @@ onUnmounted(() => {
   @apply max-w-full h-auto rounded-lg shadow-md my-4 mx-auto;
   max-height: 400px;
   object-fit: contain;
+}
+
+.rich-text-editor :deep(.ProseMirror .editor-link) {
+  @apply text-emerald-600 underline hover:text-emerald-700 transition-colors;
 }
 
 .rich-text-editor :deep(.ProseMirror img) {
