@@ -122,7 +122,7 @@ class BlogPostController extends Controller
         return Inertia::render('Admin/BlogPosts/Edit', [
             'blog_post' => $blogPost,
             'categories' => $this->getCategories(),
-            'authors' => User::where('is_admin', true)->get(['id', 'name']),
+            'authors' => User::role('admin')->get(['id', 'name']),
         ]);
     }
 
@@ -219,5 +219,18 @@ class BlogPostController extends Controller
             'Product Updates',
             'Success Stories',
         ];
+    }
+
+    public function uploadImage(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
+        ]);
+
+        $path = $request->file('image')->store('blog-images', 'public');
+        
+        return response()->json([
+            'url' => Storage::disk('public')->url($path)
+        ]);
     }
 }

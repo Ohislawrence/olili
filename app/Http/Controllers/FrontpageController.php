@@ -13,17 +13,38 @@ class FrontpageController extends Controller
 {
     public function features()
     {
-        return Inertia::render('Frontpages/Features');
+        return Inertia::render('Frontpages/Features', [
+            'meta' => [
+                'title' => 'OliLearn - Learn Anything With AI',
+                'description' => 'Your AI tutor for any subject.',
+                'image' => asset('images/og-image.png'),
+                'url' => url()->current(),
+            ]
+        ]);
     }
 
     public function community()
     {
-        return Inertia::render('Frontpages/Community');
+        return Inertia::render('Frontpages/Community', [
+            'meta' => [
+                'title' => 'OliLearn - Learn Anything With AI',
+                'description' => 'Your AI tutor for any subject.',
+                'image' => asset('images/og-image.png'),
+                'url' => url()->current(),
+            ]
+        ]);
     }
 
     public function about()
     {
-        return Inertia::render('Frontpages/About');
+        return Inertia::render('Frontpages/About', [
+            'meta' => [
+                'title' => 'OliLearn - Learn Anything With AI',
+                'description' => 'Your AI tutor for any subject.',
+                'image' => asset('images/og-image.png'),
+                'url' => url()->current(),
+            ]
+        ]);
     }
 
     public function pricing()
@@ -57,29 +78,63 @@ class FrontpageController extends Controller
         });
 
     return Inertia::render('Frontpages/Pricing', [
-        'subscriptionPlans' => $subscriptionPlans,
-    ]);
+        'subscriptionPlans' => $subscriptionPlans, 'meta' => [
+                'title' => 'OliLearn - Learn Anything With AI',
+                'description' => 'Your AI tutor for any subject.',
+                'image' => asset('images/og-image.png'),
+                'url' => url()->current(),
+            ]
+        ]
+        );
 }
 
 
     public function help()
     {
-        return Inertia::render('Frontpages/Help');
+        return Inertia::render('Frontpages/Help', [
+            'meta' => [
+                'title' => 'OliLearn - Learn Anything With AI',
+                'description' => 'Your AI tutor for any subject.',
+                'image' => asset('images/og-image.png'),
+                'url' => url()->current(),
+            ]
+        ]);
     }
 
     public function contact()
     {
-        return Inertia::render('Frontpages/Contact');
+        return Inertia::render('Frontpages/Contact', [
+            'meta' => [
+                'title' => 'OliLearn - Learn Anything With AI',
+                'description' => 'Your AI tutor for any subject.',
+                'image' => asset('images/og-image.png'),
+                'url' => url()->current(),
+            ]
+        ]);
     }
 
     public function faq()
     {
-        return Inertia::render('Frontpages/Faq');
+        return Inertia::render('Frontpages/Faq', [
+            'meta' => [
+                'title' => 'OliLearn - Learn Anything With AI',
+                'description' => 'Your AI tutor for any subject.',
+                'image' => asset('images/og-image.png'),
+                'url' => url()->current(),
+            ]
+        ]);
     }
 
     public function enterprise()
     {
-        return Inertia::render('Frontpages/Enterprise');
+        return Inertia::render('Frontpages/Enterprise', [
+            'meta' => [
+                'title' => 'OliLearn - Learn Anything With AI',
+                'description' => 'Your AI tutor for any subject.',
+                'image' => asset('images/og-image.png'),
+                'url' => url()->current(),
+            ]
+        ]);
     }
 
     /**
@@ -107,6 +162,12 @@ class FrontpageController extends Controller
             'posts' => $posts,
             'filters' => $request->only(['search', 'category']),
             'categories' => BlogPost::published()->distinct()->pluck('category'),
+            'meta' => [
+                'title' => 'OliLearn - Learn Anything With AI',
+                'description' => 'Your AI tutor for any subject.',
+                'image' => asset('images/og-image.png'),
+                'url' => url()->current(),
+            ],
             'featuredPosts' => BlogPost::with('author')
                 ->published()
                 ->orderBy('published_at', 'desc')
@@ -144,6 +205,12 @@ class FrontpageController extends Controller
             'post' => $post,
             'relatedPosts' => $relatedPosts,
             'popularPosts' => $popularPosts,
+            'meta' => [
+                'title' => 'OliLearn - Learn Anything With AI',
+                'description' => 'Your AI tutor for any subject.',
+                'image' => asset('images/og-image.png'),
+                'url' => url()->current(),
+            ]
         ]);
     }
 
@@ -173,6 +240,12 @@ class FrontpageController extends Controller
             'filters' => $request->only(['subject', 'level']),
             'subjects' => Course::active()->distinct()->pluck('subject'),
             'levels' => Course::active()->distinct()->pluck('level'),
+            'meta' => [
+                'title' => 'OliLearn - Learn Anything With AI',
+                'description' => 'Your AI tutor for any subject.',
+                'image' => asset('images/og-image.png'),
+                'url' => url()->current(),
+            ]
         ]);
     }
 
@@ -194,7 +267,12 @@ class FrontpageController extends Controller
 
         return Inertia::render('Frontpages/Courses/Show', [
             'course' => $course,
-            'relatedCourses' => $relatedCourses,
+            'relatedCourses' => $relatedCourses,'meta' => [
+                'title' => 'OliLearn - Learn Anything With AI',
+                'description' => 'Your AI tutor for any subject.',
+                'image' => asset('images/og-image.png'),
+                'url' => url()->current(),
+            ]
         ]);
     }
 }

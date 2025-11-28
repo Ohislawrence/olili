@@ -116,5 +116,5 @@ Route::middleware([
     Route::get('/blog-posts/{blogPost}/edit', [BlogPostController::class, 'edit'])->name('blog-posts.edit');
     Route::put('/blog-posts/{blogPost}', [BlogPostController::class, 'update'])->name('blog-posts.update');
     Route::delete('/blog-posts/{blogPost}', [BlogPostController::class, 'destroy'])->name('blog-posts.destroy');
-    Route::post('/blog-posts/{blogPost}/toggle-publish', [BlogPostController::class, 'togglePublish'])->name('blog-posts.toggle-publish');
+    Route::post('/upload-image', [BlogPostController::class, 'uploadImage'])->name('upload-image');
 });

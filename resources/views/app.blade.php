@@ -18,6 +18,12 @@
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
         @inertiaHead
 
+        <meta property="og:title" content="{{ $page['props']['meta']['title'] ?? 'OliLearn' }}" />
+        <meta property="og:description" content="{{ $page['props']['meta']['description'] ?? '' }}" />
+        <meta property="og:image" content="{{ $page['props']['meta']['image'] ?? '' }}" />
+        <meta property="og:url" content="{{ $page['props']['meta']['url'] ?? url()->current() }}" />
+        <meta property="og:type" content="website" />
+
     </head>
     <body class="font-sans antialiased">
         @inertia

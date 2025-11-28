@@ -124,7 +124,6 @@
 <script setup>
 import { Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import PWAInstall from "@/Components/PWAInstall.vue";
 
 const newsletterEmail = ref('');
 const newsletterLoading = ref(false);

@@ -174,6 +174,24 @@
         <MinusIcon class="h-4 w-4" />
       </button>
 
+      <!-- Image Upload -->
+      <div class="w-px h-6 bg-gray-300 mx-1"></div>
+      <button
+        @click="triggerImageUpload"
+        class="p-2 rounded hover:bg-gray-200 transition-colors"
+        type="button"
+        title="Insert Image"
+      >
+        <PhotoIcon class="h-4 w-4" />
+      </button>
+      <input
+        ref="imageInput"
+        type="file"
+        class="hidden"
+        accept="image/*"
+        @change="handleImageUpload"
+      >
+
       <!-- Clear Formatting -->
       <div class="w-px h-6 bg-gray-300 mx-1"></div>
       <button
@@ -184,6 +202,38 @@
       >
         Clear
       </button>
+
+      <!-- Undo/Redo -->
+      <div class="w-px h-6 bg-gray-300 mx-1"></div>
+      <button
+        @click="editor.chain().focus().undo().run()"
+        :disabled="!editor.can().chain().focus().undo().run()"
+        class="p-2 rounded hover:bg-gray-200 transition-colors text-sm"
+        type="button"
+        title="Undo"
+      >
+        Undo
+      </button>
+      <button
+        @click="editor.chain().focus().redo().run()"
+        :disabled="!editor.can().chain().focus().redo().run()"
+        class="p-2 rounded hover:bg-gray-200 transition-colors text-sm"
+        type="button"
+        title="Redo"
+      >
+        Redo
+      </button>
+    </div>
+
+    <!-- Image Upload Progress -->
+    <div v-if="uploadProgress > 0 && uploadProgress < 100" class="bg-blue-50 border-t border-blue-200 px-4 py-2">
+      <div class="flex items-center justify-between text-sm">
+        <span class="text-blue-700">Uploading image...</span>
+        <span class="text-blue-700 font-medium">{{ uploadProgress }}%</span>
+      </div>
+      <div class="w-full bg-blue-200 rounded-full h-1.5 mt-1">
+        <div class="bg-blue-600 h-1.5 rounded-full transition-all duration-300" :style="{ width: uploadProgress + '%' }"></div>
+      </div>
     </div>
 
     <!-- Editor Content -->
@@ -212,13 +262,15 @@
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import TextAlign from '@tiptap/extension-text-align'
-import { watch, onUnmounted } from 'vue'
+import Image from '@tiptap/extension-image'
+import { watch, onUnmounted, ref } from 'vue'
 import { 
   BoldIcon, 
   ItalicIcon,
   ListBulletIcon,
   CodeBracketIcon,
-  MinusIcon
+  MinusIcon,
+  PhotoIcon
 } from '@heroicons/vue/24/outline'
 
 // Custom SVG icons for missing Heroicons
@@ -287,9 +339,16 @@ const props = defineProps({
     type: String,
     default: 'Start writing your content...',
   },
+  uploadUrl: {
+    type: String,
+    default: '/admin/upload-image', // Default upload endpoint
+  },
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'imageUploaded'])
+
+const imageInput = ref(null)
+const uploadProgress = ref(0)
 
 const editor = useEditor({
   content: props.modelValue,
@@ -297,6 +356,11 @@ const editor = useEditor({
     StarterKit,
     TextAlign.configure({
       types: ['heading', 'paragraph'],
+    }),
+    Image.configure({
+      HTMLAttributes: {
+        class: 'editor-image',
+      },
     }),
   ],
   editorProps: {
@@ -306,21 +370,84 @@ const editor = useEditor({
     },
   },
   onUpdate: () => {
-    // Only emit if editor is ready
     if (editor.value) {
       emit('update:modelValue', editor.value.getHTML())
     }
   },
-  onCreate: () => {
-    console.log('Editor created and ready')
-  },
 })
+
+// Image upload functionality
+const triggerImageUpload = () => {
+  imageInput.value?.click()
+}
+
+const handleImageUpload = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file')
+    return
+  }
+
+  // Validate file size (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('Image size should be less than 5MB')
+    return
+  }
+
+  try {
+    // Create FormData for upload
+    const formData = new FormData()
+    formData.append('image', file)
+
+    // Simulate upload progress
+    uploadProgress.value = 10
+
+    // Upload image to server
+    const response = await fetch(props.uploadUrl, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error('Upload failed')
+    }
+
+    const data = await response.json()
+    uploadProgress.value = 100
+
+    // Insert image into editor
+    if (data.url && editor.value) {
+      editor.value.chain().focus().setImage({ src: data.url }).run()
+      emit('imageUploaded', { url: data.url, alt: file.name })
+    }
+
+    // Reset progress after a delay
+    setTimeout(() => {
+      uploadProgress.value = 0
+    }, 2000)
+
+  } catch (error) {
+    console.error('Image upload failed:', error)
+    alert('Failed to upload image. Please try again.')
+    uploadProgress.value = 0
+  } finally {
+    // Reset file input
+    if (imageInput.value) {
+      imageInput.value.value = ''
+    }
+  }
+}
 
 // Helper function to get character count
 const getCharacterCount = () => {
   if (!editor.value) return 0
-  
-  // Simple character count implementation
   const text = editor.value.getText()
   return text.length
 }
@@ -384,5 +511,23 @@ onUnmounted(() => {
 
 .rich-text-editor :deep(.ProseMirror pre) {
   @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4;
+}
+
+.rich-text-editor :deep(.ProseMirror .editor-image) {
+  @apply max-w-full h-auto rounded-lg shadow-md my-4 mx-auto;
+  max-height: 400px;
+  object-fit: contain;
+}
+
+.rich-text-editor :deep(.ProseMirror img) {
+  @apply cursor-pointer transition-opacity duration-200;
+}
+
+.rich-text-editor :deep(.ProseMirror img:hover) {
+  @apply opacity-90;
+}
+
+.rich-text-editor :deep(.ProseMirror .ProseMirror-selectednode) {
+  @apply outline-2 outline-emerald-500 outline-offset-2;
 }
 </style>

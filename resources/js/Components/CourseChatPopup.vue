@@ -41,7 +41,7 @@
                     </div>
                     <div>
                         <h2 class="text-lg font-bold text-white" id="chat-modal">
-                        AI Tutor
+                        Oli Ai Tutor
                         </h2>
                         <p class="mt-1 text-sm text-emerald-100">
                         {{ course.title }}

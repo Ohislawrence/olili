@@ -312,7 +312,8 @@ const unreadNotificationCount = ref(0)
 
 // Auto-hide flash messages after 5 seconds
 const autoHideFlash = () => {
-  if (page.props.flash.success || page.props.flash.error ||  props.flash.message ||  props.flash.status ) {
+  // Use only page.props - no need for props.props
+  if (page.props.flash.success || page.props.flash.error || page.props.flash.message || page.props.flash.status) {
     setTimeout(() => {
       clearFlash()
     }, 5000)

@@ -1,10 +1,4 @@
 <template>
-    <MetaTags
-        title="Blogs"
-        description="Stay upto date with Olilearn, get deals too."
-        image="/images/olingolearn.png"
-        type="article"
-    />
     <AppLayout>
         <Head title="Blogpost Updates" />
         <!-- Header -->
