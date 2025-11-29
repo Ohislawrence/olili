@@ -107,7 +107,7 @@ class CreateNewUser implements CreatesNewUsers
         if ($isSocialRegistration) {
             // Generate random password for social registrations
             $userData['password'] = Hash::make(Str::random(32));
-            $userData['email_verified_at'] = now(); // Social emails are typically verified
+            $userData['email_verified_at'] = now(); 
         } else {
             $userData['password'] = Hash::make($input['password']);
         }

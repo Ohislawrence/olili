@@ -300,13 +300,10 @@ class SocialAuthService
                 'provider_data' => $userData,
             ]);
 
-            Log::info('Social account linked to existing user', [
-                'user_id' => $user->id,
-                'provider' => $provider,
-                'provider_id' => $userData['id'],
-            ]);
+            Auth::login($user);
+            return redirect()->route('student.dashboard');
 
-            return $user;
+            //return $user;
         }
 
         // User doesn't exist - CREATE NEW USER with social data
@@ -334,13 +331,11 @@ class SocialAuthService
             $createNewUser = app(\App\Actions\Fortify\CreateNewUser::class);
             $user = $createNewUser->create($userInput);
 
-            Log::info('New user created via social registration', [
-                'user_id' => $user->id,
-                'provider' => $provider,
-                'email' => $userData['email'],
-            ]);
+            Auth::login($user);
 
-            return $user;
+            return redirect()->route('student.dashboard');
+
+            //return $user;
 
         } catch (\Exception $e) {
             Log::error('Failed to create user from social data', [

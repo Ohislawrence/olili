@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\BlogPostController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\EmailController;
 
 Route::middleware([
     'auth:sanctum',
@@ -117,4 +118,112 @@ Route::middleware([
     Route::put('/blog-posts/{blogPost}', [BlogPostController::class, 'update'])->name('blog-posts.update');
     Route::delete('/blog-posts/{blogPost}', [BlogPostController::class, 'destroy'])->name('blog-posts.destroy');
     Route::post('/upload-image', [BlogPostController::class, 'uploadImage'])->name('upload-image');
+
+    //email
+    Route::get('/email', [EmailController::class, 'index'])->name('email.index');
+    Route::post('/email/send', [EmailController::class, 'send'])->name('email.send');
+
+    // user search route
+    Route::get('/users/search', function (Request $request) {
+        try {
+            $search = $request->get('search', '');
+            $limit = $request->get('limit', 20);
+            
+            if (empty($search) || strlen($search) < 2) {
+                return response()->json([]);
+            }
+            
+            $users = \App\Models\User::where(function($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                })
+                ->with('roles')
+                ->where('is_active', true)
+                ->limit($limit)
+                ->get(['id', 'name', 'email'])
+                ->map(function ($user) {
+                    return [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'roles' => $user->roles->map(function ($role) {
+                            return [
+                                'id' => $role->id,
+                                'name' => $role->name
+                            ];
+                        })
+                    ];
+                });
+            
+            return response()->json($users);
+        } catch (\Exception $e) {
+            \Log::error('User search error: ' . $e->getMessage());
+            return response()->json([], 500);
+        }
+    })->name('users.search');
+
+    Route::get('/users/by-role/{role}', function ($role) {
+        try {
+            $validRoles = ['admin', 'student', 'tutor', 'organization'];
+            
+            if (!in_array($role, $validRoles)) {
+                return response()->json([], 400);
+            }
+            
+            $users = \App\Models\User::role($role)
+                ->with('roles')
+                ->where('is_active', true)
+                ->get(['id', 'name', 'email'])
+                ->map(function ($user) {
+                    return [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'roles' => $user->roles->map(function ($role) {
+                            return [
+                                'id' => $role->id,
+                                'name' => $role->name
+                            ];
+                        })
+                    ];
+                });
+            
+            return response()->json($users);
+        } catch (\Exception $e) {
+            \Log::error('Users by role error: ' . $e->getMessage());
+            return response()->json([], 500);
+        }
+    })->name('users.by-role');
+
+    Route::post('/users/by-ids', function (Request $request) {
+        try {
+            $userIds = $request->input('ids', []);
+            
+            if (empty($userIds)) {
+                return response()->json([]);
+            }
+            
+            $users = \App\Models\User::whereIn('id', $userIds)
+                ->with('roles')
+                ->get(['id', 'name', 'email'])
+                ->map(function ($user) {
+                    return [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'roles' => $user->roles->map(function ($role) {
+                            return [
+                                'id' => $role->id,
+                                'name' => $role->name
+                            ];
+                        })
+                    ];
+                });
+            
+            return response()->json($users);
+        } catch (\Exception $e) {
+            \Log::error('Users by IDs error: ' . $e->getMessage());
+            return response()->json([], 500);
+        }
+    })->name('users.by-ids');
 });

@@ -342,6 +342,7 @@ const toggleSidebar = () => {
 const navigation = [
   { name: 'Dashboard', href: route('admin.dashboard'), active: 'admin.dashboard', icon: HomeIcon },
   { name: 'Users', href: route('admin.users.index'), active: 'admin.users.*', icon: UsersIcon },
+  { name: 'Emails', href: route('admin.email.index'), active: 'admin.email.*', icon: UsersIcon },
   { name: 'BlogPost', href: route('admin.blog-posts.index'), active: 'admin.blog-posts.*', icon: UsersIcon },
   { name: 'Courses', href: route('admin.courses.index'), active: 'admin.courses.*', icon: BookOpenIcon },
   { name: 'AI Providers', href: route('admin.ai-providers.index'), active: 'admin.ai-providers.*', icon: CpuChipIcon },
