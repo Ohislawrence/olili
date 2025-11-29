@@ -24,9 +24,10 @@ class WelcomeStudentMail extends Mailable implements ShouldQueue
     public function build()
     {
         return $this->subject('Welcome to Olilearn - Start Your Learning Journey!')
-                    ->markdown('emails.welcome-student', [
-                        'user' => $this->user,
-                    ]);
+                ->markdown('emails.welcome-student', [
+                    'user' => $this->user,
+                ])
+                ->text('emails.welcome-student-plain');
     }
 
     protected function getLearningRecommendations(User $user)
