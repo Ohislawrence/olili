@@ -97,10 +97,10 @@ class CreateNewUser implements CreatesNewUsers
         // Prepare user data
         $userData = [
             'name' => $input['name'],
-            'email' => $input['email'],
-            'provider'=> $input['provider'],
-            'provider_id'=> $input['provider_id'],
-            'provider_token'=> $input['provider_token'],
+            'email' => $input['email'] ,
+            'provider'=> $input['provider'] ?? null,
+            'provider_id'=> $input['provider_id'] ?? null,
+            'provider_token'=> $input['provider_token'] ?? null,
         ];
 
         // Set password for social vs regular registration
