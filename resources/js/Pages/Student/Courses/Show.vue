@@ -399,18 +399,7 @@
                   Review Course
                 </Link>
 
-                <div class="grid grid-cols-2 gap-3">
-                  <Link
-                    :href="course.chat_sessions?.length > 0
-                        ? route('student.chat.show', { chatSession: course.chat_sessions[0].id })
-                        : route('student.chat.create', { course: course.id })"
-                    :method="course.chat_sessions?.length > 0 ? 'get' : 'post'"
-                    as="button"
-                    class="flex items-center justify-center px-3 py-2.5 border border-emerald-300 text-sm font-semibold rounded-lg text-emerald-700 bg-white hover:bg-emerald-50 transition-colors"
-                    >
-                    <ChatBubbleLeftRightIcon class="h-4 w-4 mr-2" />
-                    {{ course.chat_sessions?.length > 0 ? 'AI Tutor' : 'Start Chat' }}
-                    </Link>
+                <div class="pt-3 border-t border-gray-200">
                   <Link
                     v-if="course.capstone_project"
                     :href="route('student.capstone-projects.show', course.capstone_project.id)"
