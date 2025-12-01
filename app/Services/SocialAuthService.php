@@ -282,7 +282,7 @@ class SocialAuthService
                 'provider_id' => $userData['id'],
             ]);
 
-            return $socialAccount->user; // Return user object
+            return $socialAccount->user;
         }
 
         // Check if user exists by email (but doesn't have this social account linked)
@@ -300,16 +300,9 @@ class SocialAuthService
                 'provider_data' => $userData,
             ]);
 
-            // REMOVED: Auth::login($user);
-            // REMOVED: return redirect()->route('student.dashboard');
-            
-            return $user; // Just return the user object
+            // Just return the user object - controller will handle login and redirect
+            return $user;
         }
-
-        // User doesn't exist - CREATE NEW USER with social data
-        return $this->createUserFromSocialData($provider, $userData, $tokenData);
-    }
-
 
         // User doesn't exist - CREATE NEW USER with social data
         return $this->createUserFromSocialData($provider, $userData, $tokenData);
