@@ -1,5 +1,5 @@
 <template>
-  <StudentLayout>
+  <StudentLayout :content-loading="contentLoading" >
     <Head :title="`Learning: ${course.title}`" />
     <div class="h-screen flex overflow-hidden bg-gradient-to-br from-slate-50 to-emerald-50">
       <!-- Sidebar - Enhanced with Module/Topic Hierarchy -->
@@ -1367,6 +1367,7 @@ const markAsComplete = async () => {
 
 const generateContent = async (topic) => {
   contentLoading.value = true
+  
   try {
     await router.post(route('student.outlines.generate-content', {
       course: props.course.id,
@@ -1378,12 +1379,15 @@ const generateContent = async (topic) => {
       onError: (errors) => {
         console.error('Failed to generate content:', errors)
         alert('Failed to generate content. Please try again.')
+      },
+      onFinish: () => {
+        // This ensures the loading overlay disappears even if there's an error
+        contentLoading.value = false
       }
     })
   } catch (error) {
     console.error('Error generating content:', error)
     alert('An error occurred while generating content.')
-  } finally {
     contentLoading.value = false
   }
 }
@@ -1405,6 +1409,7 @@ function formatContent(content) {
 const startQuiz = async () => {
   if (!canAttemptQuiz.value) return
   quizLoading.value = true
+  contentLoading.value = true
   try {
     console.log('Starting quiz for:', props.current_topic.quiz.id)
     const response = await fetch(route('student.quizzes.start', props.current_topic.quiz.id), {
@@ -1437,6 +1442,7 @@ const startQuiz = async () => {
     alert('Failed to start quiz: ' + error.message)
   } finally {
     quizLoading.value = false
+    contentLoading.value = false
   }
 }
 
@@ -1475,6 +1481,7 @@ const submitQuiz = async () => {
     clearInterval(timerInterval.value);
   }
   quizLoading.value = true;
+  contentLoading.value = true;
   try {
     console.log('Submitting quiz attempt:', {
       attemptId: currentQuizAttempt.value.id,
@@ -1523,6 +1530,7 @@ const submitQuiz = async () => {
     alert('Failed to submit quiz: ' + error.message);
   } finally {
     quizLoading.value = false;
+    contentLoading.value = false;
   }
 }
 
@@ -1538,6 +1546,7 @@ const viewAttemptResults = (attempt) => {
 
 const generateQuiz = async (topic) => {
   quizLoading.value = true
+  contentLoading.value = true
   try {
     await router.post(route('student.outlines.generate-quiz', {
       course: props.course.id,
@@ -1556,6 +1565,7 @@ const generateQuiz = async (topic) => {
     alert('An error occurred while generating quiz.')
   } finally {
     quizLoading.value = false
+    contentLoading.value = false
   }
 }
 

@@ -262,9 +262,31 @@
         </header>
 
         <!-- Main Page Content -->
+        <div
+          v-if="contentLoading"
+          class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+        >
+          <div class="bg-white p-5 rounded-xl shadow-lg text-center max-w-sm">
+            <div class="flex items-center justify-center mb-3">
+              <svg class="animate-spin h-8 w-8 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+            <p class="text-lg font-medium text-gray-800">
+              Generating your learning content…
+            </p>
+            <p class="text-sm text-gray-500 mt-1">
+              Oli AI is creating personalized materials for you.
+            </p>
+            <p class="text-xs text-gray-400 mt-2">
+              Please stay on this page
+            </p>
+          </div>
+        </div>
         <main class="flex-1 overflow-y-auto bg-transparent pb-20 md:pb-0">
           <div class="p-4 sm:p-6 lg:p-8">
-            <div class="max-w-7xl mx-auto" :class="{ 'blur-sm pointer-events-none select-none': loading }">
+            <div class="max-w-7xl mx-auto" :class="{ 'blur-sm': loading && !props.disableGlobalBlur}">
               <div class="animate-fade-in-up">
                 <slot />
               </div>
@@ -280,7 +302,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { ref, onMounted, watch, nextTick, onUnmounted } from 'vue'
 import { router, usePage, Head } from '@inertiajs/vue3'
 import { Link } from '@inertiajs/vue3'
 import Dropdown from '@/Components/Dropdown.vue'
@@ -303,6 +325,19 @@ import {
   RectangleStackIcon,
 } from '@heroicons/vue/24/outline'
 import MobileBottomNav from '@/Components/Student/MobileBottomNav.vue'
+
+
+const props = defineProps({
+  disableGlobalBlur: {
+    type: Boolean,
+    default: false
+  },
+  contentLoading: {
+    type: Boolean,
+    default: false
+  }
+})
+
 
 const page = usePage()
 const loading = ref(false)
