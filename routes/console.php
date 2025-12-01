@@ -42,11 +42,7 @@ Schedule::command('reminders:send-course-creation')
     ->description('Send course creation reminders to users without courses');
 
 // ================= SYSTEM MAINTENANCE =================
-// Queue processing
-Schedule::command('queue:work --stop-when-empty --max-time=300')
-    ->everyMinute()
-    ->withoutOverlapping()
-    ->description('Process email queue jobs');
+
 
 // Optional: Cleanup tasks
 Schedule::command('model:prune')

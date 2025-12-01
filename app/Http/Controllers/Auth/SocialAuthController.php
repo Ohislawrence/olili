@@ -57,21 +57,12 @@ class SocialAuthController extends Controller
             // Check if this is a new user (just registered)
             $isNewUser = $user->wasRecentlyCreated;
 
-            // Record login history
-        if (method_exists($user, 'recordLogin')) {
-            $user->recordLogin('social_' . $provider);
-        }
-
-        // Check if this is a new user
-        $isNewUser = $user->wasRecentlyCreated;
-
-        // Use regular redirect with flash data
         if ($isNewUser) {
             return redirect()->route('dashboard')
                 ->with('success', 'Welcome! Your account has been created successfully with ' . ucfirst($provider) . '.');
         } else {
             return redirect()->route('dashboard')
-                ->with('info', 'Successfully signed in with ' . ucfirst($provider));
+                ->with('success', 'Successfully signed in with ' . ucfirst($provider));
         }
 
         } catch (\Exception $e) {

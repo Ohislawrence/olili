@@ -1,6 +1,17 @@
 <template>
     <Head title="Log in" />
-
+<!-- Flash Messages -->
+        <div v-if="$page.props.flash.success" class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+            {{ $page.props.flash.success }}
+        </div>
+        
+        <div v-if="$page.props.flash.error" class="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+            {{ $page.props.flash.error }}
+        </div>
+        
+        <div v-if="$page.props.flash.info" class="fixed top-4 right-4 bg-blue-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+            {{ $page.props.flash.info }}
+        </div>
     <!-- Background Elements -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
         <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-emerald-100 rounded-full opacity-30 animate-float"></div>
@@ -197,8 +208,10 @@
 </template>
 
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Head, Link, useForm,usePage } from '@inertiajs/vue3';
+import { computed,onMounted, watch } from 'vue';
+
+const page = usePage()
 
 const props = defineProps({
     canResetPassword: Boolean,
@@ -223,6 +236,17 @@ const submit = () => {
         onFinish: () => form.reset('password'),
     });
 };
+
+onMounted(() => {
+    if (page.props.flash.success || page.props.flash.error || page.props.flash.info) {
+        setTimeout(() => {
+            // Clear flash messages
+            page.props.flash.success = null
+            page.props.flash.error = null
+            page.props.flash.info = null
+        }, 5000)
+    }
+})
 </script>
 
 <style scoped>

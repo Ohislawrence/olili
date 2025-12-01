@@ -28,6 +28,17 @@ class CreateNewUser implements CreatesNewUsers
         // Check if this is a social registration (has social data)
         $isSocialRegistration = isset($input['provider']) && isset($input['provider_id']);
 
+        if ($isSocialRegistration) {
+            $existingUser = User::where('email', $input['email'])->first();
+            if ($existingUser) {
+                Log::info('Linking social account to existing user', [
+                    'user_id' => $existingUser->id,
+                    'provider' => $input['provider']
+                ]);
+                return $this->linkToExistingUser($existingUser, $input);
+            }
+        }
+        
         // Enhanced validation for role-based registration
         $validationRules = [
             'role' => ['required', 'in:student,tutor,organization'],
@@ -278,5 +289,26 @@ class CreateNewUser implements CreatesNewUsers
         }
 
         Subscription::create($subscriptionData);
+    }
+
+    protected function linkToExistingUser(User $user, array $input): User
+    {
+        // Link social account to existing user
+        SocialAccount::updateOrCreate(
+            [
+                'provider' => $input['provider'],
+                'provider_id' => $input['provider_id'],
+            ],
+            [
+                'user_id' => $user->id,
+                'token' => $input['provider_token'] ?? null,
+                'refresh_token' => $input['social_refresh_token'] ?? null,
+                'expires_at' => isset($input['social_expires_in']) ? 
+                    now()->addSeconds($input['social_expires_in']) : null,
+                'provider_data' => $input['social_user_data'] ?? null,
+            ]
+        );
+
+        return $user;
     }
 }
