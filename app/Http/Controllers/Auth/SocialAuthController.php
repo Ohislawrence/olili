@@ -57,14 +57,22 @@ class SocialAuthController extends Controller
             // Check if this is a new user (just registered)
             $isNewUser = $user->wasRecentlyCreated;
 
-            // Flash appropriate success message
-            if ($isNewUser) {
-                return Inertia::location(route('dashboard'))
-                    ->with('success', 'Welcome! Your account has been created successfully with ' . ucfirst($provider) . '.');
-            } else {
-                return Inertia::location(route('dashboard'))
-                    ->with('info', 'Successfully signed in with ' . ucfirst($provider));
-            }
+            // Record login history
+        if (method_exists($user, 'recordLogin')) {
+            $user->recordLogin('social_' . $provider);
+        }
+
+        // Check if this is a new user
+        $isNewUser = $user->wasRecentlyCreated;
+
+        // Use regular redirect with flash data
+        if ($isNewUser) {
+            return redirect()->route('dashboard')
+                ->with('success', 'Welcome! Your account has been created successfully with ' . ucfirst($provider) . '.');
+        } else {
+            return redirect()->route('dashboard')
+                ->with('info', 'Successfully signed in with ' . ucfirst($provider));
+        }
 
         } catch (\Exception $e) {
             Log::error("Social callback error for {$provider}: " . $e->getMessage());
