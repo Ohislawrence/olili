@@ -332,7 +332,7 @@ class SocialAuthService
             // REMOVED: Auth::login($user);
             // REMOVED: return redirect()->route('student.dashboard');
 
-            return $user; // Just return the user object
+            return $user; 
 
         } catch (\Exception $e) {
             Log::error('Failed to create user from social data', [
