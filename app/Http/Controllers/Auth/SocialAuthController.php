@@ -7,6 +7,7 @@ use App\Services\SocialAuthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
 
 class SocialAuthController extends Controller
 {
@@ -23,9 +24,7 @@ class SocialAuthController extends Controller
             return $this->socialAuthService->redirect($provider);
         } catch (\Exception $e) {
             Log::error("Social redirect error: " . $e->getMessage());
-            return redirect()->route('login')->withErrors([
-                'email' => 'Failed to initiate social login.'
-            ]);
+            return Inertia::location(route('login'))->with('error', 'Failed to initiate social login.');
         }
     }
 
@@ -43,9 +42,7 @@ class SocialAuthController extends Controller
                 ]);
 
                 return redirect()->route('login')
-                    ->withErrors([
-                        'email' => $this->getOAuthErrorDescription($error, $provider)
-                    ]);
+                    ->with('error', $this->getOAuthErrorDescription($error, $provider));
             }
 
             $user = $this->socialAuthService->handleCallback($provider, $request->all());
@@ -57,18 +54,23 @@ class SocialAuthController extends Controller
                 $user->recordLogin('social_' . $provider);
             }
 
-            // Flash success message
-            session()->flash('status', "Successfully signed in with " . ucfirst($provider));
+            // Check if this is a new user (just registered)
+            $isNewUser = $user->wasRecentlyCreated;
 
-            return redirect()->intended(route('dashboard'));
+            // Flash appropriate success message
+            if ($isNewUser) {
+                return Inertia::location(route('dashboard'))
+                    ->with('success', 'Welcome! Your account has been created successfully with ' . ucfirst($provider) . '.');
+            } else {
+                return Inertia::location(route('dashboard'))
+                    ->with('info', 'Successfully signed in with ' . ucfirst($provider));
+            }
 
         } catch (\Exception $e) {
             Log::error("Social callback error for {$provider}: " . $e->getMessage());
 
             return redirect()->route('login')
-                ->withErrors([
-                    'email' => $this->getUserFriendlyError($e->getMessage(), $provider)
-                ]);
+                ->with('error', $this->getUserFriendlyError($e->getMessage(), $provider));
         }
     }
 
@@ -86,10 +88,10 @@ class SocialAuthController extends Controller
                 'provider' => $provider,
             ]);
 
-            return back()->with('status', ucfirst($provider) . ' account unlinked successfully.');
+            return back()->with('success', ucfirst($provider) . ' account unlinked successfully.');
         }
 
-        return back()->withErrors(['email' => 'No linked account found for ' . ucfirst($provider)]);
+        return back()->with('error', 'No linked account found for ' . ucfirst($provider));
     }
 
     /**
@@ -109,6 +111,7 @@ class SocialAuthController extends Controller
 
         return $errorMessages[$error] ?? 'An error occurred during ' . ucfirst($provider) . ' authentication. Please try again.';
     }
+
 
     /**
      * Get user-friendly error messages
@@ -149,9 +152,7 @@ class SocialAuthController extends Controller
             // Check for error parameters from provider
             if ($request->has('error')) {
                 $error = $request->get('error');
-                return back()->withErrors([
-                    'email' => $this->getOAuthErrorDescription($error, $provider)
-                ]);
+                return back()->with('error', $this->getOAuthErrorDescription($error, $provider));
             }
 
             // Get access token and user info
@@ -161,14 +162,12 @@ class SocialAuthController extends Controller
             // Link the account
             $this->socialAuthService->linkAccount($user, $provider, $userData, $tokenData);
 
-            return back()->with('status', ucfirst($provider) . ' account linked successfully!');
+            return back()->with('success', ucfirst($provider) . ' account linked successfully!');
 
         } catch (\Exception $e) {
             Log::error("Social account linking error for {$provider}: " . $e->getMessage());
 
-            return back()->withErrors([
-                'email' => $this->getUserFriendlyError($e->getMessage(), $provider)
-            ]);
+            return back()->with('error', $this->getUserFriendlyError($e->getMessage(), $provider));
         }
     }
 }
