@@ -282,7 +282,7 @@ class SocialAuthService
                 'provider_id' => $userData['id'],
             ]);
 
-            return $socialAccount->user;
+            return $socialAccount->user; // Return user object
         }
 
         // Check if user exists by email (but doesn't have this social account linked)
@@ -300,11 +300,16 @@ class SocialAuthService
                 'provider_data' => $userData,
             ]);
 
-            Auth::login($user);
-            return redirect()->route('student.dashboard');
-
-            //return $user;
+            // REMOVED: Auth::login($user);
+            // REMOVED: return redirect()->route('student.dashboard');
+            
+            return $user; // Just return the user object
         }
+
+        // User doesn't exist - CREATE NEW USER with social data
+        return $this->createUserFromSocialData($provider, $userData, $tokenData);
+    }
+
 
         // User doesn't exist - CREATE NEW USER with social data
         return $this->createUserFromSocialData($provider, $userData, $tokenData);
@@ -331,11 +336,10 @@ class SocialAuthService
             $createNewUser = app(\App\Actions\Fortify\CreateNewUser::class);
             $user = $createNewUser->create($userInput);
 
-            Auth::login($user);
+            // REMOVED: Auth::login($user);
+            // REMOVED: return redirect()->route('student.dashboard');
 
-            return redirect()->route('student.dashboard');
-
-            //return $user;
+            return $user; // Just return the user object
 
         } catch (\Exception $e) {
             Log::error('Failed to create user from social data', [
@@ -347,6 +351,7 @@ class SocialAuthService
             throw new \Exception('Failed to create user account: ' . $e->getMessage());
         }
     }
+    
     protected function verifyState(string $state)
     {
         $sessionState = session('oauth_state');
