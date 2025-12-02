@@ -11,6 +11,7 @@ use App\Http\Controllers\LoginHistoryController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Test\TestingController;
 use App\Http\Controllers\WelcomeController;
+use App\Http\Controllers\OnboardingController;
 use App\Mail\WelcomeStudentMail;
 use Illuminate\Support\Facades\Mail;
 
@@ -61,6 +62,13 @@ require __DIR__.'/admin.php';
 require __DIR__.'/student.php';
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
     Route::get('/login-history', [LoginHistoryController::class, 'index'])->name('login.history');
+});
+
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->prefix('onboarding')->name('onboarding.')->group(function () {
+    Route::post('/complete', [OnboardingController::class, 'complete'])->name('complete');
+    Route::post('/skip', [OnboardingController::class, 'skip'])->name('skip');
+    Route::post('/restart', [OnboardingController::class, 'restart'])->name('restart');
+    Route::get('/status', [OnboardingController::class, 'status'])->name('status');
 });
 
 // Test route

@@ -133,6 +133,9 @@
                 {{ item.name }}
               </span>
             </NavLink>
+            <div class="mt-8">
+                <OnboardingButton />
+            </div>
           </div>
         </nav>
 
@@ -299,6 +302,11 @@
     <!-- Mobile Bottom Navigation - Fixed at bottom -->
     <MobileBottomNav class="fixed bottom-0 left-0 right-0 z-40 md:hidden" />
   </div>
+  <OnboardingModal 
+      :show="showOnboardingModal" 
+      :user="$page.props.auth.user"
+      @close="closeOnboarding"
+  />
 </template>
 
 <script setup>
@@ -308,6 +316,8 @@ import { Link } from '@inertiajs/vue3'
 import Dropdown from '@/Components/Dropdown.vue'
 import DropdownLink from '@/Components/DropdownLink.vue'
 import NavLink from '@/Components/NavLink.vue'
+import OnboardingModal from '@/Components/Onboarding/OnboardingModal.vue';
+import OnboardingButton from '@/Components/Onboarding/OnboardingButton.vue';
 import {
   HomeIcon,
   BookOpenIcon,
@@ -335,9 +345,14 @@ const props = defineProps({
   contentLoading: {
     type: Boolean,
     default: false
-  }
+  },
+  showOnboarding: {
+        type: Boolean,
+        default: false,
+    },
 })
 
+const showOnboardingModal = ref(props.showOnboarding);
 
 const page = usePage()
 const loading = ref(false)
@@ -425,6 +440,28 @@ onMounted(() => {
     // Optional: Refresh count every 30 seconds
     setInterval(fetchUnreadCount, 30000)
 })
+
+// Watch for changes from parent
+watch(() => props.showOnboarding, (newVal) => {
+    showOnboardingModal.value = newVal;
+});
+
+const closeOnboarding = () => {
+    showOnboardingModal.value = false;
+};
+
+// Check localStorage for restart flag
+const checkLocalStorage = () => {
+    if (localStorage.getItem('showOnboarding')) {
+        showOnboardingModal.value = true;
+        localStorage.removeItem('showOnboarding');
+    }
+};
+
+// Check on component mount
+onMounted(() => {
+    checkLocalStorage();
+});
 </script>
 
 <style scoped>

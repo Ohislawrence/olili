@@ -13,6 +13,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Http;
+use App\Traits\HasOnboarding;
 
 
 
@@ -20,6 +21,7 @@ class User extends Authenticatable
 {
     use HasApiTokens;
     use HasRoles;
+    use HasOnboarding;
 
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory;
@@ -53,6 +55,10 @@ class User extends Authenticatable
         'last_login_ip',
         'login_count',
         'last_failed_login_at',
+        'onboarding_completed_at',
+        'onboarding_skipped_at',
+        'onboarding_seen_at',
+        'onboarding_data',
     ];
 
     /**
@@ -95,6 +101,10 @@ class User extends Authenticatable
             'failed_login_attempts' => 'integer',
             'account_locked_until' => 'datetime',
             'login_count' => 'integer',
+            'onboarding_completed_at' => 'datetime',
+            'onboarding_skipped_at' => 'datetime',
+            'onboarding_seen_at' => 'datetime',
+            'onboarding_data' => 'array',
         ];
     }
 

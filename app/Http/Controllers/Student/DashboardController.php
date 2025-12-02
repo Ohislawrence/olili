@@ -59,6 +59,7 @@ class DashboardController extends Controller
                 'learning_analytics' => [],
                 'student_profile' => null,
                 'current_subscription' => null,
+                'showOnboarding' => $user->shouldSeeOnboarding(),
             ]);
         }
     }

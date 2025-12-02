@@ -11,6 +11,8 @@ use App\Listeners\RecordSuccessfulLogin;
 use App\Listeners\RecordFailedLogin;
 use App\Listeners\RecordLogout;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
+use App\Events\OnboardingCompleted;
+use App\Listeners\SendOnboardingCompletionNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
@@ -28,6 +30,9 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
             //SendWelcomeEmail::class,
+        ],
+        OnboardingCompleted::class => [
+            SendOnboardingCompletionNotification::class,
         ],
     ];
 
