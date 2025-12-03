@@ -10,7 +10,6 @@ use App\Http\Controllers\Admin\AiAnalyticsController;
 use App\Http\Controllers\Admin\SystemSettingsController;
 use App\Http\Controllers\Admin\SubscriptionPlanController;
 use App\Http\Controllers\Admin\SubscriptionController;
-use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\BlogPostController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\EmailController;

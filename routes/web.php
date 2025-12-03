@@ -5,13 +5,15 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SocialAuthController;
-use App\Http\Controllers\BlogController;
 use App\Http\Controllers\FrontpageController;
 use App\Http\Controllers\LoginHistoryController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Test\TestingController;
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\Community\CommunityController;
+use App\Http\Controllers\Community\PostController;
+use App\Http\Controllers\Community\ProfileController;
 use App\Mail\WelcomeStudentMail;
 use Illuminate\Support\Facades\Mail;
 
@@ -27,6 +29,7 @@ Route::get('/help', [FrontpageController::class, 'help'])->name('help');
 Route::get('/contact', [FrontpageController::class, 'contact'])->name('contact');
 Route::get('/faq', [FrontpageController::class, 'faq'])->name('faq');
 
+// Courses routes
 Route::get('/course', [FrontpageController::class, 'coursesIndex'])->name('courses.index');
 Route::get('/course/{course:slug}', [FrontpageController::class, 'courseShow'])->name('courses.show');
 
@@ -37,8 +40,8 @@ Route::get('/blog', [FrontpageController::class, 'blogIndex'])->name('blog.index
 Route::get('/blog/{slug}', [FrontpageController::class, 'blogShow'])->name('blog.show');
 
 // Courses routes
-Route::get('/courses', [FrontpageController::class, 'coursesIndex'])->name('courses.index');
-Route::get('/courses/{id}', [FrontpageController::class, 'courseShow'])->name('courses.show');
+//Route::get('/courses', [FrontpageController::class, 'coursesIndex'])->name('courses.index');
+//Route::get('/courses/{id}', [FrontpageController::class, 'courseShow'])->name('courses.show');
 
 
 
@@ -64,11 +67,57 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::get('/login-history', [LoginHistoryController::class, 'index'])->name('login.history');
 });
 
+
+//onboarding
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->prefix('onboarding')->name('onboarding.')->group(function () {
     Route::post('/complete', [OnboardingController::class, 'complete'])->name('complete');
     Route::post('/skip', [OnboardingController::class, 'skip'])->name('skip');
     Route::post('/restart', [OnboardingController::class, 'restart'])->name('restart');
     Route::get('/status', [OnboardingController::class, 'status'])->name('status');
+});
+
+//community
+Route::prefix('community')->name('community.')->group(function () {
+    // Main community page
+    Route::get('/', [CommunityController::class, 'index'])->name('index');
+    
+    // View individual post
+    Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
+    
+    // View user profiles
+    Route::get('/profile/{user}', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/{user}/followers', [ProfileController::class, 'followers'])->name('profile.followers');
+    Route::get('/profile/{user}/following', [ProfileController::class, 'following'])->name('profile.following');
+    
+});
+
+// Protected routes (auth required)
+Route::middleware([
+            config('jetstream.auth_session'), 
+            'auth:sanctum',                   
+            'verified'                        
+        ])->group(function () {
+        // Post creation
+    Route::get('/posts/creates', [CommunityController::class, 'creates'])->name('posts.creates');
+    
+    Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+    
+    // Post interactions (edit/delete)
+    Route::put('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
+    Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+    
+    // Like/Unlike
+    Route::post('/posts/{post}/like', [PostController::class, 'like'])->name('posts.like');
+    Route::delete('/posts/{post}/like', [PostController::class, 'unlike'])->name('posts.unlike');
+    
+    // Comments
+    Route::post('/posts/{post}/comments', [PostController::class, 'storeComment'])->name('posts.comments.store');
+    Route::delete('/comments/{comment}', [PostController::class, 'deleteComment'])->name('comments.destroy');
+    
+    // Follow/Unfollow
+    Route::post('/profile/{user}/follow', [ProfileController::class, 'follow'])->name('profile.follow');
+    Route::delete('/profile/{user}/follow', [ProfileController::class, 'unfollow'])->name('profile.unfollow');
+    
 });
 
 // Test route

@@ -3,7 +3,7 @@
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\ProgressController;
 use App\Http\Controllers\Api\NotificationController;
-use App\Http\Controllers\BlogController;
+use App\Http\Controllers\Admin\BlogPostController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -19,4 +19,4 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/notifications/mark-read', [NotificationController::class, 'markAsRead']);
 });
 
-Route::get('/api/featured-blog-posts', [BlogController::class, 'featured']);
+Route::get('/api/featured-blog-posts', [BlogPostController::class, 'featured']);

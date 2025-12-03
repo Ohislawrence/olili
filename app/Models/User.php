@@ -771,4 +771,75 @@ class User extends Authenticatable
         return $this->socialAccounts()->where('provider', $provider)->exists();
     }
 
+    public function communityPosts()
+    {
+        return $this->hasMany(CommunityPost::class);
+    }
+
+    public function postComments()
+    {
+        return $this->hasMany(PostComment::class);
+    }
+
+    public function postLikes()
+    {
+        return $this->hasMany(PostLike::class);
+    }
+
+    public function followers()
+    {
+        return $this->hasMany(UserFollower::class, 'user_id')->with('follower');
+    }
+
+    public function following()
+    {
+        return $this->hasMany(UserFollower::class, 'follower_id')->with('user');
+    }
+
+    public function isFollowing(User $user): bool
+    {
+        return $this->following()->where('user_id', $user->id)->exists();
+    }
+
+    public function follow(User $user): void
+    {
+        if (!$this->isFollowing($user)) {
+            UserFollower::create([
+                'user_id' => $user->id,
+                'follower_id' => $this->id,
+            ]);
+        }
+    }
+
+    public function unfollow(User $user): void
+    {
+        $this->following()->where('user_id', $user->id)->delete();
+    }
+
+    public function getFollowerCountAttribute(): int
+    {
+        return $this->followers()->count();
+    }
+
+    public function getFollowingCountAttribute(): int
+    {
+        return $this->following()->count();
+    }
+
+    public function getPostCountAttribute(): int
+    {
+        return $this->communityPosts()->count();
+    }
+
+    public function getCommunityStatsAttribute(): array
+    {
+        return [
+            'posts' => $this->post_count,
+            'followers' => $this->follower_count,
+            'following' => $this->following_count,
+            'likes_received' => $this->communityPosts()->sum('like_count'),
+            'comments_received' => $this->communityPosts()->sum('comment_count'),
+        ];
+    }
+
 }

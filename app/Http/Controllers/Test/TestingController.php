@@ -16,8 +16,11 @@ class TestingController extends Controller
     {
         //$subscription = auth()->user()->current_subscription;
        // dd($subscription->hasFeature('unlimited_course_creation'));
-        $student = auth()->user();
-        $vart = CourseCreationReminder::find('1');
-        dd($vart);
+        $user = auth()->user();
+        $courses = $user->courses()->active()->get();
+
+        return Inertia::render('Frontpages/Community/Create', [
+            'courses' => $courses,
+        ]);
     }
 }

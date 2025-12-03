@@ -260,7 +260,7 @@ const steps = ref([
             'Spaced repetition for better memory',
             'Create custom flashcards for any topic',
         ],
-        feature: 'Flashcards are auto-generated from your courses',
+        feature: 'Flashcards can be created from any course.',
     },
     {
         id: 'progress',

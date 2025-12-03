@@ -94,6 +94,12 @@ class WelcomeController extends Controller
             'courses' => $courses,
             'blogPosts' => $blogPosts,
             'subscriptionPlans' => $subscriptionPlans,
+            'meta' => [
+                'title' => 'Unlocking potential with AI-personalized learning for every student',
+                'description' => 'Discover how Olilearn combines artificial intelligence with proven learning methodologies to create the most effective and engaging educational experience.',
+                'image' => asset('olilearn-main.png'),
+                'url' => url()->current(),
+            ]
         ]);
     }
 }

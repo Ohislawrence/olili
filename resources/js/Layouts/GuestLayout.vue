@@ -19,7 +19,7 @@
                         <Link :href="route('features')" class="text-gray-700 hover:text-emerald-600 font-medium transition-colors" :class="{ 'text-emerald-600': $page.component === 'frontpages/Features' }">Features</Link>
                         <Link :href="route('courses.index')" class="text-gray-700 hover:text-emerald-600 font-medium transition-colors">Courses</Link>
                         <Link :href="route('blog.index')" class="text-gray-700 hover:text-emerald-600 font-medium transition-colors" :class="{ 'text-emerald-600': $page.component.startsWith('Blog') }">Blog</Link>
-                        <Link :href="route('community')" class="text-gray-700 hover:text-emerald-600 font-medium transition-colors" :class="{ 'text-emerald-600': $page.component === 'frontpages/Community' }">Community</Link>
+                        <Link :href="route('community.index')" class="text-gray-700 hover:text-emerald-600 font-medium transition-colors" :class="{ 'text-emerald-600': $page.component === 'frontpages/Community' }">Community</Link>
                         <Link :href="route('about')" class="text-gray-700 hover:text-emerald-600 font-medium transition-colors" :class="{ 'text-emerald-600': $page.component === 'frontpages/About' }">About</Link>
                     </nav>
 
@@ -85,7 +85,7 @@
                         <h3 class="text-lg font-semibold mb-4">Support</h3>
                         <ul class="space-y-2">
                             <li><Link :href="route('help')" class="text-gray-400 hover:text-emerald-400 transition">Help Center</Link></li>
-                            <li><Link :href="route('community')" class="text-gray-400 hover:text-emerald-400 transition">Community</Link></li>
+                            <li><Link :href="route('community.index')" class="text-gray-400 hover:text-emerald-400 transition">Community</Link></li>
                             <li><Link :href="route('contact')" class="text-gray-400 hover:text-emerald-400 transition">Contact Us</Link></li>
                             <li><Link :href="route('faq')" class="text-gray-400 hover:text-emerald-400 transition">FAQ</Link></li>
                         </ul>
