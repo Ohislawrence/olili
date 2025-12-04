@@ -81,8 +81,14 @@ class CourseController extends Controller
         $course->load([
             'studentProfile.user',
             'examBoard',
-            'outlines.contents',
-            'outlines.quiz',
+            'modules.topics.contents',
+            'modules.topics.quiz',
+            'flashcards' => function ($query) {
+                $query->with('user')->orderBy('created_at', 'desc');
+            },
+            'flashcardSets' => function ($query) {
+                $query->withCount('flashcards')->with('flashcards');
+            },
             'capstoneProject',
             'chatSessions' => function ($query) {
                 $query->with('messages')->latest()->limit(5);
@@ -90,14 +96,26 @@ class CourseController extends Controller
             'progressTracking.user',
         ]);
 
+        // Flatten topics for easier access
+        $course->topics = $course->modules->flatMap->topics;
+        
+        // Calculate due flashcards
+        $dueFlashcards = $course->flashcards->filter(function($flashcard) {
+            return !$flashcard->next_review_date || 
+                \Carbon\Carbon::parse($flashcard->next_review_date)->lte(now());
+        })->count();
+
         $stats = [
-            'total_outlines' => $course->outlines->count(),
-            'completed_outlines' => $course->outlines->where('is_completed', true)->count(),
-            'total_quizzes' => $course->outlines->where('has_quiz', true)->count(),
-            'total_content_items' => $course->outlines->sum(function ($outline) {
-                return $outline->contents->count();
+            'total_outlines' => $course->topics->count(),
+            'completed_outlines' => $course->topics->where('is_completed', true)->count(),
+            'total_quizzes' => $course->topics->where('has_quiz', true)->count(),
+            'total_content_items' => $course->topics->sum(function ($topic) {
+                return $topic->contents->count();
             }),
             'total_study_time' => $course->progressTracking->sum('time_spent_minutes'),
+            'total_flashcards' => $course->flashcards->count(),
+            'flashcard_sets_count' => $course->flashcardSets->count(),
+            'due_flashcards' => $dueFlashcards, // Add this line
         ];
 
         return Inertia::render('Admin/Courses/Show', [
@@ -282,5 +300,22 @@ class CourseController extends Controller
         ];
     }
 
+    public function flashcards(Course $course)
+    {
+        $flashcards = $course->flashcards()
+            ->with(['user', 'courseOutline'])
+            ->orderBy('next_review_date', 'asc')
+            ->paginate(20);
+
+        $flashcardSets = $course->flashcardSets()
+            ->withCount('flashcards')
+            ->paginate(10);
+
+        return Inertia::render('Admin/Courses/Flashcards', [
+            'course' => $course,
+            'flashcards' => $flashcards,
+            'flashcardSets' => $flashcardSets,
+        ]);
+    }
 
 }

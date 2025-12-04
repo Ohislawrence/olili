@@ -36,7 +36,7 @@ class ContentGenerationService
         try {
             $content = $this->aiService->chat($messages, [
                 'temperature' => 0.8,
-                'max_tokens' => 3000,
+                'max_tokens' => 4000,
             ], 'content_generation');
 
             return CourseContent::create([

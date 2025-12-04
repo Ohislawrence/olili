@@ -14,13 +14,40 @@ class TestingController extends Controller
 {
     public function test()
     {
-        //$subscription = auth()->user()->current_subscription;
-       // dd($subscription->hasFeature('unlimited_course_creation'));
-        $user = auth()->user();
-        $courses = $user->courses()->active()->get();
+        try {
+        $response = Http::withoutVerifying()->timeout(60)
+            ->withHeaders([
+                'Authorization' => 'Bearer ' . env('DEEPSEEK_API_KEY'),
+                'Content-Type'  => 'application/json',
+            ])
+            ->post('https://api.deepseek.com/chat/completions', [
+                'model' => 'deepseek-chat',
+                'messages' => [
+                    ['role' => 'user', 'content' => 'Say hello in one sentence.']
+                ],
+                'stream' => false,  // IMPORTANT: Prevent cURL error 18
+            ]);
 
-        return Inertia::render('Frontpages/Community/Create', [
-            'courses' => $courses,
-        ]);
+        if ($response->failed()) {
+            return [
+                'status' => 'error',
+                'http_code' => $response->status(),
+                'body' => $response->body()
+            ];
+        }
+
+        $data = $response->json();
+
+        return [
+            'status' => 'success',
+            'reply'  => $data['choices'][0]['message']['content'] ?? null
+        ];
+
+    } catch (\Exception $e) {
+        return [
+            'status' => 'exception',
+            'message' => $e->getMessage(),
+        ];
+    }
     }
 }

@@ -125,7 +125,7 @@ class AiProviderController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:255|unique:ai_providers,code,' . $aiProvider->id,
-            'api_key' => 'required|string',
+            'api_key' => 'nullable|string',
             'base_url' => 'nullable|url',
             'available_models' => 'required|array|min:1',
             'available_models.*' => 'string',
@@ -144,7 +144,7 @@ class AiProviderController extends Controller
         $aiProvider->update([
             'name' => $request->name,
             'code' => $request->code,
-            'api_key' => $request->api_key,
+            'api_key' => $request->filled('api_key') ? $request->api_key : $aiProvider->api_key,
             'base_url' => $request->base_url,
             'available_models' => $request->available_models,
             'cost_per_token' => $request->cost_per_token,

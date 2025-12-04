@@ -220,4 +220,21 @@ class Course extends Model
             $notificationService->sendImmediateOverdueNotification($this);
         }
     }
+
+    public function getAllTopicsAttribute()
+    {
+        return $this->modules->flatMap(function($module) {
+            return $module->topics;
+        });
+    }
+
+    public function flashcards()
+    {
+        return $this->hasMany(Flashcard::class);
+    }
+
+    public function flashcardSets()
+    {
+        return $this->hasMany(FlashcardSet::class);
+    }
 }

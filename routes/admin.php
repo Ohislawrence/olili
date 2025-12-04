@@ -11,8 +11,10 @@ use App\Http\Controllers\Admin\SystemSettingsController;
 use App\Http\Controllers\Admin\SubscriptionPlanController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\BlogPostController;
+use App\Http\Controllers\Admin\CommunityController as AdminCommunityController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\EmailController;
+use Illuminate\Http\Request;
 
 Route::middleware([
     'auth:sanctum',
@@ -49,6 +51,7 @@ Route::middleware([
     Route::post('/courses/{course}/update-progress', [CourseController::class, 'updateProgress'])->name('courses.update-progress');
     Route::post('/courses/{course}/regenerate-outline', [CourseController::class, 'regenerateOutline'])->name('courses.regenerate-outline');
     Route::get('/courses/{course}/analytics', [CourseController::class, 'getCourseAnalytics'])->name('courses.analytics');
+    Route::get('/courses/{course}/flashcards', [CourseController::class, 'flashcards'])->name('courses.flashcards');
 
     // AI Providers Management
     Route::get('/ai-providers', [AiProviderController::class, 'index'])->name('ai-providers.index');
@@ -122,16 +125,47 @@ Route::middleware([
     Route::get('/email', [EmailController::class, 'index'])->name('email.index');
     Route::post('/email/send', [EmailController::class, 'send'])->name('email.send');
 
+
+    /**
+    // Community Management
+    Route::prefix('mod')->name('mod.')->group(function () {
+        Route::get('/check', [AdminCommunityController::class, 'index'])->name('index');
+        // Posts management
+        Route::prefix('posts')->name('posts.')->group(function () {
+            Route::get('/{post}', [AdminCommunityController::class, 'show'])->name('show');
+            Route::post('/{post}/approve', [AdminCommunityController::class, 'approve'])->name('approve');
+            Route::post('/{post}/reject', [AdminCommunityController::class, 'reject'])->name('reject');
+            Route::post('/{post}/pin', [AdminCommunityController::class, 'pin'])->name('pin');
+            Route::post('/{post}/unpin', [AdminCommunityController::class, 'unpin'])->name('unpin');
+            Route::delete('/{post}', [AdminCommunityController::class, 'destroy'])->name('destroy');
+        });
+
+        // Bulk actions
+        Route::post('/bulk-action', [AdminCommunityController::class, 'bulkAction'])->name('bulk-action');
+
+        // Comments moderation
+        Route::get('/comments', [AdminCommunityController::class, 'moderateComments'])->name('comments.index');
+        Route::post('/comments/{comment}/approve', [AdminCommunityController::class, 'approveComment'])->name('comments.approve');
+        Route::delete('/comments/{comment}', [AdminCommunityController::class, 'deleteComment'])->name('comments.destroy');
+
+        // User activity
+        Route::get('/users/{user}/activity', [AdminCommunityController::class, 'userActivity'])->name('users.activity');
+
+        // Export
+        Route::get('/export', [AdminCommunityController::class, 'export'])->name('export');
+    });
+
+ */
     // user search route
     Route::get('/users/search', function (Request $request) {
         try {
             $search = $request->get('search', '');
             $limit = $request->get('limit', 20);
-            
+
             if (empty($search) || strlen($search) < 2) {
                 return response()->json([]);
             }
-            
+
             $users = \App\Models\User::where(function($query) use ($search) {
                     $query->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
@@ -153,7 +187,7 @@ Route::middleware([
                         })
                     ];
                 });
-            
+
             return response()->json($users);
         } catch (\Exception $e) {
             \Log::error('User search error: ' . $e->getMessage());
@@ -164,11 +198,11 @@ Route::middleware([
     Route::get('/users/by-role/{role}', function ($role) {
         try {
             $validRoles = ['admin', 'student', 'tutor', 'organization'];
-            
+
             if (!in_array($role, $validRoles)) {
                 return response()->json([], 400);
             }
-            
+
             $users = \App\Models\User::role($role)
                 ->with('roles')
                 ->where('is_active', true)
@@ -186,7 +220,7 @@ Route::middleware([
                         })
                     ];
                 });
-            
+
             return response()->json($users);
         } catch (\Exception $e) {
             \Log::error('Users by role error: ' . $e->getMessage());
@@ -197,11 +231,11 @@ Route::middleware([
     Route::post('/users/by-ids', function (Request $request) {
         try {
             $userIds = $request->input('ids', []);
-            
+
             if (empty($userIds)) {
                 return response()->json([]);
             }
-            
+
             $users = \App\Models\User::whereIn('id', $userIds)
                 ->with('roles')
                 ->get(['id', 'name', 'email'])
@@ -218,7 +252,7 @@ Route::middleware([
                         })
                     ];
                 });
-            
+
             return response()->json($users);
         } catch (\Exception $e) {
             \Log::error('Users by IDs error: ' . $e->getMessage());

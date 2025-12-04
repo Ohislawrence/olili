@@ -49,20 +49,150 @@
                 <h3 class="text-lg font-semibold text-gray-900">Progress Overview</h3>
               </div>
               <div class="p-6">
-                <div class="flex items-center justify-between mb-4">
-                  <div>
-                    <h4 class="text-sm font-medium text-gray-500">Overall Progress</h4>
-                    <p class="text-2xl font-bold text-gray-900">
-                      {{ Math.round(course.progress_percentage) }}%
-                    </p>
-                  </div>
-                  <div class="text-right">
-                    <h4 class="text-sm font-medium text-gray-500">Completed</h4>
-                    <p class="text-2xl font-bold text-gray-900">
-                      {{ course.completed_outlines_count }}/{{ course.outlines_count }}
-                    </p>
-                  </div>
-                </div>
+                <!-- Update all stat references to use optional chaining -->
+<div class="flex items-center justify-between mb-4">
+  <div>
+    <h4 class="text-sm font-medium text-gray-500">Overall Progress</h4>
+    <p class="text-2xl font-bold text-gray-900">
+      {{ Math.round(course.progress_percentage) }}%
+    </p>
+  </div>
+  <div class="text-right">
+    <h4 class="text-sm font-medium text-gray-500">Completed</h4>
+    <p class="text-2xl font-bold text-gray-900">
+      {{ course.completed_outlines_count || 0 }}/{{ course.outlines_count || 0 }}
+    </p>
+  </div>
+</div>
+
+<!-- Update the flashcards section to be safer -->
+<div class="bg-white shadow rounded-lg">
+  <div class="px-6 py-4 border-b border-gray-200">
+    <div class="flex justify-between items-center">
+      <h3 class="text-lg font-semibold text-gray-900">Flashcards</h3>
+      <span class="text-sm text-gray-500">
+        {{ course.flashcards?.length || 0 }} cards • 
+        {{ stats?.due_flashcards || 0 }} due for review
+      </span>
+    </div>
+  </div>
+  
+  <div class="p-6">
+    <!-- Flashcard Sets -->
+    <div v-if="course.flashcard_sets?.length" class="mb-6">
+      <h4 class="text-md font-medium text-gray-900 mb-3">Flashcard Sets</h4>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div
+          v-for="set in course.flashcard_sets"
+          :key="set.id"
+          class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50"
+        >
+          <div class="flex justify-between items-start">
+            <div>
+              <h5 class="font-medium text-gray-900">{{ set.title }}</h5>
+              <p class="text-sm text-gray-500 mt-1">{{ set.description }}</p>
+            </div>
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+              :class="set.is_public ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
+            >
+              {{ set.is_public ? 'Public' : 'Private' }}
+            </span>
+          </div>
+          <div class="mt-3 flex items-center text-sm text-gray-500">
+            <AcademicCapIcon class="h-4 w-4 mr-1" />
+            <span>{{ set.flashcards_count || 0 }} cards</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Individual Flashcards -->
+    <div v-if="course.flashcards?.length" class="mb-6">
+      <h4 class="text-md font-medium text-gray-900 mb-3">Recent Flashcards</h4>
+      <div class="space-y-3">
+        <div
+          v-for="flashcard in course.flashcards.slice(0, 5)"
+          :key="flashcard.id"
+          class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50"
+        >
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2 mb-2">
+                <span
+                  class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium capitalize"
+                  :class="getDifficultyClass(flashcard.difficulty_level)"
+                >
+                  {{ flashcard.difficulty_level || 'medium' }}
+                </span>
+                <span v-if="flashcard.course_outline" class="text-xs text-gray-500">
+                  {{ flashcard.course_outline.title }}
+                </span>
+              </div>
+              
+              <div class="mb-3">
+                <p class="text-sm font-medium text-gray-900 mb-1">
+                  <span class="text-gray-500">Q:</span> {{ flashcard.question || 'No question' }}
+                </p>
+                <p class="text-sm text-gray-600">
+                  <span class="text-gray-500">A:</span> {{ flashcard.answer || 'No answer' }}
+                </p>
+                <p v-if="flashcard.explanation" class="text-sm text-gray-500 mt-2">
+                  {{ flashcard.explanation }}
+                </p>
+              </div>
+            </div>
+            
+            <div class="ml-4 text-right">
+              <div v-if="flashcard.next_review_date" class="text-xs text-gray-500">
+                Next review:
+                <span
+                  :class="isFlashcardDue(flashcard) ? 'text-red-600 font-medium' : 'text-gray-700'"
+                >
+                  {{ formatDate(flashcard.next_review_date) }}
+                </span>
+              </div>
+              <div v-else class="text-xs text-gray-500">Not studied yet</div>
+              
+              <div class="mt-2 text-xs text-gray-500">
+                <span>Repetitions: {{ flashcard.repetitions || 0 }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+            <div class="text-xs text-gray-500">
+              Created by: {{ flashcard.user?.name || 'Unknown' }}
+            </div>
+            <div class="flex space-x-2">
+              <span class="text-xs text-gray-400">
+                Ease: {{ flashcard.ease_factor || 2.5 }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div v-if="course.flashcards.length > 5" class="mt-4 text-center">
+        <button
+          @click="viewAllFlashcards"
+          class="text-sm text-blue-600 hover:text-blue-800"
+        >
+          View all {{ course.flashcards.length }} flashcards →
+        </button>
+      </div>
+    </div>
+
+    <!-- No Flashcards Message -->
+    <div v-else class="text-center py-8">
+      <AcademicCapIcon class="h-12 w-12 mx-auto text-gray-400" />
+      <h4 class="mt-2 text-sm font-medium text-gray-900">No Flashcards Yet</h4>
+      <p class="mt-1 text-sm text-gray-500">
+        Flashcards will appear here once created by students or tutors.
+      </p>
+    </div>
+  </div>
+</div>
                 <div class="w-full bg-gray-200 rounded-full h-4">
                   <div
                     class="bg-blue-600 h-4 rounded-full transition-all duration-300"
@@ -73,52 +203,56 @@
             </div>
 
             <!-- Course Outline -->
-            <div class="bg-white shadow rounded-lg">
-              <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">Course Outline</h3>
+            <div
+              v-for="module in course.modules"
+              :key="module.id"
+              class="mb-6"
+            >
+              <div class="bg-gray-50 p-4 rounded-lg mb-2">
+                <h4 class="font-semibold text-gray-900">{{ module.title }}</h4>
+                <p class="text-sm text-gray-600">{{ module.description }}</p>
               </div>
-              <div class="p-6">
-                <div class="space-y-4">
-                  <div
-                    v-for="outline in course.outlines"
-                    :key="outline.id"
-                    class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
-                  >
-                    <div class="flex items-center space-x-4">
-                      <div
-                        class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
-                        :class="getOutlineIconClass(outline.type)"
-                      >
-                        <component
-                          :is="getOutlineIcon(outline.type)"
-                          class="h-4 w-4 text-white"
-                        />
-                      </div>
-                      <div>
-                        <h4 class="text-sm font-medium text-gray-900">{{ outline.title }}</h4>
-                        <p class="text-sm text-gray-500">{{ outline.description }}</p>
-                        <div class="flex items-center space-x-4 mt-1">
-                          <span class="text-xs text-gray-400 capitalize">{{ outline.type }}</span>
-                          <span class="text-xs text-gray-400">
-                            {{ outline.estimated_duration_minutes }} minutes
-                          </span>
-                        </div>
+              
+              <div class="space-y-4 ml-4">
+                <div
+                  v-for="topic in module.topics"
+                  :key="topic.id"
+                  class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+                >
+                  <div class="flex items-center space-x-4">
+                    <div
+                      class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+                      :class="getOutlineIconClass(topic.type)"
+                    >
+                      <component
+                        :is="getOutlineIcon(topic.type)"
+                        class="h-4 w-4 text-white"
+                      />
+                    </div>
+                    <div>
+                      <h4 class="text-sm font-medium text-gray-900">{{ topic.title }}</h4>
+                      <p class="text-sm text-gray-500">{{ topic.description }}</p>
+                      <div class="flex items-center space-x-4 mt-1">
+                        <span class="text-xs text-gray-400 capitalize">{{ topic.type }}</span>
+                        <span class="text-xs text-gray-400">
+                          {{ topic.estimated_duration_minutes }} minutes
+                        </span>
                       </div>
                     </div>
-                    <div class="flex items-center space-x-3">
-                      <span
-                        v-if="outline.is_completed"
-                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                      >
-                        Completed
-                      </span>
-                      <span
-                        v-else
-                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                      >
-                        Pending
-                      </span>
-                    </div>
+                  </div>
+                  <div class="flex items-center space-x-3">
+                    <span
+                      v-if="topic.is_completed"
+                      class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                    >
+                      Completed
+                    </span>
+                    <span
+                      v-else
+                      class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                    >
+                      Pending
+                    </span>
                   </div>
                 </div>
               </div>
@@ -230,7 +364,7 @@
                 </dl>
               </div>
             </div>
-
+  
             <!-- Quick Actions -->
             <div class="bg-white shadow rounded-lg">
               <div class="px-6 py-4 border-b border-gray-200">
@@ -321,5 +455,27 @@ const markAsCompleted = () => {
   if (confirm('Mark this course as completed?')) {
     router.patch(route('admin.courses.mark-completed', props.course.id))
   }
+}
+
+const getDifficultyClass = (level) => {
+  const classes = {
+    easy: 'bg-green-100 text-green-800',
+    medium: 'bg-yellow-100 text-yellow-800',
+    hard: 'bg-red-100 text-red-800',
+  }
+  return classes[level] || 'bg-gray-100 text-gray-800'
+}
+
+const isFlashcardDue = (flashcard) => {
+  if (!flashcard.next_review_date) return true
+  const nextReview = new Date(flashcard.next_review_date)
+  return nextReview <= new Date()
+}
+
+const viewAllFlashcards = () => {
+  // You might want to navigate to a flashcards page or show a modal
+  alert(`Showing all flashcards for ${props.course.title}`)
+  // Or use router to navigate to flashcards page:
+  // router.visit(route('admin.courses.flashcards', props.course.id))
 }
 </script>

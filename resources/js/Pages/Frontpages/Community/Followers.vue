@@ -6,7 +6,7 @@
     />
     <AppLayout>
         <Head :title="profileUser.name + ' - Followers'" />
-        
+
         <div class="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50 py-12">
             <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <!-- Back Navigation -->
@@ -109,7 +109,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <button
                                     v-if="!isOwnProfile && follower.follower.id !== $page.props.auth.user.id"
                                     @click="toggleFollowUser(follower.follower)"
@@ -136,9 +136,10 @@
     </AppLayout>
 </template>
 
+
 <script setup>
 import { computed } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import MetaTags from '@/Components/MetaTags.vue';
 import Pagination from '@/Components/Pagination.vue';

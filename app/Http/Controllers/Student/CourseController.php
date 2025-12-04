@@ -137,14 +137,22 @@ class CourseController extends Controller
                 'learning_objectives' => $request->learning_objectives,
             ]);
 
-            return redirect()->route('student.courses.show', $course->id)
-                ->with('success', 'Course created successfully! Your personalized learning path has been generated.');
+            // Return JSON response for AJAX handling
+            return response()->json([
+                'success' => true,
+                'redirect' => route('student.courses.show', $course->id),
+                'message' => 'Course created successfully! Your personalized learning path has been generated.',
+                'course_id' => $course->id
+            ]);
 
         } catch (\Exception $e) {
             \Log::error('Course creation failed: ' . $e->getMessage());
-            return redirect()->back()
-                ->with('error', 'Failed to create course: ' . $e->getMessage())
-                ->withInput();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create course: ' . $e->getMessage(),
+                'errors' => $e->getMessage()
+            ], 422);
         }
     }
 

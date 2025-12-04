@@ -95,7 +95,7 @@ class CourseGenerationService
 
             $response = $this->aiService->chat($messages, [
                 'temperature' => 0.7,
-                'max_tokens' => 4000,
+                'max_tokens' => 3000,
             ], 'course_generation');
 
             Log::debug('AI Response received', ['response' => $response]);

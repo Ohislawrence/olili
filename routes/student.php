@@ -31,74 +31,72 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('/outlines/{outline}/complete', [CourseController::class, 'completeOutline'])->name('outlines.complete');
     Route::post('/outlines/{outline}/generate-content', [CourseController::class, 'generateContent'])->name('outlines.generate-content');
     Route::post('/courses/{course}/update-progress', [CourseController::class, 'updateProgress'])->name('courses.update-progress');
-    Route::post('/courses/complete/{outline}/topic', [CourseController::class, 'completeTopic'])->name('courses.completeTopic');
+    Route::post('/courses/{course}/complete-topic/{topic}', [CourseController::class, 'completeTopic'])->name('courses.complete-topic');
     Route::get('/courses/{course}/chat/initialize', [ChatController::class, 'initializePopupChat'])->name('courses.chat.initialize');
 
-    //contentQuiz
+    // Content Quiz - Fixed route names to avoid conflicts
     Route::post('/courses/{course}/outlines/{outline}/generate-quiz', [CourseController::class, 'generateQuiz'])
-    ->name('outlines.generate-quiz');
-    Route::post('/quizzes/{quiz}/start', [QuizController::class, 'start'])->name('quizzes.start');
-    Route::post('/quiz-submit/{attempt}/submit', [QuizController::class, 'submit'])->name('quizzes.submit');
-    Route::post('/quiz-result/{attempt}/submit', [QuizController::class, 'getDetailedResults'])->name('quizzes.result');
+        ->name('courses.outlines.generate-quiz');
+    Route::post('/courses/{course}/quizzes/{quiz}/start', [QuizController::class, 'startCourseQuiz'])
+        ->name('courses.quizzes.start');
+    Route::post('/courses/{course}/quiz-attempts/{attempt}/submit', [QuizController::class, 'submitCourseQuiz'])
+        ->name('courses.quiz-attempts.submit');
+    Route::post('/courses/{course}/quiz-attempts/{attempt}/result', [QuizController::class, 'getCourseQuizResults'])
+        ->name('courses.quiz-attempts.result');
 
-    // General Quizzes
+    // General Quizzes - Fixed parameter order and names
     Route::get('/quizzes', [QuizController::class, 'index'])->name('quizzes.index');
     Route::get('/quizzes/{quiz}', [QuizController::class, 'show'])->name('quizzes.show');
-    Route::get('/quizzes/{quiz}/start', [QuizController::class, 'startAttempt'])->name('quizzes.start.attempt');
-    Route::get('/quizzes/{attempt}/continue/{quiz}', [QuizController::class, 'continueAttempt'])->name('quizzes.continue.attempt');
+    Route::get('/quizzes/{quiz}/start', [QuizController::class, 'startAttempt'])->name('quizzes.start');
+    Route::get('/quiz-attempts/{attempt}/continue', [QuizController::class, 'continueAttempt'])->name('quiz-attempts.continue');
     Route::post('/quiz-attempts/{attempt}/submit', [QuizController::class, 'submitAttempt'])->name('quiz-attempts.submit');
     Route::get('/quiz-attempts/{attempt}/result', [QuizController::class, 'showResult'])->name('quiz-attempts.result');
     Route::get('/quizzes/{quiz}/history', [QuizController::class, 'getQuizHistory'])->name('quizzes.history');
 
-    // Chat
-   // Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
-    //Route::get('/chat/create', [ChatController::class, 'create'])->name('chat.create');
-    //Route::middleware([ 'subscription:basic_chat'])->post('/chat/', [ChatController::class, 'store'])->name('chat.store');
-    //Route::get('/chat/{course}', [ChatController::class, 'showFromCourse'])->name('chat.showFromCourse');
-   // Route::get('/chat/{chatSession}', [ChatController::class, 'show'])->name('chat.show');
-    //Route::post('/courses/{course}/chat/{chatSession}/send-message', [ChatController::class, 'sendMessage'])->name('courses.chat.send-message');
-    //Route::post('/chat/{chatSession}/update-context', [ChatController::class, 'updateContext'])->name('chat.update-context');
-   // Route::delete('/chat/{chatSession}/close', [ChatController::class, 'closeSession'])->name('chat.close');
-    //Route::get('/chat/active-session', [ChatController::class, 'getActiveSession'])->name('chat.active-session');
-    //Route::get('/chat/{chatSession}/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
-
-    // Flashcard Routes
+    // Flashcard Routes - Fixed route parameter names
     Route::get('/flashcards', [FlashcardController::class, 'index'])->name('flashcards.index');
     Route::get('/flashcards/create', [FlashcardController::class, 'create'])->name('flashcards.create');
     Route::post('/flashcards', [FlashcardController::class, 'store'])->name('flashcards.store');
     Route::get('/flashcards/{flashcardSet}', [FlashcardController::class, 'show'])->name('flashcards.show');
     Route::get('/flashcards/{flashcardSet}/study', [FlashcardController::class, 'study'])->name('flashcards.study');
-    Route::post('/flashcards/{flashcard}/progress', [FlashcardController::class, 'updateProgress'])->name('flashcards.update-progress');
+    Route::post('/flashcard-items/{flashcard}/progress', [FlashcardController::class, 'updateProgress'])->name('flashcards.update-progress');
     Route::delete('/flashcards/{flashcardSet}', [FlashcardController::class, 'destroy'])->name('flashcards.destroy');
     Route::get('/courses/{course}/outlines', [FlashcardController::class, 'getCourseOutlines'])->name('courses.outlines');
     Route::post('/flashcards/{flashcardSet}/reset-progress', [FlashcardController::class, 'resetProgress'])->name('flashcards.reset-progress');
 
-     // Notification Routes
-    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
-    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
-    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
-    Route::delete('/notifications', [NotificationController::class, 'clearAll'])->name('notifications.clear-all');
-    Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
+    // Notification Routes - Added middleware for consistency
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+        Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+        Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+        Route::delete('/notifications', [NotificationController::class, 'clearAll'])->name('notifications.clear-all');
+        Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
+    });
 
-    // Profile
-    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
-    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
-    Route::put('/profile/learning-goals', [ProfileController::class, 'updateLearningGoals'])->name('profile.update-learning-goals');
-    Route::get('/profile/progress-stats', [ProfileController::class, 'getProgressStats'])->name('profile.progress-stats');
-    Route::get('/profile/course-progress', [ProfileController::class, 'getCourseProgress'])->name('profile.course-progress');
+    // Profile - Added missing middleware
+    Route::middleware(['auth'])->prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [ProfileController::class, 'show'])->name('show');
+        Route::get('/edit', [ProfileController::class, 'edit'])->name('edit');
+        Route::put('/', [ProfileController::class, 'update'])->name('update');
+        Route::put('/password', [ProfileController::class, 'updatePassword'])->name('update-password');
+        Route::put('/learning-goals', [ProfileController::class, 'updateLearningGoals'])->name('update-learning-goals');
+        Route::get('/progress-stats', [ProfileController::class, 'getProgressStats'])->name('progress-stats');
+        Route::get('/course-progress', [ProfileController::class, 'getCourseProgress'])->name('course-progress');
+    });
 
-    // Capstone Projects
-    Route::get('/capstone-projects', [CapstoneProjectController::class, 'index'])->name('capstone-projects.index');
-    Route::get('/capstone-projects/create/{course}', [CapstoneProjectController::class, 'create'])->name('capstone-projects.create');
-    Route::get('/capstone-projects/{capstoneProject}', [CapstoneProjectController::class, 'show'])->name('capstone-projects.show');
-    Route::post('/capstone-projects/{capstoneProject}/submit', [CapstoneProjectController::class, 'submit'])->name('capstone-projects.submit');
-    Route::get('/capstone-projects/{capstoneProject}/download/{fileIndex}', [CapstoneProjectController::class, 'downloadFile'])->name('capstone-projects.download-file');
+    // Capstone Projects - Fixed route parameters and added missing routes
+    Route::middleware(['subscription:capstone_projects'])->group(function () {
+        Route::get('/capstone-projects', [CapstoneProjectController::class, 'index'])->name('capstone-projects.index');
+        Route::get('/capstone-projects/create/{course}', [CapstoneProjectController::class, 'create'])->name('capstone-projects.create');
+        Route::post('/capstone-projects', [CapstoneProjectController::class, 'store'])->name('capstone-projects.store');
+        Route::get('/capstone-projects/{capstoneProject}', [CapstoneProjectController::class, 'show'])->name('capstone-projects.show');
+        Route::post('/capstone-projects/{capstoneProject}/submit', [CapstoneProjectController::class, 'submit'])->name('capstone-projects.submit');
+        Route::get('/capstone-projects/{capstoneProject}/download/{fileIndex}', [CapstoneProjectController::class, 'downloadFile'])->name('capstone-projects.download-file');
+        Route::delete('/capstone-projects/{capstoneProject}', [CapstoneProjectController::class, 'destroy'])->name('capstone-projects.destroy');
+    });
 
-
-    // Course Tutor Chat Routes
+    // Course Tutor Chat Routes - Fixed nested routing
     Route::prefix('courses/{course}')->name('courses.')->group(function () {
         Route::prefix('tutor')->name('tutor.')->group(function () {
             Route::get('/session', [CourseTutorController::class, 'getCourseSession'])->name('session');

@@ -168,7 +168,7 @@ abstract class BaseAiService
 
     public function getMaxTokens(): int
     {
-        return $this->provider->max_tokens_per_request ?? 4000;
+        return $this->provider->max_tokens_per_request ?? 1000;
     }
 
     public function getCurrentModel(): string

@@ -11,7 +11,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Test\TestingController;
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\OnboardingController;
-use App\Http\Controllers\Community\CommunityController;
+use App\Http\Controllers\Community\CommunityController as FrontCommunityController;
 use App\Http\Controllers\Community\PostController;
 use App\Http\Controllers\Community\ProfileController;
 use App\Mail\WelcomeStudentMail;
@@ -22,7 +22,6 @@ Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
 // Frontpage routes
 Route::get('/features', [FrontpageController::class, 'features'])->name('features');
-Route::get('/community', [FrontpageController::class, 'community'])->name('community');
 Route::get('/about', [FrontpageController::class, 'about'])->name('about');
 Route::get('/pricing', [FrontpageController::class, 'pricing'])->name('pricing');
 Route::get('/help', [FrontpageController::class, 'help'])->name('help');
@@ -39,12 +38,6 @@ Route::get('/enterprise', [FrontpageController::class, 'enterprise'])->name('ent
 Route::get('/blog', [FrontpageController::class, 'blogIndex'])->name('blog.index');
 Route::get('/blog/{slug}', [FrontpageController::class, 'blogShow'])->name('blog.show');
 
-// Courses routes
-//Route::get('/courses', [FrontpageController::class, 'coursesIndex'])->name('courses.index');
-//Route::get('/courses/{id}', [FrontpageController::class, 'courseShow'])->name('courses.show');
-
-
-
 Route::get('/dashboard', function () {
     if (auth()->check()) {
         if (auth()->user()->hasRole('admin')) {
@@ -60,15 +53,13 @@ Route::get('/register', [RegisterController::class, 'create'])
     ->middleware(['guest'])
     ->name('register');
 
-// another routes
-require __DIR__.'/admin.php';
-require __DIR__.'/student.php';
+
+
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
     Route::get('/login-history', [LoginHistoryController::class, 'index'])->name('login.history');
 });
 
-
-//onboarding
+// Onboarding
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->prefix('onboarding')->name('onboarding.')->group(function () {
     Route::post('/complete', [OnboardingController::class, 'complete'])->name('complete');
     Route::post('/skip', [OnboardingController::class, 'skip'])->name('skip');
@@ -76,49 +67,44 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::get('/status', [OnboardingController::class, 'status'])->name('status');
 });
 
-//community
+// Community - Public routes
 Route::prefix('community')->name('community.')->group(function () {
     // Main community page
-    Route::get('/', [CommunityController::class, 'index'])->name('index');
-    
+    Route::get('/', [FrontCommunityController::class, 'index'])->name('index');
+
     // View individual post
     Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
-    
+
     // View user profiles
     Route::get('/profile/{user}', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/{user}/followers', [ProfileController::class, 'followers'])->name('profile.followers');
     Route::get('/profile/{user}/following', [ProfileController::class, 'following'])->name('profile.following');
-    
+
+    //auth route
+    Route::middleware([config('jetstream.auth_session'),'auth:sanctum','verified'])->group(function () {
+
+        Route::get('/posts/create', [PostController::class, 'create'])->name('create');
+        Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+        // Post interactions (edit/delete)
+        Route::put('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
+        Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+
+        // Like/Unlike
+        Route::post('/posts/{post}/like', [PostController::class, 'like'])->name('posts.like');
+        Route::delete('/posts/{post}/like', [PostController::class, 'unlike'])->name('posts.unlike');
+
+        // Comments
+        Route::post('/posts/{post}/comments', [PostController::class, 'storeComment'])->name('posts.comments.store');
+        Route::delete('/comments/{comment}', [PostController::class, 'deleteComment'])->name('comments.destroy');
+
+        // Follow/Unfollow
+        Route::post('/profile/{user}/follow', [ProfileController::class, 'follow'])->name('profile.follow');
+        Route::delete('/profile/{user}/follow', [ProfileController::class, 'unfollow'])->name('profile.unfollow');
+    });
 });
 
-// Protected routes (auth required)
-Route::middleware([
-            config('jetstream.auth_session'), 
-            'auth:sanctum',                   
-            'verified'                        
-        ])->group(function () {
-        // Post creation
-    Route::get('/posts/creates', [CommunityController::class, 'creates'])->name('posts.creates');
-    
-    Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
-    
-    // Post interactions (edit/delete)
-    Route::put('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
-    Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
-    
-    // Like/Unlike
-    Route::post('/posts/{post}/like', [PostController::class, 'like'])->name('posts.like');
-    Route::delete('/posts/{post}/like', [PostController::class, 'unlike'])->name('posts.unlike');
-    
-    // Comments
-    Route::post('/posts/{post}/comments', [PostController::class, 'storeComment'])->name('posts.comments.store');
-    Route::delete('/comments/{comment}', [PostController::class, 'deleteComment'])->name('comments.destroy');
-    
-    // Follow/Unfollow
-    Route::post('/profile/{user}/follow', [ProfileController::class, 'follow'])->name('profile.follow');
-    Route::delete('/profile/{user}/follow', [ProfileController::class, 'unfollow'])->name('profile.unfollow');
-    
-});
+
+
 
 // Test route
 Route::get('/testing', [TestingController::class, 'test'])->name('test.testing');
@@ -134,37 +120,47 @@ Route::prefix('payment')->name('payment.')->group(function () {
     Route::get('/pricing/{role}', [PaymentController::class, 'pricingForRole'])->name('pricing.role');
 
     // Payment initialization
-    Route::post('/payment/subscription', [PaymentController::class, 'initializeSubscription'])->name('subscription.initialize');
-    Route::post('/payment/one-time', [PaymentController::class, 'initializeOneTimePayment'])->name('one-time.initialize');
+    Route::post('/subscription', [PaymentController::class, 'initializeSubscription'])->name('subscription.initialize');
+    Route::post('/one-time', [PaymentController::class, 'initializeOneTimePayment'])->name('one-time.initialize');
 
     // Payment callbacks
-    Route::get('/payment/callback', [PaymentController::class, 'handleCallback'])->name('callback');
-    Route::get('/payment/success', [PaymentController::class, 'success'])->name('success');
-    Route::get('/payment/failure', [PaymentController::class, 'failure'])->name('failure');
+    Route::get('/callback', [PaymentController::class, 'handleCallback'])->name('callback');
+    Route::get('/success', [PaymentController::class, 'success'])->name('success');
+    Route::get('/failure', [PaymentController::class, 'failure'])->name('failure');
 
     // Subscription management
     Route::post('/subscription/cancel', [PaymentController::class, 'cancelSubscription'])->name('subscription.cancel');
     Route::post('/subscription/change', [PaymentController::class, 'changePlan'])->name('subscription.change');
 
     // Payment history
-    Route::get('/payment/history', [PaymentController::class, 'paymentHistory'])->name('payment.history');
-    Route::get('/payment/history/filter', [PaymentController::class, 'filterPaymentHistory'])->name('payment.history.filter');
+    Route::get('/history', [PaymentController::class, 'paymentHistory'])->name('payment.history');
+    Route::get('/history/filter', [PaymentController::class, 'filterPaymentHistory'])->name('payment.history.filter');
     Route::get('/subscription/status', [PaymentController::class, 'subscriptionStatus'])->name('subscription.status');
-
 });
 
+// Social authentication routes
 Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->name('social.redirect');
-
 Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->name('social.callback');
-Route::post('/auth/{provider}/unlink', [SocialAuthController::class, 'unlinkAccount'])->name('social.unlink')->middleware(['auth']);
-Route::post('/auth/{provider}/link', [SocialAuthController::class, 'linkAccount'])->name('social.link');
 
+// Protected social auth routes
+Route::middleware(['auth'])->group(function () {
+    Route::post('/auth/{provider}/unlink', [SocialAuthController::class, 'unlinkAccount'])->name('social.unlink');
+    Route::post('/auth/{provider}/link', [SocialAuthController::class, 'linkAccount'])->name('social.link');
+});
+
+// Test email queue
 Route::get('/test-queue-email', function () {
     $user = App\Models\User::first();
 
-    //\App\Mail\WelcomeStudentMail::dispatch($user);
-    // or
+    if (!$user) {
+        return "No user found!";
+    }
+
     Mail::to($user->email)->queue(new WelcomeStudentMail($user));
 
     return "Email queued! Check your queue worker.";
 });
+
+// Another routes
+require __DIR__.'/admin.php';
+require __DIR__.'/student.php';

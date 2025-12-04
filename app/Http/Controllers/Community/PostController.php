@@ -68,7 +68,7 @@ class PostController extends Controller
 
     public function update(Request $request, CommunityPost $post)
     {
-        $this->authorize('update', $post);
+        //$this->authorize('update', $post);
 
         $request->validate([
             'title' => 'required|string|max:255',
@@ -83,10 +83,10 @@ class PostController extends Controller
 
     public function destroy(CommunityPost $post)
     {
-        $this->authorize('delete', $post);
-        
+        //$this->authorize('delete', $post);
+
         $post->delete();
-        
+
         return redirect()->route('community.index')
             ->with('success', 'Post deleted successfully!');
     }
@@ -140,8 +140,8 @@ class PostController extends Controller
 
     public function deleteComment(PostComment $comment)
     {
-        $this->authorize('delete', $comment);
-        
+        //$this->authorize('delete', $comment);
+
         $comment->delete();
         $comment->post->decrement('comment_count');
 

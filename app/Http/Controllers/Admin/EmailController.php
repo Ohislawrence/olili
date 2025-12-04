@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CommunityPost;
 use App\Services\EmailService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -77,5 +78,13 @@ class EmailController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to send email: ' . $e->getMessage());
         }
+    }
+
+
+    public function indexOne()
+    {
+
+
+        return Inertia::render('Admin/Community/Index');
     }
 }

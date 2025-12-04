@@ -3,6 +3,9 @@
 
 namespace App\Services\Ai;
 
+use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\RequestException;
+
 class DeepSeekService extends BaseAiService
 {
     public function getProviderCode(): string
@@ -30,6 +33,41 @@ class DeepSeekService extends BaseAiService
             'top_p' => $parameters['top_p'] ?? 1.0,
             'stream' => false,
         ], $parameters);
+    }
+
+    protected function makeRequest(array $payload): array
+    {
+        $apiKey = $this->provider->api_key ?? config('services.deepseek.api_key');
+        
+        if (!$apiKey) {
+            throw new \Exception('DeepSeek API key is not configured.');
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])
+            ->timeout(120)
+            ->read_timeout(120), 
+            ->connectTimeout(30) 
+            ->retry(3, 100) 
+            ->throw() 
+            ->post($this->getBaseUrl(), $payload);
+
+            return $response->json();
+
+        } catch (RequestException $e) {
+            // Log the error for debugging
+            \Log::error('DeepSeek API Request Failed:', [
+                'url' => $this->getBaseUrl(),
+                'error' => $e->getMessage(),
+                'payload_size' => strlen(json_encode($payload))
+            ]);
+
+            throw new \Exception("DeepSeek API request failed: " . $e->getMessage());
+        }
     }
 
     protected function extractContentFromResponse(array $response): string

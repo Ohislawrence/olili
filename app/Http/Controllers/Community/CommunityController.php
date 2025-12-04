@@ -67,7 +67,7 @@ class CommunityController extends Controller
         ]);
     }
 
-    public function creates()
+    public function create()
     {
         $user = auth()->user();
         $courses = $user->courses()->active()->get();
