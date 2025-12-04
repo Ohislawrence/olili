@@ -398,6 +398,15 @@
                   <AcademicCapIcon class="h-4 w-4 mr-2" />
                   Review Course
                 </Link>
+                <Link
+                    v-if="course.status === 'draft'"
+                    :href="route('student.courses.start', course.id)"
+                    method="post"
+                    as="button"
+                    class="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                    >
+                    Start
+                    </Link>
 
                 <div class="pt-3 border-t border-gray-200">
                   <Link
