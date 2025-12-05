@@ -38,7 +38,7 @@ class DeepSeekService extends BaseAiService
     protected function makeRequest(array $payload): array
     {
         $apiKey = $this->provider->api_key ?? config('services.deepseek.api_key');
-        
+
         if (!$apiKey) {
             throw new \Exception('DeepSeek API key is not configured.');
         }
@@ -50,10 +50,10 @@ class DeepSeekService extends BaseAiService
                 'Accept' => 'application/json',
             ])
             ->timeout(120)
-            ->read_timeout(120), 
-            ->connectTimeout(30) 
-            ->retry(3, 100) 
-            ->throw() 
+            ->read_timeout(120)
+            ->connectTimeout(30)
+            ->retry(3, 100)
+            ->throw()
             ->post($this->getBaseUrl(), $payload);
 
             return $response->json();
