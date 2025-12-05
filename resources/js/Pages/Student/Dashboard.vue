@@ -45,7 +45,7 @@
                     Change Plan
                   </Link>
                   <Link
-                    :href="route('payment.history')"
+                    :href="route('payment.payment.history')"
                     class="text-white hover:text-emerald-100 font-medium text-sm transition-colors"
                   >
                     View Billing
