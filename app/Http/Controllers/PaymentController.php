@@ -450,6 +450,120 @@ class PaymentController extends Controller
     }
 }
 
+    public function paymentHistory(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $role = $user->getRoleNames()->first();
+
+            \Log::info('=== PAYMENT HISTORY DEBUG START ===');
+            \Log::info('User ID: ' . $user->id);
+            \Log::info('User email: ' . $user->email);
+
+            // Check if user has any payments
+            $paymentCount = $user->payments()->count();
+            \Log::info('Total payments for user: ' . $paymentCount);
+
+            if ($paymentCount > 0) {
+                $samplePayment = $user->payments()->first();
+                \Log::info('Sample payment data:', [
+                    'id' => $samplePayment->id,
+                    'amount' => $samplePayment->amount,
+                    'status' => $samplePayment->status,
+                    'subscription_plan_id' => $samplePayment->subscription_plan_id,
+                ]);
+            }
+
+            $payments = $user->payments()
+                ->with(['subscriptionPlan'])
+                ->latest()
+                ->paginate(10);
+
+            \Log::info('Payments query executed');
+            \Log::info('Payments count from paginator: ' . $payments->count());
+            \Log::info('Payments total: ' . $payments->total());
+
+            // Transform the payments with safe access
+            $transformedPayments = $payments->through(function ($payment) {
+                \Log::info('Transforming payment ID: ' . $payment->id);
+
+                $planName = 'N/A';
+                if ($payment->subscriptionPlan) {
+                    $planName = $payment->subscriptionPlan->name;
+                    \Log::info('Found subscription plan: ' . $planName);
+                } else {
+                    \Log::info('No subscription plan found for payment: ' . $payment->id);
+                }
+
+                return [
+                    'id' => $payment->id,
+                    'amount' => $payment->amount,
+                    'currency' => $payment->currency,
+                    'status' => $payment->status,
+                    'reference' => $payment->reference,
+                    'description' => $payment->description,
+                    'plan_name' => $planName,
+                    'paid_at' => $payment->paid_at?->format('M j, Y g:i A'),
+                    'created_at' => $payment->created_at->format('M j, Y g:i A'),
+                    'formatted_amount' => $payment->currency . ' ' . number_format($payment->amount, 2),
+                    'is_subscription' => !is_null($payment->subscription_plan_id),
+                    'metadata' => $payment->metadata,
+                ];
+            });
+
+            $totalSpent = $user->payments()
+                ->where('status', 'success')
+                ->sum('amount');
+
+            $stats = [
+                'total_payments' => $paymentCount,
+                'successful_payments' => $user->payments()->where('status', 'success')->count(),
+                'failed_payments' => $user->payments()->where('status', 'failed')->count(),
+                'pending_payments' => $user->payments()->where('status', 'pending')->count(),
+                'total_spent' => $totalSpent,
+            ];
+
+            \Log::info('Payment stats:', $stats);
+            \Log::info('=== PAYMENT HISTORY DEBUG END ===');
+
+            return Inertia::render('Payment/History', [
+                'payments' => $transformedPayments,
+                'stats' => $stats,
+                'filters' => $request->only(['search', 'status', 'type']),
+                'user_role' => $role,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Payment history error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+
+            return Inertia::render('Payment/History', [
+                'payments' => [
+                    'data' => [],
+                    'links' => [],
+                    'meta' => [
+                        'current_page' => 1,
+                        'from' => null,
+                        'last_page' => 1,
+                        'links' => [],
+                        'path' => url()->current(),
+                        'per_page' => 10,
+                        'to' => null,
+                        'total' => 0,
+                    ]
+                ],
+                'stats' => [
+                    'total_payments' => 0,
+                    'successful_payments' => 0,
+                    'failed_payments' => 0,
+                    'pending_payments' => 0,
+                    'total_spent' => 0,
+                ],
+                'filters' => $request->only(['search', 'status', 'type']),
+                'user_role' => $request->user()->getRoleNames()->first(),
+            ]);
+        }
+    }
     /**
      * Filter payment history (AJAX endpoint)
      */
