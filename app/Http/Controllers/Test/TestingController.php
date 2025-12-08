@@ -7,6 +7,8 @@ use App\Models\CourseCreationReminder;
 use App\Models\Quiz;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
+use App\Models\User;
+use App\Notifications\CourseCreationReminder as NotificationsCourseCreationReminder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -14,40 +16,28 @@ class TestingController extends Controller
 {
     public function test()
     {
-        try {
-        $response = Http::withoutVerifying()->timeout(60)
-            ->withHeaders([
-                'Authorization' => 'Bearer ' . env('DEEPSEEK_API_KEY'),
-                'Content-Type'  => 'application/json',
-            ])
-            ->post('https://api.deepseek.com/chat/completions', [
-                'model' => 'deepseek-chat',
-                'messages' => [
-                    ['role' => 'user', 'content' => 'Say hello in one sentence.']
-                ],
-                'stream' => false,  // IMPORTANT: Prevent cURL error 18
-            ]);
+        $user = User::where('id', 2)->first();
 
-        if ($response->failed()) {
-            return [
-                'status' => 'error',
-                'http_code' => $response->status(),
-                'body' => $response->body()
-            ];
-        }
-
-        $data = $response->json();
-
-        return [
-            'status' => 'success',
-            'reply'  => $data['choices'][0]['message']['content'] ?? null
-        ];
-
-    } catch (\Exception $e) {
-        return [
-            'status' => 'exception',
-            'message' => $e->getMessage(),
-        ];
+    // Make sure we have a User object
+    if (!$user) {
+        dd('User not found');
     }
+
+    // PASS USER OBJECT
+    $notification = new \App\Notifications\CourseCreationReminder($user, 1);
+
+    // Get the mail message
+    $mailMessage = $notification->toMail($user);
+
+    // Render the view to check
+    $view = $mailMessage->view;
+    $data = $mailMessage->viewData;
+
+    dd([
+        'user_in_data' => isset($data['user']),
+        'user_class' => get_class($data['user'] ?? null),
+        'view_data' => $data,
+        'rendered' => $mailMessage->render(),
+    ]);
     }
 }

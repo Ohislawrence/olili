@@ -49,7 +49,7 @@ class CourseCreationReminderService
 
             try {
                 // Send notification
-                $user->notify(new ReminderNotification($user,$reminder->reminder_count));
+                $user->notify(new ReminderNotification($user, $reminder->reminder_count));
 
                 // Update reminder record
                 $reminder->markReminderSent();

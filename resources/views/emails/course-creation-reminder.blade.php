@@ -2,9 +2,9 @@
 @component('mail::message')
 # {{ $subject }}
 
-Hello {{ $user->name }}!
+Hello {{ $user->name ?? 'there' }}!
 
-{{ $message }}
+{{ $message ?? '' }}
 
 ## Why Create Your First Course?
 
@@ -27,7 +27,7 @@ Create Your First Course
 - You can choose to enter a Description and Learning Objectives if you want to
 - Sit back and learn!
 
-@component('mail::button', ['url' => route('courses.index'), 'color' => 'primary'])
+@component('mail::button', ['url' => route('student.courses.index'), 'color' => 'primary'])
 Browse Course Examples
 @endcomponent
 

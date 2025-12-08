@@ -2,6 +2,7 @@
 // app/Notifications/CourseCreationReminder.php
 namespace App\Notifications;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -16,7 +17,17 @@ class CourseCreationReminder extends Notification implements ShouldQueue
 
     public function __construct($user, $reminderCount)
     {
-        $this->user = $user;
+        // Handle both User object and array
+        if (is_array($user) && isset($user['id'])) {
+            // If array passed, find the user
+            $this->user = User::find($user['id']);
+        } else if ($user instanceof User) {
+            // If User object passed
+            $this->user = $user;
+        } else {
+            throw new \InvalidArgumentException('Invalid user parameter');
+        }
+
         $this->reminderCount = $reminderCount;
     }
 
