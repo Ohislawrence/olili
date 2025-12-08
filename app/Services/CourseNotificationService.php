@@ -14,24 +14,24 @@ class CourseNotificationService
 {
     public function checkAndSendDueSoonNotifications(): void
     {
+        // Remove the complex whereDoesntHave clause
         $dueSoonCourses = Course::with(['studentProfile.user'])
             ->active()
             ->where('target_completion_date', '<=', now()->addDays(7))
-            ->where('target_completion_date', '>', now())
-            ->whereDoesntHave('studentProfile.user.notifications', function ($query) {
-                $query->where('data->type', 'course_due_soon')
-                      ->where('created_at', '>', now()->subDays(1));
-            })
+            ->where('target_completion_date', '>=', now())
             ->get();
 
         $this->info("Found {$dueSoonCourses->count()} courses due soon.");
 
         foreach ($dueSoonCourses as $course) {
-            $daysRemaining = now()->diffInDays($course->target_completion_date);
+            $daysRemaining = now()->diffInDays($course->target_completion_date, false);
 
-            // Send notification at specific intervals
-            if (in_array($daysRemaining, [7, 3, 1])) {
-                $this->sendDueSoonNotification($course, $daysRemaining);
+            // Check if notification should be sent today
+            if (in_array($daysRemaining, [7, 3, 1, 0])) {
+                // Use helper method
+                if (!$this->hasUserBeenNotifiedToday($course->studentProfile->user, 'course_due_soon')) {
+                    $this->sendDueSoonNotification($course, $daysRemaining);
+                }
             }
         }
     }
@@ -120,22 +120,46 @@ class CourseNotificationService
             return false;
         }
 
-        // Check if course is due today
+        // Check if course is due today (but hasn't been notified today)
         if ($course->target_completion_date->isToday()) {
-            $this->sendDueSoonNotification($course, 0);
-            return true;
+            $hasNotified = $course->studentProfile->user->notifications()
+                ->where('data->type', 'course_due_soon')
+                ->whereDate('created_at', today())
+                ->exists();
+
+            if (!$hasNotified) {
+                $this->sendDueSoonNotification($course, 0);
+                return true;
+            }
         }
 
-        // Check if course is overdue
-        if ($course->target_completion_date->isPast()) {
-            $daysOverdue = now()->diffInDays($course->target_completion_date);
-            if ($daysOverdue === 1) { // First day overdue
+        // Check if course is overdue (first day only)
+        if ($course->target_completion_date->isYesterday()) { // Changed from isPast()
+            $hasNotified = $course->studentProfile->user->notifications()
+                ->where('data->type', 'course_overdue')
+                ->whereDate('created_at', today())
+                ->exists();
+
+            if (!$hasNotified) {
                 $this->sendImmediateOverdueNotification($course);
                 return true;
             }
         }
 
         return false;
+    }
+
+    private function hasUserBeenNotifiedToday($user, string $type): bool
+    {
+        // Handle if user is not loaded or null
+        if (!$user || !$user->relationLoaded('notifications')) {
+            return false;
+        }
+
+        return $user->notifications()
+            ->where('data->type', $type)
+            ->whereDate('created_at', today())
+            ->exists();
     }
 
     // Helper methods for logging

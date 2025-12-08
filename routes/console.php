@@ -8,10 +8,6 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-//Schedule::command('reminders:send-course-creation')
-//    ->hourly()
-//    ->withoutOverlapping()
- //   ->description('Send course creation reminders to users without courses'); 
 
 // ================= NOTIFICATION COMMANDS =================
 // Morning notification batch
