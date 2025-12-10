@@ -105,8 +105,8 @@ class FrontpageController extends Controller
     {
         return Inertia::render('Frontpages/Contact', [
             'meta' => [
-                'title' => 'OliLearn - Learn Anything With AI',
-                'description' => 'Your AI tutor for any subject.',
+                'title' => 'Reach out to us today',
+                'description' => 'Have questions about Olilearn, Contact our team in Nigeria. We are here to help students, parents, and tutors with AI-powered learning solutions.',
                 'image' => asset('olilearn-main.png'),
                 'url' => url()->current(),
             ]
@@ -117,8 +117,8 @@ class FrontpageController extends Controller
     {
         return Inertia::render('Frontpages/Faq', [
             'meta' => [
-                'title' => 'OliLearn - Learn Anything With AI',
-                'description' => 'Your AI tutor for any subject.',
+                'title' => 'Frequently Asked Questions',
+                'description' => "Find answers to common questions about Olilearn's AI-powered learning platform for Nigerian students, parents, and tutors.",
                 'image' => asset('olilearn-main.png'),
                 'url' => url()->current(),
             ]
@@ -129,8 +129,8 @@ class FrontpageController extends Controller
     {
         return Inertia::render('Frontpages/Enterprise', [
             'meta' => [
-                'title' => 'OliLearn - Learn Anything With AI',
-                'description' => 'Your AI tutor for any subject.',
+                'title' => 'Enterprise Solutions - Olilearn Corporate Partnerships',
+                'description' => "Partner with Olilearn for Corporate Social Responsibility (CSR), corporate volunteerism, and corporate giving programs. Sponsor Nigerian students' education through AI-powered learning.",
                 'image' => asset('olilearn-main.png'),
                 'url' => url()->current(),
             ]

@@ -48,7 +48,12 @@ class CourseCreationReminder extends Notification implements ShouldQueue
                 'reminderCount' => $this->reminderCount,
                 'message' => $message,
                 'subject' => $subject,
-            ])->text('emails.course-creation-reminder-plain');
+            ])->text('emails.course-creation-reminder-plain', [
+                'user' => $this->user,
+                'reminderCount' => $this->reminderCount,
+                'message' => $message,
+                'subject' => $subject,
+            ]);
     }
 
     protected function getSubject(): string

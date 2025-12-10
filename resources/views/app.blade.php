@@ -25,6 +25,15 @@
         <meta property="og:type" content="website" />
         <meta property="og:logo" content="{{asset('logo-olilearn.PNG')}}" />
 
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@olilearn" />
+        <meta name="twitter:creator" content="@olilearn" />
+        <meta name="twitter:url" content="{{ $page['props']['meta']['url'] ?? url()->current() }}" />
+        <meta name="twitter:image" content="{{ $page['props']['meta']['url'] ?? url()->current() }}" />
+        <meta name="twitter:description" content="{{ $page['props']['meta']['description'] ?? '' }}" />
+        <meta name="twitter:title" content="{{ $page['props']['meta']['title'] ?? 'OliLearn' }}" />
+
     </head>
     <body class="font-sans antialiased">
         @inertia

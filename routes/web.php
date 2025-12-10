@@ -14,6 +14,7 @@ use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\Community\CommunityController as FrontCommunityController;
 use App\Http\Controllers\Community\PostController;
 use App\Http\Controllers\Community\ProfileController;
+use App\Http\Controllers\ContactController;
 use App\Mail\WelcomeStudentMail;
 use Illuminate\Support\Facades\Mail;
 
@@ -37,6 +38,11 @@ Route::get('/enterprise', [FrontpageController::class, 'enterprise'])->name('ent
 // Blog routes (using FrontpagesController)
 Route::get('/blog', [FrontpageController::class, 'blogIndex'])->name('blog.index');
 Route::get('/blog/{slug}', [FrontpageController::class, 'blogShow'])->name('blog.show');
+
+// Contact Form Routes
+Route::post('/contact/submit', [ContactController::class, 'submitContactForm'])->name('contact.submit');
+Route::post('/partnership/submit', [ContactController::class, 'submitPartnershipForm'])->name('partnership.submit');
+Route::post('/newsletter/subscribe', [ContactController::class, 'subscribeNewsletter'])->name('newsletter.subscribe');
 
 Route::get('/dashboard', function () {
     if (auth()->check()) {
