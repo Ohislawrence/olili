@@ -31,7 +31,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('/outlines/{outline}/complete', [CourseController::class, 'completeOutline'])->name('outlines.complete');
     Route::post('/outlines/{outline}/generate-content', [CourseController::class, 'generateContent'])->name('outlines.generate-content');
     Route::post('/courses/{course}/update-progress', [CourseController::class, 'updateProgress'])->name('courses.update-progress');
-    Route::post('/courses/{course}/complete-topic/{topic}', [CourseController::class, 'completeTopic'])->name('courses.complete-topic');
+    Route::post('/courses/{course}/complete-topic/{outline}', [CourseController::class, 'completeTopic'])->name('courses.complete-topic');
     Route::get('/courses/{course}/chat/initialize', [ChatController::class, 'initializePopupChat'])->name('courses.chat.initialize');
 
     // Content Quiz - Fixed route names to avoid conflicts
