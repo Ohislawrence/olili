@@ -454,7 +454,7 @@ class PaymentController extends Controller
     {
         try {
             $user = $request->user();
-            $role = $user->getRoleNames()->first();
+            $role = auth()->user()->roles->pluck("name")->first(); //$user->getRoleNames()->first();
 
             \Log::info('=== PAYMENT HISTORY DEBUG START ===');
             \Log::info('User ID: ' . $user->id);

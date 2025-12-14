@@ -12,14 +12,14 @@ class UserDirectEmail extends Notification implements ShouldQueue
     use Queueable;
 
     public $subject;
-    public $message;
+    public $bodyText;
     public $fromEmail;
     public $fromName;
 
-    public function __construct($subject, $message, $fromEmail = null, $fromName = null)
+    public function __construct($subject, $bodyText, $fromEmail = null, $fromName = null)
     {
         $this->subject = $subject;
-        $this->message = $message;
+        $this->bodyText = $bodyText;
         $this->fromEmail = $fromEmail;
         $this->fromName = $fromName;
     }
@@ -34,8 +34,8 @@ class UserDirectEmail extends Notification implements ShouldQueue
         $mail = (new MailMessage)
             ->subject($this->subject)
             ->markdown('emails.user-direct', [
-                'message' => $this->message,
-                'user' => $notifiable
+                'bodyText' => $this->bodyText,
+                'user' => $notifiable,
             ]);
 
         if ($this->fromEmail) {

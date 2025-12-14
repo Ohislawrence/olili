@@ -302,11 +302,14 @@
     <!-- Mobile Bottom Navigation - Fixed at bottom -->
     <MobileBottomNav class="fixed bottom-0 left-0 right-0 z-40 md:hidden" />
   </div>
-  <OnboardingModal 
-      :show="showOnboardingModal" 
+  <OnboardingModal
+      :show="showOnboardingModal"
       :user="$page.props.auth.user"
       @close="closeOnboarding"
   />
+  <!-- PWA Components -->
+        <InstallButton />
+        <PushSubscribe />
 </template>
 
 <script setup>
@@ -318,6 +321,8 @@ import DropdownLink from '@/Components/DropdownLink.vue'
 import NavLink from '@/Components/NavLink.vue'
 import OnboardingModal from '@/Components/Onboarding/OnboardingModal.vue';
 import OnboardingButton from '@/Components/Onboarding/OnboardingButton.vue';
+import PushPrompt from '@/Components/PWA/PushPrompt.vue';
+import InstallButton from '@/Components/PWA/InstallButton.vue';
 import {
   HomeIcon,
   BookOpenIcon,

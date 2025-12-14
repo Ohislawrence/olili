@@ -12,10 +12,10 @@ return new class extends Migration
         Schema::create('tutor_profiles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('organization_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('organization_profiles_id')->nullable()->constrained()->onDelete('set null');
             $table->string('qualification')->nullable();
             $table->text('bio')->nullable();
-            $table->text('specialties')->nullable(); // JSON array of specialties
+            $table->json('specialties')->nullable(); // JSON array of specialties
             $table->text('teaching_style')->nullable();
             $table->integer('years_of_experience')->default(0);
             $table->decimal('hourly_rate', 8, 2)->nullable();
@@ -35,7 +35,6 @@ return new class extends Migration
             // Indexes
             $table->index(['is_verified', 'is_online']);
             $table->index('rating');
-            $table->index('specialties');
         });
     }
 

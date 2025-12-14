@@ -12,8 +12,8 @@ class CourseCreationReminder extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public $user;
-    public $reminderCount;
+    protected $user;
+    protected $reminderCount;
 
     public function __construct($user, $reminderCount)
     {
@@ -46,12 +46,12 @@ class CourseCreationReminder extends Notification implements ShouldQueue
             ->markdown('emails.course-creation-reminder', [
                 'user' => $this->user,
                 'reminderCount' => $this->reminderCount,
-                'message' => $message,
+                'messagebody' => $message,
                 'subject' => $subject,
             ])->text('emails.course-creation-reminder-plain', [
                 'user' => $this->user,
                 'reminderCount' => $this->reminderCount,
-                'message' => $message,
+                'messagebody' => $message,
                 'subject' => $subject,
             ]);
     }

@@ -44,8 +44,7 @@ class Course extends Model
         'generation_parameters' => 'array',
     ];
 
-    // Remove this line as it might cause issues with the new structure
-    // protected $with = ['outlines'];
+
 
     public function scopeWithProgress($query)
     {

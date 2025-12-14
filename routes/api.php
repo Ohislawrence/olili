@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\ProgressController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Admin\BlogPostController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\PushSubscriptionController;
+use App\Http\Controllers\Api\WebPushController;
 
 Route::middleware(['auth:sanctum'])->group(function () {
     // Real-time chat
@@ -15,8 +17,21 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/progress/track', [ProgressController::class, 'track']);
 
     // Notifications
-    Route::get('/notifications', [NotificationController::class, 'index']);
-    Route::post('/notifications/mark-read', [NotificationController::class, 'markAsRead']);
+    Route::prefix('web-push')->group(function () {
+        Route::post('subscribe', [WebPushController::class, 'subscribe']);
+        Route::delete('unsubscribe', [WebPushController::class, 'unsubscribe']);
+        Route::post('test', [WebPushController::class, 'sendTest']);
+        Route::get('status', [WebPushController::class, 'status']);
+
+        // Admin routes
+        Route::post('send-to-user/{user}', [WebPushController::class, 'sendToUser'])
+            ->middleware('can:send_push_notifications');
+    });
+
+    Route::post('/push/subscribe', [PushSubscriptionController::class, 'store']);
+    Route::post('/push/test', [PushSubscriptionController::class, 'test']);
+    Route::get('/push/status', [PushSubscriptionController::class, 'status']);
+
 });
 
 Route::get('/api/featured-blog-posts', [BlogPostController::class, 'featured']);

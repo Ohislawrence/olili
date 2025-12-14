@@ -7,6 +7,15 @@
 
         <title inertia>{{ config('app.name', 'Olilearn') }}</title>
 
+        <!-- PWA Meta Tags -->
+        <meta name="theme-color" content="#6c9108ff"/>
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
+        <!-- Manifest -->
+        <link rel="manifest" href="/manifest.json">
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
@@ -33,6 +42,57 @@
         <meta name="twitter:image" content="{{ $page['props']['meta']['url'] ?? url()->current() }}" />
         <meta name="twitter:description" content="{{ $page['props']['meta']['description'] ?? '' }}" />
         <meta name="twitter:title" content="{{ $page['props']['meta']['title'] ?? 'OliLearn' }}" />
+
+
+        <!-- PWA Script -->
+        <script>
+            // Register Service Worker
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('/sw.js')
+                        .then(function(registration) {
+                            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                        }, function(err) {
+                            console.log('ServiceWorker registration failed: ', err);
+                        });
+                });
+            }
+
+            // Detect if app is installed
+            window.addEventListener('appinstalled', (evt) => {
+                console.log('App was installed.');
+            });
+
+            // Check if app is running in standalone mode
+            function isRunningStandalone() {
+                return window.matchMedia('(display-mode: standalone)').matches ||
+                    window.navigator.standalone === true;
+            }
+
+            // Before install prompt
+            let deferredPrompt;
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+
+                // Show install button
+                if (window.showInstallPromotion) {
+                    window.showInstallPromotion();
+                }
+            });
+
+            // Install function
+            window.installPWA = async function() {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    }
+                    deferredPrompt = null;
+                }
+            };
+        </script>
 
     </head>
     <body class="font-sans antialiased">

@@ -17,6 +17,7 @@ use App\Http\Controllers\Community\ProfileController;
 use App\Http\Controllers\ContactController;
 use App\Mail\WelcomeStudentMail;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\Api\PushSubscriptionController;
 
 // Public routes
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
@@ -165,8 +166,50 @@ Route::get('/test-queue-email', function () {
     Mail::to($user->email)->queue(new WelcomeStudentMail($user));
 
     return "Email queued! Check your queue worker.";
+});// routes/web.php (if you need web routes too)
+
+
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+    Route::post('/push/subscriptions', [PushSubscriptionController::class, 'store']);
+    Route::delete('/push/subscriptions', [PushSubscriptionController::class, 'destroy']);
+    Route::post('/push/test', [PushSubscriptionController::class, 'test']);
 });
+
+
+Route::get('/test-push', function () {
+    if (!app()->environment('local')) {
+        abort(404);
+    }
+
+    $user = auth()->user();
+
+    if (!$user) {
+        return 'Please login first';
+    }
+
+    if (!$user->hasPushSubscription()) {
+        return 'User has no push subscriptions';
+    }
+
+    // Send test notification
+    $service = new \App\Services\WebPush\WebPushService();
+    $notification = $service->createNotification(
+        'Test Notification',
+        'This is a test notification from your custom web push implementation!',
+        url('/'),
+        '/icons/icon-192x192.png'
+    );
+
+    $result = $service->sendToUser($user, $notification);
+
+    return response()->json([
+        'message' => 'Test notification sent',
+        'results' => $result,
+    ]);
+})->middleware('auth');
+
 
 // Another routes
 require __DIR__.'/admin.php';
 require __DIR__.'/student.php';
+require __DIR__.'/api.php';

@@ -17,6 +17,7 @@ use App\Traits\HasOnboarding;
 
 
 
+
 class User extends Authenticatable
 {
     use HasApiTokens;
@@ -515,16 +516,6 @@ class User extends Authenticatable
         return 'Unknown';
     }
 
-    protected function parsePlatform(string $userAgent): string
-    {
-        if (strpos($userAgent, 'Windows') !== false) return 'Windows';
-        if (strpos($userAgent, 'Mac') !== false) return 'macOS';
-        if (strpos($userAgent, 'Linux') !== false) return 'Linux';
-        if (strpos($userAgent, 'Android') !== false) return 'Android';
-        if (strpos($userAgent, 'iPhone') !== false) return 'iOS';
-        return 'Unknown';
-    }
-
     public function tutorProfile()
     {
         return $this->hasOne(TutorProfile::class);
@@ -840,6 +831,192 @@ class User extends Authenticatable
             'likes_received' => $this->communityPosts()->sum('like_count'),
             'comments_received' => $this->communityPosts()->sum('comment_count'),
         ];
+    }
+
+    public function webPushSubscriptions()
+    {
+        return $this->hasMany(WebPushSubscription::class);
+    }
+
+    public function pushNotifications()
+    {
+        return $this->hasMany(PushNotification::class);
+    }
+
+
+     public function pushSubscriptions()
+    {
+        return $this->hasMany(PushSubscription::class);
+    }
+
+    /**
+     * Get active push subscriptions
+     */
+    public function activePushSubscriptions()
+    {
+        return $this->hasMany(PushSubscription::class)->active();
+    }
+
+    /**
+     * Check if user has any active push subscriptions
+     */
+    public function hasPushSubscription(): bool
+    {
+        return $this->pushSubscriptions()->active()->exists();
+    }
+
+    /**
+     * Get push subscription by endpoint
+     */
+    public function pushSubscriptionByEndpoint(string $endpoint)
+    {
+        return $this->pushSubscriptions()->endpoint($endpoint)->first();
+    }
+
+    /**
+     * Add or update a push subscription
+     */
+    public function addPushSubscription(array $data): PushSubscription
+    {
+        return $this->pushSubscriptions()->updateOrCreate(
+            ['endpoint' => $data['endpoint']],
+            [
+                'p256dh_key' => $data['keys']['p256dh'],
+                'auth_key' => $data['keys']['auth'],
+                'user_agent' => request()->userAgent(),
+                'metadata' => [
+                    'browser' => $this->getBrowserInfo(),
+                    'platform' => $this->getPlatformInfo(),
+                    'ip_address' => request()->ip(),
+                ],
+                'is_active' => true,
+                'last_used_at' => now(),
+            ]
+        );
+    }
+
+    /**
+     * Remove a push subscription by endpoint
+     */
+    public function removePushSubscription(string $endpoint): bool
+    {
+        return $this->pushSubscriptions()
+            ->where('endpoint', $endpoint)
+            ->delete() > 0;
+    }
+
+    /**
+     * Deactivate all push subscriptions
+     */
+    public function deactivateAllPushSubscriptions(): void
+    {
+        $this->pushSubscriptions()->update(['is_active' => false]);
+    }
+
+    /**
+     * Get browser information from user agent
+     */
+    private function getBrowserInfo(): array
+    {
+        $userAgent = request()->userAgent();
+
+        return [
+            'user_agent' => $userAgent,
+            'browser' => $this->parseBrowser($userAgent),
+            'version' => $this->parseBrowserVersion($userAgent),
+        ];
+    }
+
+    /**
+     * Get platform information
+     */
+    private function getPlatformInfo(): array
+    {
+        $userAgent = request()->userAgent();
+
+        return [
+            'platform' => $this->parsePlatform($userAgent),
+            'is_mobile' => $this->isMobile($userAgent),
+            'is_desktop' => $this->isDesktop($userAgent),
+        ];
+    }
+
+
+
+    /**
+     * Parse browser version (simplified)
+     */
+    private function parseBrowserVersion(string $userAgent): string
+    {
+        // Simplified version parsing
+        preg_match('/(Chrome|Firefox|Safari|Edge|Opera)\/([0-9.]+)/', $userAgent, $matches);
+
+        return $matches[2] ?? 'Unknown';
+    }
+
+    /**
+     * Parse platform from user agent
+     */
+    private function parsePlatform(string $userAgent): string
+    {
+        if (strpos($userAgent, 'Windows') !== false) return 'Windows';
+        if (strpos($userAgent, 'Mac') !== false) return 'macOS';
+        if (strpos($userAgent, 'Linux') !== false) return 'Linux';
+        if (strpos($userAgent, 'Android') !== false) return 'Android';
+        if (strpos($userAgent, 'iPhone') !== false) return 'iOS';
+
+        return 'Unknown';
+    }
+
+    /**
+     * Check if user agent is mobile
+     */
+    private function isMobile(string $userAgent): bool
+    {
+        return preg_match('/(android|iphone|ipad|mobile)/i', $userAgent) === 1;
+    }
+
+    /**
+     * Check if user agent is desktop
+     */
+    private function isDesktop(string $userAgent): bool
+    {
+        return !$this->isMobile($userAgent);
+    }
+
+    /**
+     * Get all active subscription endpoints
+     */
+    public function getPushEndpoints(): array
+    {
+        return $this->activePushSubscriptions()
+            ->pluck('endpoint')
+            ->toArray();
+    }
+
+    /**
+     * Get push subscription count
+     */
+    public function getPushSubscriptionCount(): int
+    {
+        return $this->pushSubscriptions()->active()->count();
+    }
+
+    /**
+     * Get latest push subscription
+     */
+    public function latestPushSubscription()
+    {
+        return $this->hasOne(PushSubscription::class)->latestOfMany();
+    }
+
+    /**
+     * Route notifications for web push
+     * This is used by Laravel's notification system
+     */
+    public function routeNotificationForWebPush()
+    {
+        return $this->activePushSubscriptions;
     }
 
 }

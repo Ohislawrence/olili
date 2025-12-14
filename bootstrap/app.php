@@ -27,6 +27,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         //
     })
+    ->withCommands([
+        \App\Console\Commands\GenerateVapidKeys::class, // Register the command class here
+    ])
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

@@ -8,7 +8,7 @@
 
 # Hello {{ $user->name }}!
 
-{!! $message !!}
+{!! $bodyText !!}
 
 @component('mail::button', ['url' => config('app.url'), 'color' => 'primary'])
 Visit Your Dashboard

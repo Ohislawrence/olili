@@ -3,7 +3,7 @@
 
 Hello {{ $user->name ?? 'there' }}!
 
-{{ $message ?? '' }}
+{{ $messagebody ?? '' }}
 
 WHY CREATE YOUR FIRST COURSE?
 - Personalized Learning: Tailor content to your specific needs and goals

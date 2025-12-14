@@ -4,7 +4,7 @@
 
 Hello {{ $user->name ?? 'there' }}!
 
-{{ $message ?? '' }}
+{{ $messagebody ?? '' }}
 
 ## Why Create Your First Course?
 
