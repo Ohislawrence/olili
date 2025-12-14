@@ -1348,7 +1348,7 @@ const markAsComplete = async () => {
   try {
     // Include time spent in completion
     const totalTimeSpent = currentSessionTime.value
-    await router.post(route('student.courses.completeTopic', {
+    await router.post(route('student.courses.complete-topic', {
       course: props.course.id,
       outline: props.current_topic.id
     }), {
@@ -1367,7 +1367,7 @@ const markAsComplete = async () => {
 
 const generateContent = async (topic) => {
   contentLoading.value = true
-  
+
   try {
     await router.post(route('student.outlines.generate-content', {
       course: props.course.id,
