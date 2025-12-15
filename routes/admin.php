@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\BlogPostController;
 use App\Http\Controllers\Admin\CommunityController as AdminCommunityController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\EmailController;
+use App\Http\Controllers\Admin\NotificationController;
 use Illuminate\Http\Request;
 
 Route::middleware([
@@ -124,6 +125,22 @@ Route::middleware([
     //email
     Route::get('/email', [EmailController::class, 'index'])->name('email.index');
     Route::post('/email/send', [EmailController::class, 'send'])->name('email.send');
+
+    // Notification routes
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/create', [NotificationController::class, 'create'])->name('notifications.create');
+        Route::post('/', [NotificationController::class, 'store'])->name('notifications.store');
+        Route::get('/{notification}', [NotificationController::class, 'show'])->name('notifications.show');
+        Route::get('/{notification}/edit', [NotificationController::class, 'edit'])->name('notifications.edit');
+        Route::put('/{notification}', [NotificationController::class, 'update'])->name('notifications.update');
+        Route::delete('/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+        Route::post('/{notification}/send-now', [NotificationController::class, 'sendNow'])->name('notifications.send-now');
+        Route::get('/{notification}/preview', [NotificationController::class, 'preview'])->name('notifications.preview');
+        Route::post('/bulk-action', [NotificationController::class, 'bulkAction'])->name('notifications.bulk-action');
+        Route::post('/{notification}/resend-failed', [NotificationController::class, 'resendFailed'])->name('notifications.resend-failed');
+        Route::get('/{notification}/logs', [NotificationController::class, 'logs'])->name('notifications.logs');
+    });
 
 
     /**

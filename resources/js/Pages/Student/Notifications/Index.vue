@@ -178,13 +178,7 @@
                                                 <ClockIcon class="h-4 w-4 mr-1" />
                                                 {{ formatTime(notification.created_at) }}
                                             </span>
-                                            <span
-                                                v-if="notification.type"
-                                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize"
-                                                :class="getTypeBadgeClass(notification.type)"
-                                            >
-                                                {{ notification.type }}
-                                            </span>
+
                                         </div>
 
                                         <!-- Action Buttons -->
@@ -255,6 +249,7 @@ import {
     InformationCircleIcon,
     CheckCircleIcon as SuccessIcon,
     ArrowTopRightOnSquareIcon,
+    ShieldExclamationIcon,
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({

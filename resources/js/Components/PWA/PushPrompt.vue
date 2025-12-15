@@ -196,7 +196,7 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 .push-prompt-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   padding: 24px;
   border-radius: 12px 12px 0 0;
@@ -242,38 +242,43 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 .btn-primary {
-  background: #3b82f6;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   border: none;
   padding: 12px;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #2563eb;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .btn-primary:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+  transform: none !important;
 }
 
 .btn-secondary {
-  background: #f3f4f6;
-  color: #374151;
-  border: 1px solid #d1d5db;
+  background: #f0fdf4;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
   padding: 12px;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 .btn-secondary:hover {
-  background: #e5e7eb;
+  background: #dcfce7;
+  border-color: #86efac;
+  transform: translateY(-1px);
 }
 
 .btn-link {
@@ -284,6 +289,7 @@ function urlBase64ToUint8Array(base64String) {
   font-size: 13px;
   cursor: pointer;
   text-decoration: underline;
+  transition: color 0.2s;
 }
 
 .btn-link:hover {

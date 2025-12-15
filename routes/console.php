@@ -44,3 +44,7 @@ Schedule::command('reminders:send-course-creation')
 Schedule::command('model:prune')
     ->daily()
     ->description('Clean up old database records');
+
+Schedule::command('notifications:process-scheduled')
+        ->everyMinute()
+        ->withoutOverlapping();
