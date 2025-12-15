@@ -283,10 +283,10 @@ class CourseController extends Controller
         ]);
     }
 
-    public function completeTopic(CourseOutline $outline, Request $request)
+    public function completeTopic(CourseOutline $topic, Request $request)
     {
         //$this->authorize('update', $topic->module->course);
-
+        $outline = $topic;
         $student = auth()->user();
         $course = $outline->module->course;
 

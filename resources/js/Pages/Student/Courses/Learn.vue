@@ -1348,18 +1348,26 @@ const markAsComplete = async () => {
   try {
     // Include time spent in completion
     const totalTimeSpent = currentSessionTime.value
+
+    // FIX: Pass topic ID correctly for route model binding
     await router.post(route('student.courses.complete-topic', {
-      course: props.course.id,
-      outline: props.current_topic.id
+      topic: props.current_topic.id
     }), {
       time_spent: totalTimeSpent
     }, {
+      preserveScroll: true,
       onSuccess: () => {
         // Reset timer for next topic
         startTime.value = new Date()
         currentSessionTime.value = 0
+
+        // Reload to update completion status
+        router.reload({ preserveScroll: true })
       }
     })
+  } catch (error) {
+    console.error('Error marking as complete:', error)
+    alert('Failed to mark as complete. Please try again.')
   } finally {
     markCompleteLoading.value = false
   }

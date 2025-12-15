@@ -177,9 +177,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
 
 Route::get('/test-push', function () {
-    if (!app()->environment('local')) {
-        abort(404);
-    }
+
 
     $user = auth()->user();
 
@@ -206,7 +204,7 @@ Route::get('/test-push', function () {
         'message' => 'Test notification sent',
         'results' => $result,
     ]);
-})->middleware('auth');
+});
 
 
 // Another routes

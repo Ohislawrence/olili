@@ -309,7 +309,7 @@
   />
   <!-- PWA Components -->
         <InstallButton />
-        <PushSubscribe />
+        <PushPrompt />
 </template>
 
 <script setup>

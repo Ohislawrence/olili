@@ -31,7 +31,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('/outlines/{outline}/complete', [CourseController::class, 'completeOutline'])->name('outlines.complete');
     Route::post('/outlines/{outline}/generate-content', [CourseController::class, 'generateContent'])->name('outlines.generate-content');
     Route::post('/courses/{course}/update-progress', [CourseController::class, 'updateProgress'])->name('courses.update-progress');
-    Route::post('/courses/{course}/complete-topic/{outline}', [CourseController::class, 'completeTopic'])->name('courses.complete-topic');
+    Route::post('/courses/complete/topic/{topic}', [CourseController::class, 'completeTopic'])->name('courses.complete-topic');
     Route::get('/courses/{course}/chat/initialize', [ChatController::class, 'initializePopupChat'])->name('courses.chat.initialize');
 
     // Content Quiz - Fixed route names to avoid conflicts
@@ -65,14 +65,13 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('/flashcards/{flashcardSet}/reset-progress', [FlashcardController::class, 'resetProgress'])->name('flashcards.reset-progress');
 
     // Notification Routes - Added middleware for consistency
-    Route::group(function () {
-        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-        Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
-        Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
-        Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
-        Route::delete('/notifications', [NotificationController::class, 'clearAll'])->name('notifications.clear-all');
-        Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
-    });
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::delete('/notifications', [NotificationController::class, 'clearAll'])->name('notifications.clear-all');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
+
 
     // Profile - Added missing middleware
     Route::prefix('profile')->name('profile.')->group(function () {
