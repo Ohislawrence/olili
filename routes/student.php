@@ -9,6 +9,7 @@ use App\Http\Controllers\Student\ChatController;
 use App\Http\Controllers\Student\ProfileController;
 use App\Http\Controllers\Student\CapstoneProjectController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Student\CatalogController;
 use App\Http\Controllers\Student\CourseTutorController;
 use App\Http\Controllers\Student\FlashcardController;
 use Illuminate\Support\Facades\Route;
@@ -36,22 +37,33 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
     // Content Quiz - Fixed route names to avoid conflicts
     Route::post('/courses/{course}/outlines/{outline}/generate-quiz', [CourseController::class, 'generateQuiz'])
-        ->name('courses.outlines.generate-quiz');
-    Route::post('/courses/{course}/quizzes/{quiz}/start', [QuizController::class, 'startCourseQuiz'])
-        ->name('courses.quizzes.start');
-    Route::post('/courses/{course}/quiz-attempts/{attempt}/submit', [QuizController::class, 'submitCourseQuiz'])
-        ->name('courses.quiz-attempts.submit');
+        ->name('outlines.generate-quiz');
+    Route::post('/courses/quizzes/{quiz}/start', [QuizController::class, 'startAttempt'])
+        ->name('quizzes.start');
+    Route::post('/courses/quiz-attempts/{attempt}/submit', [QuizController::class, 'submitAttempt'])
+        ->name('quizzes.submit');
     Route::post('/courses/{course}/quiz-attempts/{attempt}/result', [QuizController::class, 'getCourseQuizResults'])
-        ->name('courses.quiz-attempts.result');
+        ->name('quiz-attempts.result');
+
+
+    // Course Catalog
+    Route::prefix('catalog')->name('catalog.')->group(function () {
+        Route::get('/', [CatalogController::class, 'index'])->name('index');
+        Route::get('/my-courses', [CatalogController::class, 'myEnrolledCourses'])->name('my-courses');
+        Route::get('/courses/{course}', [CatalogController::class, 'show'])->name('show');
+        Route::get('/courses/{course}/preview', [CatalogController::class, 'preview'])->name('preview');
+        Route::post('/courses/{course}/enroll', [CatalogController::class, 'enroll'])->name('enroll');
+        Route::delete('/courses/{course}/unenroll', [CatalogController::class, 'unenroll'])->name('unenroll');
+    });
 
     // General Quizzes - Fixed parameter order and names
     Route::get('/quizzes', [QuizController::class, 'index'])->name('quizzes.index');
-    Route::get('/quizzes/{quiz}', [QuizController::class, 'show'])->name('quizzes.show');
-    Route::get('/quizzes/{quiz}/start', [QuizController::class, 'startAttempt'])->name('quizzes.start');
-    Route::get('/quiz-attempts/{attempt}/continue', [QuizController::class, 'continueAttempt'])->name('quiz-attempts.continue');
-    Route::post('/quiz-attempts/{attempt}/submit', [QuizController::class, 'submitAttempt'])->name('quiz-attempts.submit');
-    Route::get('/quiz-attempts/{attempt}/result', [QuizController::class, 'showResult'])->name('quiz-attempts.result');
-    Route::get('/quizzes/{quiz}/history', [QuizController::class, 'getQuizHistory'])->name('quizzes.history');
+    //Route::get('/quizzes/{quiz}', [QuizController::class, 'show'])->name('quizzes.show');
+    //Route::get('/quizzes/{quiz}/start', [QuizController::class, 'startAttempt'])->name('c.quizzes.start');
+    //Route::get('/quiz-attempts/{attempt}/continue', [QuizController::class, 'continueAttempt'])->name('quiz-attempts.continue');
+    //Route::post('/quiz-attempts/{attempt}/submit', [QuizController::class, 'submitAttempt'])->name('quiz-attempts.submit');
+    //Route::get('/quiz-attempts/{attempt}/result', [QuizController::class, 'showResult'])->name('quiz-attempts.result');
+    //Route::get('/quizzes/{quiz}/history', [QuizController::class, 'getQuizHistory'])->name('quizzes.history');
 
     // Flashcard Routes - Fixed route parameter names
     Route::get('/flashcards', [FlashcardController::class, 'index'])->name('flashcards.index');

@@ -219,7 +219,7 @@ class FrontpageController extends Controller
      */
     public function coursesIndex(Request $request)
     {
-        $query = Course::with(['modules', 'examBoard'])
+        $query = Course::where('created_by', 'admin')->where('visibility', 'public')->with(['modules', 'examBoard'])
             ->active()
             ->withProgress();
 
@@ -238,8 +238,8 @@ class FrontpageController extends Controller
         return Inertia::render('Frontpages/Courses/Index', [
             'courses' => $courses,
             'filters' => $request->only(['subject', 'level']),
-            'subjects' => Course::active()->distinct()->pluck('subject'),
-            'levels' => Course::active()->distinct()->pluck('level'),
+            'subjects' => Course::where('created_by', 'admin')->where('visibility', 'public')->active()->distinct()->pluck('subject'),
+            'levels' => Course::where('created_by', 'admin')->where('visibility', 'public')->active()->distinct()->pluck('level'),
             'meta' => [
                 'title' => 'Explore Courses',
                 'description' => 'Discover our AI-powered courses designed to help you learn smarter and faster.',
@@ -254,11 +254,11 @@ class FrontpageController extends Controller
      */
     public function courseShow($id)
     {
-        $course = Course::with(['modules', 'examBoard', 'modules.topics'])
+        $course = Course::where('created_by', 'admin')->where('visibility', 'public')->with(['modules', 'examBoard', 'modules.topics'])
             ->withProgress()
             ->findOrFail($id);
 
-        $relatedCourses = Course::with(['modules'])
+        $relatedCourses = Course::where('created_by', 'admin')->where('visibility', 'public')->with(['modules'])
             ->active()
             ->where('id', '!=', $course->id)
             ->where('subject', $course->subject)

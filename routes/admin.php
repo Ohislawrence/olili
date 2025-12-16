@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\EmailController;
 use App\Http\Controllers\Admin\NotificationController;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Admin\CoursesController;
 
 Route::middleware([
     'auth:sanctum',
@@ -141,6 +142,24 @@ Route::middleware([
         Route::post('/{notification}/resend-failed', [NotificationController::class, 'resendFailed'])->name('notifications.resend-failed');
         Route::get('/{notification}/logs', [NotificationController::class, 'logs'])->name('notifications.logs');
     });
+
+    // catelog
+
+    Route::resource('catalog/courses', CoursesController::class)->names([
+                                        'index' => 'catalog.courses.index',
+                                        'create' => 'catalog.courses.create',
+                                        'store' => 'catalog.courses.store',
+                                        'show' => 'catalog.courses.show',
+                                        'edit' => 'catalog.courses.edit',
+                                        'update' => 'catalog.courses.update',
+                                        'destroy' => 'catalog.courses.destroy',
+                                    ]);
+    Route::get('catelog/courses/{course}/enrollments', [CoursesController::class, 'enrollments'])->name('catalog.courses.enrollments');
+    Route::post('catelog/courses/{course}/toggle-enrollment', [CoursesController::class, 'toggleEnrollment'])->name('catalog.courses.toggle-enrollment');
+    Route::post('catalog/students/search', [CoursesController::class, 'search'])->name('catalog.search.student');
+    Route::post('catalog/courses/{course}/bulk-enroll', [CoursesController::class, 'bulkEnroll'])->name('catalog.bulk.enroll');
+    Route::put('catalog/enrollments/{enrollment}', [CoursesController::class, 'update'])->name('catalog.update.enrollment');
+    Route::post('/catelog/courses/{course}/regenerate', [CoursesController::class, 'regenerate'])->name('catalog.courses.regenerate');
 
 
     /**

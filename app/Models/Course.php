@@ -32,6 +32,11 @@ class Course extends Model
         'prerequisites',
         'ai_model_used',
         'generation_parameters',
+        'created_by', // 'admin' or 'student'
+        'is_public',
+        'enrollment_limit',
+        'current_enrollment',
+        'visibility',
     ];
 
     protected $casts = [
@@ -42,6 +47,10 @@ class Course extends Model
         'learning_objectives' => 'array',
         'prerequisites' => 'array',
         'generation_parameters' => 'array',
+        'is_public' => 'boolean',
+        'enrollment_limit' => 'integer',
+        'current_enrollment' => 'integer',
+        'visibility' => 'string', // 'public', 'private', 'unlisted'
     ];
 
 
@@ -235,5 +244,148 @@ class Course extends Model
     public function flashcardSets()
     {
         return $this->hasMany(FlashcardSet::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_user_id');
+    }
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(CourseEnrollment::class);
+    }
+
+    public function enrolledStudents()
+    {
+        return $this->belongsToMany(User::class, 'course_enrollments')
+            ->withPivot(['enrolled_at', 'progress_percentage', 'status'])
+            ->withTimestamps();
+    }
+
+    // New scopes
+    public function scopePublic($query)
+    {
+        return $query->where('is_public', true)
+                    ->where('visibility', 'public');
+    }
+
+    public function scopeAvailableForEnrollment($query)
+    {
+        return $query->public()
+                    ->where(function($q) {
+                        $q->whereNull('enrollment_limit')
+                        ->orWhereColumn('current_enrollment', '<', 'enrollment_limit');
+                    });
+    }
+
+    public function scopeCreatedByAdmin($query)
+    {
+        return $query->where('created_by', 'admin');
+    }
+
+    public function scopeCreatedByStudent($query)
+    {
+        return $query->where('created_by', 'student');
+    }
+
+    // New methods
+    public function isPublic(): bool
+    {
+        return $this->is_public && $this->visibility === 'public';
+    }
+
+    public function isFull(): bool
+    {
+        if (!$this->enrollment_limit) return false;
+        return $this->current_enrollment >= $this->enrollment_limit;
+    }
+
+
+
+    public function enrollStudent(User $user): bool
+    {
+        if (!$this->canEnroll($user)) {
+            return false;
+        }
+
+        try {
+            \DB::beginTransaction();
+
+            // Create enrollment record
+            CourseEnrollment::create([
+                'course_id' => $this->id,
+                'user_id' => $user->id,
+                'enrolled_at' => now(),
+                'status' => 'active',
+            ]);
+
+            // Clone the course for the student
+            $this->cloneForStudent($user);
+
+            // Increment enrollment count
+            $this->increment('current_enrollment');
+
+            \DB::commit();
+            return true;
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error("Failed to enroll student: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    private function cloneForStudent(User $user)
+    {
+        // Clone the course and all its content for the student
+        $newCourse = $this->replicate();
+        $newCourse->student_profile_id = $user->studentProfile->id;
+        $newCourse->created_by = 'student';
+        $newCourse->is_public = false;
+        $newCourse->original_course_id = $this->id; // Track original public course
+        $newCourse->save();
+
+        // Clone modules
+        foreach ($this->modules as $module) {
+            $newModule = $module->replicate();
+            $newModule->course_id = $newCourse->id;
+            $newModule->save();
+
+            // Clone topics
+            foreach ($module->topics as $topic) {
+                $newTopic = $topic->replicate();
+                $newTopic->module_id = $newModule->id;
+                $newTopic->save();
+
+                // Clone contents
+                foreach ($topic->contents as $content) {
+                    $newContent = $content->replicate();
+                    $newContent->course_outline_id = $newTopic->id;
+                    $newContent->save();
+                }
+
+                // Clone quiz if exists
+                if ($topic->quiz) {
+                    $newQuiz = $topic->quiz->replicate();
+                    $newQuiz->course_outline_id = $newTopic->id;
+                    $newQuiz->save();
+
+                    // Clone quiz questions
+                    foreach ($topic->quiz->questions as $question) {
+                        $newQuestion = $question->replicate();
+                        $newQuestion->quiz_id = $newQuiz->id;
+                        $newQuestion->save();
+                    }
+                }
+            }
+        }
+    }
+    public function canEnroll(User $user): bool
+    {
+        if (!$this->isPublic()) return false;
+        if ($this->isFull()) return false;
+        if ($this->enrolledStudents()->where('user_id', $user->id)->exists()) return false;
+
+        return true;
     }
 }

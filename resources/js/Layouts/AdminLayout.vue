@@ -348,6 +348,7 @@ const navigation = [
   { name: 'BlogPost', href: route('admin.blog-posts.index'), active: 'admin.blog-posts.*', icon: UsersIcon },
   { name: 'Community Moderation', href: '/admin/mod/check', active: 'admin.mod.*', icon: ChatBubbleLeftRightIcon },
   { name: 'Courses', href: route('admin.courses.index'), active: 'admin.courses.*', icon: BookOpenIcon },
+  { name: 'Catalogs', href: route('admin.catalog.courses.index'), active: 'admin.catalog.courses.*', icon: BookOpenIcon },
   { name: 'AI Providers', href: route('admin.ai-providers.index'), active: 'admin.ai-providers.*', icon: CpuChipIcon },
   { name: 'Analytics', href: route('admin.ai-analytics.index'), active: 'admin.ai-analytics.*', icon: ChartBarIcon },
   { name: 'Exam Boards', href: route('admin.exam-boards.index'), active: 'admin.exam-boards.*', icon: ClipboardDocumentListIcon },

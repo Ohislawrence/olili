@@ -145,15 +145,7 @@
                                     <p class="text-white/90 text-sm mt-2">{{ course.level }}</p>
                                 </div>
                             </div>
-                            <div class="absolute top-4 right-4">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs bg-white/20 backdrop-blur-sm text-white border border-white/30">
-                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
-                                        <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    {{ course.progress_percentage || 0 }}%
-                                </span>
-                            </div>
+
                         </div>
                         <div class="p-6">
                             <p class="text-gray-700 mb-6 leading-relaxed line-clamp-3">{{ course.description }}</p>
@@ -171,12 +163,7 @@
                                     {{ course.modules_count || 0 }} Modules
                                 </div>
                             </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
-                                <div
-                                    class="bg-gradient-to-r from-emerald-500 to-teal-600 h-2 rounded-full transition-all duration-500 ease-out"
-                                    :style="{ width: (course.progress_percentage || 0) + '%' }"
-                                ></div>
-                            </div>
+
                             <Link
                                 :href="route('courses.show', course.id)"
                                 class="w-full inline-flex items-center justify-center bg-emerald-50 text-emerald-700 px-6 py-3 rounded-xl font-semibold hover:bg-emerald-100 transform transition-all duration-300 group-hover:scale-105 border border-emerald-200"
@@ -261,7 +248,7 @@
                         <p class="text-gray-700 leading-relaxed">{{ step.description }}</p>
                     </div>
                 </div>
-                
+
                 <!-- Start Now Button -->
                 <div class="text-center">
                     <Link

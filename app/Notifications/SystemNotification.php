@@ -34,7 +34,7 @@ class SystemNotification extends Notification implements ShouldQueue
             ->greeting('Hello ' . $notifiable->name . '!')
             ->line($this->message)
             ->action('View Details', url('/notifications'))
-            ->line('Thank you for using our application!');
+            ->line('Thank you for using Olilearn application!');
     }
 
     public function toDatabase($notifiable)

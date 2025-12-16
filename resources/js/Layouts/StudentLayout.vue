@@ -402,7 +402,7 @@ const toggleSidebar = () => {
 const navigation = [
   { name: 'Dashboard', href: route('student.dashboard'), active: 'student.dashboard', icon: HomeIcon },
   { name: 'My Courses', href: route('student.courses.index'), active: 'student.courses.*', icon: BookOpenIcon },
-  { name: 'Quizzes', href: route('student.quizzes.index'), active: 'student.quizzes.*', icon: ClipboardDocumentListIcon },
+  { name: 'Catalog', href: route('student.catalog.index'), active: 'student.catalog.*', icon: ClipboardDocumentListIcon },
   { name: 'Flash Card', href: route('student.flashcards.index'), active: 'student.flashcards.*', icon: RectangleStackIcon },
   { name: 'Profile', href: route('student.profile.show'), active: 'student.profile.*', icon: UserCircleIcon },
 ]

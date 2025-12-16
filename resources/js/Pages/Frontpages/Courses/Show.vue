@@ -52,19 +52,7 @@
                             </div>
                         </div>
 
-                        <!-- Progress -->
-                        <div class="mb-8">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="font-semibold">Your Progress</span>
-                                <span class="text-emerald-200">{{ course.progress_percentage || 0 }}% Complete</span>
-                            </div>
-                            <div class="w-full bg-white/20 rounded-full h-3">
-                                <div
-                                    class="bg-white h-3 rounded-full transition-all duration-1000 ease-out"
-                                    :style="{ width: (course.progress_percentage || 0) + '%' }"
-                                ></div>
-                            </div>
-                        </div>
+
 
                         <!-- Action Buttons -->
                         <div class="flex flex-col sm:flex-row gap-4">

@@ -13,6 +13,99 @@ use Carbon\Carbon;
 
 class QuizController extends Controller
 {
+    //content quiz
+
+    public function startAttempt(Quiz $quiz)
+    {
+        $student = auth()->user();
+
+        // Load course for authorization
+        $quiz->load(['courseOutline.module.course']);
+        // $this->authorize('view', $quiz->courseOutline->module->course);
+
+        if (!$quiz->canUserAttempt($student)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You have reached the maximum number of attempts for this quiz.',
+            ], 403);
+        }
+
+        $attempt = QuizAttempt::create([
+            'user_id' => $student->id,
+            'quiz_id' => $quiz->id,
+        ]);
+
+        $attempt->startAttempt();
+
+        return response()->json([
+            'quiz' => $quiz,
+            'attempt' => $attempt,
+            'questions' => $quiz->questions,
+            'time_limit' => $quiz->time_limit_minutes,
+            'module_context' => [
+                'module_title' => $quiz->courseOutline->module->title,
+                'topic_title' => $quiz->courseOutline->title,
+            ],
+        ], 200);
+    }
+
+    public function submitAttempt(QuizAttempt $attempt, Request $request)
+    {
+        //$this->authorize('update', $attempt);
+
+        $request->validate([
+            'answers' => 'required|array',
+        ]);
+
+        $quiz = $attempt->quiz;
+
+        // Load the full hierarchy for progress tracking
+        $quiz->load(['courseOutline.module.course']);
+
+        // Calculate score
+        $scoreData = $quiz->calculateScore($request->answers);
+
+        // Complete the attempt
+        $attempt->completeAttempt($request->answers, $scoreData);
+
+        // Record progress
+        if ($attempt->quiz->courseOutline) {
+            $progressService = app(\App\Services\ProgressTrackingService::class);
+            $progressService->recordActivity(
+                $attempt->user,
+                $quiz->courseOutline->module->course,
+                $quiz->courseOutline->id,
+                'quiz_attempt',
+                $attempt->time_taken_seconds / 60, // Convert to minutes
+                true,
+                $attempt->percentage
+            );
+
+            // If quiz was passed and it's associated with a topic, mark topic as completed
+            if ($attempt->is_passed && $quiz->courseOutline) {
+                $topic = $quiz->courseOutline;
+                if (!$topic->is_completed) {
+                    $topic->markAsCompleted();
+
+                    // Update module completion status
+                    $progressService->updateModuleCompletion($topic->module);
+                }
+            }
+        }
+
+         return response()->json([
+        'attempt' => $attempt->load(['quiz.courseOutline.module.course']),
+        'score_data' => $scoreData,
+        'questions' => $quiz->questions,
+        'user_answers' => $request->answers,
+        'module_context' => [
+            'module_title' => $quiz->courseOutline->module->title,
+            'course_title' => $quiz->courseOutline->module->course->title,
+        ],
+    ]);
+    }
+
+
     public function index(Request $request)
     {
         $student = auth()->user();
@@ -80,37 +173,7 @@ class QuizController extends Controller
         ]);
     }
 
-    public function startAttempt(Quiz $quiz)
-    {
-        $student = auth()->user();
 
-        // Load course for authorization
-        $quiz->load(['courseOutline.module.course']);
-        //$this->authorize('view', $quiz->courseOutline->module->course);
-
-        if (!$quiz->canUserAttempt($student)) {
-            return redirect()->back()
-                ->with('error', 'You have reached the maximum number of attempts for this quiz.');
-        }
-
-        $attempt = QuizAttempt::create([
-            'user_id' => $student->id,
-            'quiz_id' => $quiz->id,
-        ]);
-
-        $attempt->startAttempt();
-
-        return Inertia::render('Student/Quizzes/Take', [
-            'quiz' => $quiz->load(['courseOutline.module.course']),
-            'attempt' => $attempt,
-            'questions' => $quiz->questions,
-            'time_limit' => $quiz->time_limit_minutes,
-            'module_context' => [
-                'module_title' => $quiz->courseOutline->module->title,
-                'topic_title' => $quiz->courseOutline->title,
-            ],
-        ]);
-    }
 
     public function continueAttempt(QuizAttempt $attempt, Quiz $quiz )
     {
@@ -134,61 +197,7 @@ class QuizController extends Controller
         ]);
     }
 
-    public function submitAttempt(QuizAttempt $attempt, Request $request)
-    {
-        //$this->authorize('update', $attempt);
 
-        $request->validate([
-            'answers' => 'required|array',
-        ]);
-
-        $quiz = $attempt->quiz;
-
-        // Load the full hierarchy for progress tracking
-        $quiz->load(['courseOutline.module.course']);
-
-        // Calculate score
-        $scoreData = $quiz->calculateScore($request->answers);
-
-        // Complete the attempt
-        $attempt->completeAttempt($request->answers, $scoreData);
-
-        // Record progress
-        if ($attempt->quiz->courseOutline) {
-            $progressService = app(\App\Services\ProgressTrackingService::class);
-            $progressService->recordActivity(
-                $attempt->user,
-                $quiz->courseOutline->module->course,
-                $quiz->courseOutline->id,
-                'quiz_attempt',
-                $attempt->time_taken_seconds / 60, // Convert to minutes
-                true,
-                $attempt->percentage
-            );
-
-            // If quiz was passed and it's associated with a topic, mark topic as completed
-            if ($attempt->is_passed && $quiz->courseOutline) {
-                $topic = $quiz->courseOutline;
-                if (!$topic->is_completed) {
-                    $topic->markAsCompleted();
-
-                    // Update module completion status
-                    $progressService->updateModuleCompletion($topic->module);
-                }
-            }
-        }
-
-        return Inertia::render('Student/Quizzes/Result', [
-            'attempt' => $attempt->load(['quiz.courseOutline.module.course']),
-            'score_data' => $scoreData,
-            'questions' => $quiz->questions,
-            'user_answers' => $request->answers,
-            'module_context' => [
-                'module_title' => $quiz->courseOutline->module->title,
-                'course_title' => $quiz->courseOutline->module->course->title,
-            ],
-        ]);
-    }
 
     public function showResult(QuizAttempt $attempt)
     {

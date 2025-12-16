@@ -1019,4 +1019,9 @@ class User extends Authenticatable
         return $this->activePushSubscriptions;
     }
 
+    public function enrollments()
+    {
+        return $this->hasMany(CourseEnrollment::class);
+    }
+
 }

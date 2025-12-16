@@ -180,7 +180,6 @@
                                     <option value="latest">Latest</option>
                                     <option value="popular">Most Popular</option>
                                     <option value="duration">Duration</option>
-                                    <option value="progress">Progress</option>
                                 </select>
                             </div>
                         </div>
@@ -205,26 +204,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- Progress Badge -->
-                                    <div class="absolute top-4 right-4">
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs bg-white/20 backdrop-blur-sm text-white border border-white/30">
-                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
-                                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
-                                            </svg>
-                                            {{ course.progress_percentage || 0 }}%
-                                        </span>
-                                    </div>
-
-                                    <!-- Status Badge -->
-                                    <div class="absolute top-4 left-4">
-                                        <span
-                                            class="inline-flex items-center px-3 py-1 rounded-full text-xs backdrop-blur-sm border font-medium"
-                                            :class="getStatusClasses(course.status)"
-                                        >
-                                            {{ course.status }}
-                                        </span>
-                                    </div>
                                 </div>
 
                                 <!-- Course Content -->
@@ -248,20 +227,9 @@
                                             </div>
                                         </div>
 
-                                        <!-- Dates -->
-                                        <div class="flex items-center justify-between text-xs text-gray-500">
-                                            <span>Start: {{ course.start_date || 'Flexible' }}</span>
-                                            <span v-if="course.target_completion_date">Due: {{ course.target_completion_date }}</span>
-                                        </div>
                                     </div>
 
-                                    <!-- Progress Bar -->
-                                    <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
-                                        <div
-                                            class="bg-gradient-to-r from-emerald-500 to-teal-600 h-2 rounded-full transition-all duration-500 ease-out"
-                                            :style="{ width: (course.progress_percentage || 0) + '%' }"
-                                        ></div>
-                                    </div>
+
 
                                     <!-- Action Buttons -->
                                     <div class="flex space-x-3">

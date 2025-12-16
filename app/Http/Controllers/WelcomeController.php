@@ -16,7 +16,7 @@ class WelcomeController extends Controller
     public function index()
     {
         // Get featured courses with progress information
-        $courses = Course::with(['modules', 'examBoard'])
+        $courses = Course::where('created_by', 'admin')->where('visibility', 'public')->with(['modules', 'examBoard'])
             ->active()
             ->withProgress()
             ->limit(6)

@@ -1,7 +1,7 @@
 
 {{ $subject }}
 
-Hello {{ $user->name }}!
+Hello!
 
 {{ $messagebody }}
 
