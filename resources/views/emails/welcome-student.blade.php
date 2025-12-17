@@ -10,7 +10,7 @@
 
     {{-- Body --}}
     @component('mail::message')
-# Welcome to OliLearn, {{ $user->name }}! 🎉
+# Welcome to OliLearn, {{ $user?->name ?? '' }}! 🎉
 
 We're excited to have you on board. Your learning journey begins now, and we’ve built OliLearn to help you learn smarter with AI-assisted courses, structured study paths, quizzes, and flashcards.
 
@@ -18,11 +18,11 @@ We're excited to have you on board. Your learning journey begins now, and we’v
 
 ## Getting Started
 
-- Complete your profile for better recommendations  
-- Explore available courses or create your own  
-- Use **Oli Tutor AI** to ask topic-related questions  
-- Take quizzes to measure understanding  
-- Use flashcards to master key concepts  
+- Complete your profile for better recommendations
+- Explore available courses or create your own
+- Use **Oli Tutor AI** to ask topic-related questions
+- Take quizzes to measure understanding
+- Use flashcards to master key concepts
 
 ---
 
@@ -30,12 +30,12 @@ We're excited to have you on board. Your learning journey begins now, and we’v
 
 Creating a course on OliLearn is simple—whether it’s for WAEC, JAMB, NECO, university courses, professional exams, or any personal topic.
 
-1. Go to your **Dashboard** and click **“New Course”**.  
-2. Enter a course title (e.g., *JAMB Chemistry*, *Python Basics*, *Financial Accounting*).  
-3. Or choose from structured **Exam Boards**.  
-4. Set Target Completion Date, Level, and Weekly Study Hours.  
-5. *(Optional)* Add learning objectives and a description.  
-6. Click **Create Course** to begin.  
+1. Go to your **Dashboard** and click **“New Course”**.
+2. Enter a course title (e.g., *JAMB Chemistry*, *Python Basics*, *Financial Accounting*).
+3. Or choose from structured **Exam Boards**.
+4. Set Target Completion Date, Level, and Weekly Study Hours.
+5. *(Optional)* Add learning objectives and a description.
+6. Click **Create Course** to begin.
 
 Once submitted, OliLearn automatically generates all topics, modules, quizzes, and flashcards for you.
 
@@ -72,7 +72,7 @@ If you ever need help, our support team is always available.
     {{-- Footer --}}
     @slot('footer')
         @component('mail::footer')
-© {{ date('Y') }} OliLearn. All rights reserved.  
+© {{ date('Y') }} OliLearn. All rights reserved.
 [Visit Website]({{ config('app.url') }}) | [Contact Support]({{ url('/contact') }}) | [Privacy Policy]({{ url('/privacy') }})
         @endcomponent
     @endslot

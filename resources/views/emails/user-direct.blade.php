@@ -6,7 +6,7 @@
         @endcomponent
     @endslot
 
-# Hello {{ $user->name }}!
+# Hello {{ $user?->name ?? 'student' }}!
 
 {!! $bodyText !!}
 

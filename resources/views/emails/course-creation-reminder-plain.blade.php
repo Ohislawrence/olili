@@ -1,7 +1,7 @@
 {{-- resources/views/emails/course-creation-reminder-plain.blade.php --}}
 {{ $subject }}
 
-Hello {{ $user->name ?? 'there' }}!
+Hello {{ $user?->name ?? 'there' }}!
 
 {{ $messagebody ?? '' }}
 

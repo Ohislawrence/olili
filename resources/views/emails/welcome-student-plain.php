@@ -1,10 +1,10 @@
-Welcome to OliLearn, {{ $user->name }}! 🎉
+Welcome to OliLearn, {{ $user?->name ?? '' }}! 🎉
 
 We're thrilled to have you join our learning community. Your educational journey starts now!
 
 GETTING STARTED:
 - Complete your profile to get personalized recommendations
-- Explore courses that match your interests  
+- Explore courses that match your interests
 - Set your learning goals to track your progress
 - Connect with tutors who can guide your learning
 
