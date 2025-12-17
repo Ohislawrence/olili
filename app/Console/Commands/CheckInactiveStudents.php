@@ -18,7 +18,7 @@ class CheckInactiveStudents extends Command
 
         $inactiveCourses = Course::with(['studentProfile.user'])
             ->active()
-            ->where('updated_at', '<', now()->subDays(3)) // No activity for 3 days
+            ->where('updated_at', '<', now()->subDays(2)) // No activity for 3 days
             ->get();
 
         $processedCount = 0;

@@ -161,6 +161,8 @@
 
                 <!-- Actions -->
                 <div class="flex space-x-2">
+
+
                     <Link
                     :href="route('student.courses.show', course.id)"
                     class="flex-1 text-center px-4 py-2 text-sm font-semibold text-emerald-700 bg-white border border-emerald-300 rounded-lg hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors"
@@ -232,11 +234,13 @@
         </div>
       </div>
     </div>
+
+
   </StudentLayout>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import StudentLayout from '@/Layouts/StudentLayout.vue'
 import { Head, Link } from '@inertiajs/vue3'
@@ -253,6 +257,9 @@ const filters = ref({
   search: props.filters.search || '',
   status: props.filters.status || '',
 })
+
+
+
 
 // Debounced search
 let searchTimeout = null
@@ -323,6 +330,9 @@ const setLoaderMessage = (msg) => {
     new CustomEvent("loader-message", { detail: msg })
   )
 }
+
+
+
 </script>
 
 <style scoped>

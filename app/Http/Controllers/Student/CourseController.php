@@ -176,6 +176,9 @@ class CourseController extends Controller
             'capstoneProject',
         ]);
 
+        //$creator = $course->creator->id === auth()->user()->id ? true : false;
+
+
         $nextTopic = $this->getNextTopic($course);
         $courseStats = $this->progressService->calculateCourseProgress($course);
         //dd($courseStats);

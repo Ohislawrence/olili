@@ -48,3 +48,5 @@ Schedule::command('model:prune')
 Schedule::command('notifications:process-scheduled')
         ->everyMinute()
         ->withoutOverlapping();
+
+Schedule::command('course-shares:cleanup')->daily();

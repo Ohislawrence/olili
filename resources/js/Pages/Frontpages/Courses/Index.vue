@@ -234,7 +234,7 @@
                                     <!-- Action Buttons -->
                                     <div class="flex space-x-3">
                                         <Link
-                                            :href="route('courses.show', course.id)"
+                                            :href="route('courses.show', { id: course.id, slug: course.slug })"
                                             class="flex-1 bg-emerald-600 text-white text-center py-3 px-4 rounded-xl font-semibold hover:bg-emerald-700 transform transition-all duration-300 group-hover:scale-105"
                                         >
                                             View Course

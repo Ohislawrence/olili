@@ -81,7 +81,7 @@ self.addEventListener('pushsubscriptionchange', event => {
     self.registration.pushManager.subscribe(event.oldSubscription.options)
       .then(subscription => {
         // Send new subscription to server
-        return fetch('/api/push/subscriptions', {
+        return fetch('/push/subscriptions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -209,7 +209,7 @@ async function syncPushSubscription() {
 
     if (subscription) {
       // Send subscription to server
-      await fetch('/api/push/subscriptions/sync', {
+      await fetch('/push/subscriptions/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

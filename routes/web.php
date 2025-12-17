@@ -32,7 +32,7 @@ Route::get('/faq', [FrontpageController::class, 'faq'])->name('faq');
 
 // Courses routes
 Route::get('/course', [FrontpageController::class, 'coursesIndex'])->name('courses.index');
-Route::get('/course/{course:slug}', [FrontpageController::class, 'courseShow'])->name('courses.show');
+Route::get('/course/{id}/{slug?}', [FrontpageController::class, 'courseShow'])->name('courses.show');
 
 Route::get('/enterprise', [FrontpageController::class, 'enterprise'])->name('enterprise');
 

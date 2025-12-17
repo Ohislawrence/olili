@@ -364,6 +364,7 @@
                                 Start
                               </Link>
                             </div>
+
                           </div>
                         </div>
                       </div>
@@ -406,8 +407,13 @@
                     class="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                     >
                     Start
-                    </Link>
-
+                </Link>
+                <button
+                    @click="openShareModal"
+                    class="w-full flex items-center justify-center px-4 py-2.5 border border-emerald-300 text-sm font-semibold rounded-lg text-emerald-700 bg-white hover:bg-emerald-50 transition-colors disabled:opacity-50"
+                  >
+                    Share
+                </button>
                 <div class="pt-3 border-t border-gray-200">
                   <Link
                     v-if="course.capstone_project"
@@ -517,12 +523,119 @@
         </div>
       </div>
     </div>
+
+    <!-- Share Modal -->
+  <div v-if="showShareModal" class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+      <!-- Background overlay -->
+      <div
+        class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+        @click="closeShareModal"
+      ></div>
+
+      <!-- Modal panel -->
+      <div
+        class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+        @keydown.esc="closeShareModal"
+        tabindex="0"
+      >
+        <div class="bg-white px-6 pt-6 pb-4">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Share Course with Friends</h3>
+            <button
+              @click="closeShareModal"
+              class="text-gray-400 hover:text-gray-500 focus:outline-none"
+            >
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="mb-4">
+            <p class="text-sm text-gray-600 mb-2">
+              Share "{{ course.title }}" with up to 5 friends via email. They'll receive an invitation to join this course.
+            </p>
+            <div class="mb-4">
+              <textarea
+                v-model="shareMessage"
+                rows="3"
+                placeholder="Add a personal message (optional)"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Email Inputs -->
+          <div class="space-y-3">
+            <div v-for="(email, index) in shareEmails" :key="index" class="flex gap-2">
+              <input
+                v-model="shareEmails[index]"
+                type="email"
+                placeholder="friend@example.com"
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
+                :class="{ 'border-red-300': emailErrors[index] }"
+                @keydown.enter.prevent="submitShare"
+              />
+              <button
+                v-if="shareEmails.length > 1"
+                @click="removeEmail(index)"
+                class="px-3 py-2 text-red-600 hover:text-red-800 focus:outline-none"
+                type="button"
+              >
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div v-for="(error, index) in emailErrors" :key="'error-' + index" class="text-red-600 text-sm">
+              {{ error }}
+            </div>
+          </div>
+
+          <!-- Add More Emails Button -->
+          <button
+            v-if="shareEmails.length < 5"
+            @click="addEmail"
+            type="button"
+            class="mt-3 inline-flex items-center text-sm text-emerald-600 hover:text-emerald-800 focus:outline-none"
+          >
+            <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Add another email
+          </button>
+        </div>
+
+        <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3">
+          <button
+            @click="closeShareModal"
+            type="button"
+            class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+          >
+            Cancel
+          </button>
+          <button
+            @click="submitShare"
+            :disabled="isSharing || !hasValidEmails"
+            :class="[
+              'px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500',
+              isSharing || !hasValidEmails ? 'bg-emerald-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'
+            ]"
+          >
+            <span v-if="isSharing">Sharing...</span>
+            <span v-else>Share Course</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
   </StudentLayout>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { ref, computed, onMounted, watch } from 'vue'
+import { router, usePage } from '@inertiajs/vue3'
 import StudentLayout from '@/Layouts/StudentLayout.vue'
 import { Head, Link } from '@inertiajs/vue3'
 import {
@@ -544,9 +657,26 @@ const props = defineProps({
   course_stats: Object,
 })
 
+
+
 const pauseLoading = ref(false)
 const resumeLoading = ref(false)
 const expandedModules = ref({})
+
+const showShareModal = ref(false)
+const shareEmails = ref([''])
+const shareMessage = ref('')
+const emailErrors = ref([])
+const shareResults = ref([])
+const isSharing = ref(false)
+
+
+const hasValidEmails = computed(() => {
+    return shareEmails.value.some(email => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        return emailRegex.test(email.trim())
+    })
+})
 
 // Initialize expanded modules - expand first module by default
 onMounted(() => {
@@ -672,6 +802,89 @@ const resumeCourse = async () => {
   } finally {
     resumeLoading.value = false
   }
+}
+
+
+
+const openShareModal = () => {
+    showShareModal.value = true
+    shareEmails.value = ['']
+    shareMessage.value = ''
+    emailErrors.value = []
+    shareResults.value = []
+}
+
+const closeShareModal = () => {
+    showShareModal.value = false
+}
+
+const addEmail = () => {
+    if (shareEmails.value.length < 5) {
+        shareEmails.value.push('')
+    }
+}
+
+const removeEmail = (index) => {
+    shareEmails.value.splice(index, 1)
+    emailErrors.value.splice(index, 1)
+}
+
+const validateEmails = () => {
+    emailErrors.value = []
+    let isValid = true
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const uniqueEmails = new Set()
+
+    shareEmails.value.forEach((email, index) => {
+        const trimmedEmail = email.trim()
+
+        if (!trimmedEmail) {
+            emailErrors.value[index] = 'Email is required'
+            isValid = false
+        } else if (!emailRegex.test(trimmedEmail)) {
+            emailErrors.value[index] = 'Please enter a valid email address'
+            isValid = false
+        } else if (uniqueEmails.has(trimmedEmail.toLowerCase())) {
+            emailErrors.value[index] = 'Duplicate email address'
+            isValid = false
+        } else {
+            uniqueEmails.add(trimmedEmail.toLowerCase())
+        }
+    })
+
+    return isValid
+}
+
+const submitShare = async () => {
+    if (!validateEmails()) {
+        return
+    }
+
+    isSharing.value = true
+
+    try {
+        await router.post(route('student.course.share', props.course.id), {
+            emails: shareEmails.value.map(email => email.trim()).filter(email => email),
+            message: shareMessage.value,
+        }, {
+            preserveScroll: true,
+            onFinish: () => {
+                isSharing.value = false
+                showShareModal.value = false
+                // Clear form on success
+                if (page.props.flash.success) {
+                    setTimeout(() => {
+                        shareEmails.value = ['']
+                        shareMessage.value = ''
+                    }, 500)
+                }
+            }
+        })
+    } catch (error) {
+        console.error('Sharing failed:', error)
+        isSharing.value = false
+    }
 }
 </script>
 

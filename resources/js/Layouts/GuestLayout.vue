@@ -118,7 +118,6 @@
             </div>
         </footer>
     </div>
-    <PWAInstall />
 </template>
 
 <script setup>

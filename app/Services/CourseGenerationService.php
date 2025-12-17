@@ -11,6 +11,7 @@ use App\Services\Ai\BaseAiService;
 use Illuminate\Support\Facades\DB;
 use App\Services\Ai\AiServiceManager;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class CourseGenerationService
 {
@@ -31,6 +32,7 @@ class CourseGenerationService
             $course = Course::create([
                 'exam_board_id' => $courseData['exam_board_id'] ?? null,
                 'title' => $courseData['title'],
+                'slug' => Str::slug($courseData['title']),
                 'subject' => $courseData['subject'],
                 'description' => $courseData['description'] ?? '',
                 'level' => $studentProfile->target_level,

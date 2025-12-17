@@ -50,25 +50,25 @@
 
 
 
-      <!-- Quizzes -->
+      <!-- catalog -->
       <Link
-        :href="route('student.quizzes.index')"
+        :href="route('student.catalog.index')"
         class="flex flex-col items-center justify-center w-16 h-16 transition-all duration-200 group relative"
-        :class="route().current('student.quizzes.*') ? 'text-emerald-600' : 'text-gray-600 hover:text-emerald-500'"
+        :class="route().current('student.catalog.*') ? 'text-emerald-600' : 'text-gray-600 hover:text-emerald-500'"
       >
         <div class="relative">
           <ClipboardDocumentListIcon class="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
           <div
-            v-if="route().current('student.quizzes.*')"
+            v-if="route().current('student.catalog.*')"
             class="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"
           ></div>
         </div>
         <span class="text-xs mt-1 font-medium transition-colors duration-200"
-              :class="route().current('student.quizzes.*') ? 'text-emerald-600' : 'text-gray-500 group-hover:text-emerald-600'">
-          Quizzes
+              :class="route().current('student.catalog.*') ? 'text-emerald-600' : 'text-gray-500 group-hover:text-emerald-600'">
+          Catalog
         </span>
         <div
-          v-if="route().current('student.quizzes.*')"
+          v-if="route().current('student.catalog.*')"
           class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-emerald-500 rounded-full"
         ></div>
       </Link>
@@ -77,7 +77,7 @@
       <Link
         :href="route('student.flashcards.index')"
         class="flex flex-col items-center justify-center w-16 h-16 transition-all duration-200 group relative"
-        :class="route().current('student.quizzes.*') ? 'text-emerald-600' : 'text-gray-600 hover:text-emerald-500'"
+        :class="route().current('student.flashcards.*') ? 'text-emerald-600' : 'text-gray-600 hover:text-emerald-500'"
       >
         <div class="relative">
           <RectangleStackIcon class="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />

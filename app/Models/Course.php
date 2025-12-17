@@ -37,6 +37,11 @@ class Course extends Model
         'enrollment_limit',
         'current_enrollment',
         'visibility',
+        'slug',
+        'is_shared',
+        'shared_by',
+        'created_by_user_id',
+
     ];
 
     protected $casts = [
@@ -387,5 +392,65 @@ class Course extends Model
         if ($this->enrolledStudents()->where('user_id', $user->id)->exists()) return false;
 
         return true;
+    }
+
+    public function shares()
+    {
+        return $this->hasMany(CourseShare::class);
+    }
+
+    public function sharedWithMe()
+    {
+        return $this->hasMany(CourseShare::class, 'recipient_id', 'created_by');
+    }
+
+    // Add a method to clone course for sharing
+    public function cloneForUser(User $user, int $sharerId = null): Course
+    {
+        $clonedCourse = $this->replicate();
+        $clonedCourse->created_by = $user->id;
+        $clonedCourse->student_profile_id = $user->studentProfile->id;
+        $clonedCourse->original_course_id = $this->id;
+        $clonedCourse->is_shared = true;
+        $clonedCourse->shared_by = $sharerId;
+        $clonedCourse->status = 'draft';
+        $clonedCourse->save();
+
+        // Clone modules
+        foreach ($this->modules as $module) {
+            $clonedModule = $module->replicate();
+            $clonedModule->course_id = $clonedCourse->id;
+            $clonedModule->save();
+
+            // Clone topics
+            foreach ($module->topics as $topic) {
+                $clonedTopic = $topic->replicate();
+                $clonedTopic->module_id = $clonedModule->id;
+                $clonedTopic->save();
+            }
+        }
+
+        return $clonedCourse;
+    }
+
+    public function scopeSharedWith($query, User $user)
+    {
+        return $query->where(function($q) use ($user) {
+            $q->whereHas('shares', function($query) use ($user) {
+                $query->where('recipient_email', $user->email)
+                    ->orWhere('recipient_id', $user->id);
+            });
+        });
+    }
+
+    public function scopeAcceptedShares($query, User $user)
+    {
+        return $query->whereHas('shares', function($query) use ($user) {
+            $query->where(function($q) use ($user) {
+                $q->where('recipient_email', $user->email)
+                    ->orWhere('recipient_id', $user->id);
+            })
+            ->where('status', 'accepted');
+        });
     }
 }

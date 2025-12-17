@@ -15,13 +15,13 @@
           </div>
           <div class="mt-4 md:mt-0 md:ml-4">
             <Link
-              :href="route('student.courses.index')"
+              :href="route('student.courses.shared')"
               class="inline-flex items-center px-4 py-2 border border-emerald-300 shadow-sm text-sm font-medium rounded-md text-emerald-700 bg-white hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-              My Courses
+              Shared Courses
             </Link>
           </div>
         </div>

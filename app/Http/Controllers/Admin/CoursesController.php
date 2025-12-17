@@ -10,6 +10,8 @@ use App\Services\CourseGenerationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
 
 class CoursesController extends Controller
 {
@@ -94,6 +96,7 @@ class CoursesController extends Controller
 
             $courseData = [
                 'title' => $validated['title'],
+                'slug' => Str::slug($validated['title']),
                 'subject' => $validated['subject'],
                 'description' => $validated['description'],
                 'exam_board_id' => $validated['exam_board_id'] ?? null,
@@ -417,6 +420,7 @@ public function regenerate(Course $course)
         // Regenerate course using AI
         $courseData = [
             'title' => $course->title,
+            'slug' => Str::slug($course->title),
             'subject' => $course->subject,
             'description' => $course->description,
             'level' => $course->level,

@@ -10,6 +10,7 @@ use App\Http\Controllers\Student\ProfileController;
 use App\Http\Controllers\Student\CapstoneProjectController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Student\CatalogController;
+use App\Http\Controllers\Student\CourseShareController;
 use App\Http\Controllers\Student\CourseTutorController;
 use App\Http\Controllers\Student\FlashcardController;
 use Illuminate\Support\Facades\Route;
@@ -55,6 +56,13 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::post('/courses/{course}/enroll', [CatalogController::class, 'enroll'])->name('enroll');
         Route::delete('/courses/{course}/unenroll', [CatalogController::class, 'unenroll'])->name('unenroll');
     });
+
+    //share courses
+    Route::post('courses/{course}/share', [CourseShareController::class, 'share'])->name('course.share');
+    Route::get('courses/share/{token}/accept', [CourseShareController::class, 'accept'])->name('course.share.accept');
+    Route::get('courses/share/{token}/reject', [CourseShareController::class, 'reject'])->name('share.reject');
+    Route::get('courses/shared/pending', [CourseShareController::class, 'pendingShares'])->name('courses.shared.pending');
+    Route::get('courses/me/shared', [CourseShareController::class, 'sharedCourses'])->name('courses.shared');
 
     // General Quizzes - Fixed parameter order and names
     Route::get('/quizzes', [QuizController::class, 'index'])->name('quizzes.index');
