@@ -46,7 +46,6 @@ class CourseGenerationService
                     'weekly_hours' => $studentProfile->weekly_study_hours,
                 ],
                 'status' => 'draft',
-                'student_profile_id' => 1,
             ]);
 
             // Generate course outline using AI

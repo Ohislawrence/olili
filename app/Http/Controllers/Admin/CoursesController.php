@@ -113,7 +113,6 @@ class CoursesController extends Controller
                 'prerequisites' => $validated['prerequisites'] ?? [],
                 'status' => 'active',
                 'start_date' => now(),
-                'student_profile_id' => 1,
             ];
 
             // Use course generation service to create the course structure

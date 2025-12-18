@@ -69,11 +69,11 @@
               Choose Your Role
             </h3>
             <p class="text-gray-600">
-              Select how you want to use AITutor platform
+              Select how you want to use Olilearn platform
             </p>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Student Card -->
             <div
               class="border-2 rounded-xl p-6 cursor-pointer transition-all duration-300 hover:shadow-lg"
@@ -87,7 +87,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path>
                   </svg>
                 </div>
-                <h4 class="font-semibold text-gray-900 mb-2">Student</h4>
+                <h4 class="font-semibold text-gray-900 mb-2">Learner</h4>
                 <p class="text-sm text-gray-600 mb-4">
                   Learn with AI-powered tutoring and personalized courses
                 </p>
@@ -100,30 +100,7 @@
               </div>
             </div>
 
-            <!-- Tutor Card -->
-            <div
-              class="border-2 rounded-xl p-6 cursor-pointer transition-all duration-300 hover:shadow-lg"
-              :class="form.role === 'tutor' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'"
-              @click="selectRole('tutor')"
-            >
-              <div class="text-center">
-                <div class="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                  <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                  </svg>
-                </div>
-                <h4 class="font-semibold text-gray-900 mb-2">Tutor</h4>
-                <p class="text-sm text-gray-600 mb-4">
-                  Create courses, teach students, and grow your tutoring business
-                </p>
-                <ul class="text-xs text-gray-500 space-y-1 text-left">
-                  <li>• Course creation tools</li>
-                  <li>• Student management</li>
-                  <li>• AI teaching assistants</li>
-                  <li>• Payment integration</li>
-                </ul>
-              </div>
-            </div>
+
 
             <!-- Organization Card -->
             <div
