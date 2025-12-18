@@ -221,7 +221,7 @@ class FrontpageController extends Controller
     {
         $query = Course::where('created_by', 'admin')->where('visibility', 'public')->with(['modules', 'examBoard'])
             ->active()
-            ->withProgress();
+            ->withProgress()->latest();
 
         // Filter by subject
         if ($request->has('subject')) {
@@ -267,7 +267,8 @@ class FrontpageController extends Controller
 
         return Inertia::render('Frontpages/Courses/Show', [
             'course' => $course,
-            'relatedCourses' => $relatedCourses,'meta' => [
+            'relatedCourses' => $relatedCourses,
+            'meta' => [
                 'title' => $course->title,
                 'description' => $course->description,
                 'image' => asset('olilearn-main.png'),

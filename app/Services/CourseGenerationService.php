@@ -417,94 +417,98 @@ class CourseGenerationService
     }
 
     public function generateAdminCourse(array $courseData): Course
-{
-    \DB::beginTransaction();
+    {
+        \DB::beginTransaction();
 
-    try {
-        // Create the base course
-        $course = Course::create($courseData);
+        try {
+            // Create the base course
+            $course = Course::create($courseData);
 
-        // Generate AI-based course structure using same format as student courses
-        $prompt = $this->buildAdminCoursePrompt($courseData);
+            // Generate AI-based course structure using same format as student courses
+            $prompt = $this->buildAdminCoursePrompt($courseData);
 
-        $messages = [
-            [
-                'role' => 'system',
-                'content' => "You are an expert educational course designer creating public courses for diverse students. Return ONLY valid JSON, no other text."
-            ],
-            [
-                'role' => 'user',
-                'content' => $prompt
-            ]
-        ];
+            $messages = [
+                [
+                    'role' => 'system',
+                    'content' => "You are an expert educational course designer creating public courses for diverse students. Return ONLY valid JSON, no other text."
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $prompt
+                ]
+            ];
 
-        Log::info('Generating admin course outline with AI', [
-            'course_title' => $courseData['title'],
-            'subject' => $courseData['subject']
-        ]);
-
-        // Use the existing AI service
-        $response = $this->aiService->chat($messages, [
-            'temperature' => 0.7,
-            'max_tokens' => 4000, // Increased for complete JSON
-        ], 'admin_course_generation');
-
-        Log::debug('Admin AI Response received', [
-            'response_length' => strlen($response),
-            'response_preview' => substr($response, 0, 200)
-        ]);
-
-        // Clean and parse response
-        $response = $this->cleanJsonResponse($response);
-        $structure = json_decode($response, true);
-
-        if (!$structure || !isset($structure['modules'])) {
-            Log::error('Failed to parse AI response or missing modules', [
-                'json_error' => json_last_error_msg(),
-                'has_course' => isset($structure['course']),
-                'has_modules' => isset($structure['modules'])
+            Log::info('Generating admin course outline with AI', [
+                'course_title' => $courseData['title'],
+                'subject' => $courseData['subject']
             ]);
-            throw new \Exception('Failed to generate valid course structure from AI');
-        }
 
-        // Update course with improved title/description
-        if (isset($structure['course'])) {
+            // Use the existing AI service
+            $response = $this->aiService->chat($messages, [
+                'temperature' => 0.7,
+                'max_tokens' => 4000, // Increased for complete JSON
+            ], 'admin_course_generation');
+
+            Log::debug('Admin AI Response received', [
+                'response_length' => strlen($response),
+                'response_preview' => substr($response, 0, 200)
+            ]);
+
+            // Clean and parse response
+            $response = $this->cleanJsonResponse($response);
+            $structure = json_decode($response, true);
+
+            if (!$structure || !isset($structure['modules'])) {
+                Log::error('Failed to parse AI response or missing modules', [
+                    'json_error' => json_last_error_msg(),
+                    'has_course' => isset($structure['course']),
+                    'has_modules' => isset($structure['modules'])
+                ]);
+                throw new \Exception('Failed to generate valid course structure from AI');
+            }
+
+            // Update course with improved title/description
+            if (isset($structure['course'])) {
+                $course->update([
+                    'title' => $structure['course']['title'] ?? $course->title,
+                    'description' => $structure['course']['description'] ?? $course->description
+                ]);
+            }
+
+            // Use existing saveCourseOutline method for consistency
+            $this->saveCourseOutline($course, $structure);
+
+            // Calculate and update total duration
+            $totalMinutes = $course->modules()->sum('estimated_duration_minutes');
             $course->update([
-                'title' => $structure['course']['title'] ?? $course->title,
-                'description' => $structure['course']['description'] ?? $course->description
+                'estimated_duration_hours' => ceil($totalMinutes / 60),
             ]);
+
+            \DB::commit();
+
+            // Log the AI usage if AiUsageLog model exists
+            /**
+            if (class_exists('App\Models\AiUsageLog')) {
+                \App\Models\AiUsageLog::create([
+                    'user_id' => $courseData['created_by_user_id'] ?? null,
+                    'action' => 'generate_admin_course',
+                    'model_used' => $this->aiService->getProviderCode(),
+                    'tokens_used' => 1000,
+                    'cost' => 0.02,
+
+
+                ]);
+            }
+                 */
+
+            return $course->load('modules', 'modules.topics');
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Admin course generation failed: ' . $e->getMessage());
+            throw $e;
         }
-
-        // Use existing saveCourseOutline method for consistency
-        $this->saveCourseOutline($course, $structure);
-
-        // Calculate and update total duration
-        $totalMinutes = $course->modules()->sum('estimated_duration_minutes');
-        $course->update([
-            'estimated_duration_hours' => ceil($totalMinutes / 60),
-        ]);
-
-        \DB::commit();
-
-        // Log the AI usage if AiUsageLog model exists
-        if (class_exists('App\Models\AiUsageLog')) {
-            \App\Models\AiUsageLog::create([
-                'user_id' => $courseData['created_by_user_id'] ?? null,
-                'action' => 'generate_admin_course',
-                'model_used' => $this->aiService->getProviderCode(),
-                'tokens_used' => 1000,
-                'cost' => 0.02,
-            ]);
-        }
-
-        return $course->load('modules', 'modules.topics');
-
-    } catch (\Exception $e) {
-        \DB::rollBack();
-        \Log::error('Admin course generation failed: ' . $e->getMessage());
-        throw $e;
     }
-}
 
 private function cleanJsonResponse(string $response): string
 {
