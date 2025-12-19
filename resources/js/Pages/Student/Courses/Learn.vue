@@ -269,7 +269,9 @@
                   <button
                     v-for="tab in filteredTabs"
                     :key="tab.id"
-                    @click="activeTab = tab.id"
+                    @click="() => {
+                        activeTab = tab.id;
+                    }"
                     :class="[
                       'py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
                       activeTab === tab.id
@@ -972,7 +974,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { router,usePage } from '@inertiajs/vue3'
 import StudentLayout from '@/Layouts/StudentLayout.vue'
 import { Head, Link } from '@inertiajs/vue3'
 import { marked } from "marked"
@@ -1007,17 +1009,21 @@ const props = defineProps({
   course_structure: Array,
   current_topic: Object,
   course_stats: Object,
+  active_tab: String,
+  show_quiz_tab: Boolean,
 })
 
 
 const chatSession = ref(null)
+const page = usePage()
+const propsTabParam = page.props.active_tab
 
 // Reactive state
 const mobileSidebarOpen = ref(false)
 const markCompleteLoading = ref(false)
 const contentLoading = ref(false)
 const quizLoading = ref(false)
-const activeTab = ref('content')
+const activeTab = ref(propsTabParam || urlTabParam || 'content')
 const expandedModules = ref({})
 
 // Quiz state
@@ -1319,7 +1325,8 @@ const selectTopic = (topic) => {
   recordTimeSpent().then(() => {
     router.get(route('student.courses.learn', {
       course: props.course.id,
-      topic: topic.id
+      topic: topic.id,
+      tab: activeTab.value // Preserve current tab
     }))
     mobileSidebarOpen.value = false
   })
@@ -1332,14 +1339,24 @@ const toggleModule = (moduleId) => {
 const goToPreviousTopic = () => {
   if (hasPreviousTopic.value) {
     const previousTopic = allTopics.value[currentTopicIndex.value - 1]
-    selectTopic(previousTopic)
+    // Preserve tab parameter when navigating
+    router.get(route('student.courses.learn', {
+      course: props.course.id,
+      topic: previousTopic.id,
+      tab: activeTab.value
+    }))
   }
 }
 
 const goToNextTopic = () => {
   if (hasNextTopic.value) {
     const nextTopic = allTopics.value[currentTopicIndex.value + 1]
-    selectTopic(nextTopic)
+    // Preserve tab parameter when navigating
+    router.get(route('student.courses.learn', {
+      course: props.course.id,
+      topic: nextTopic.id,
+      tab: activeTab.value
+    }))
   }
 }
 
@@ -1416,34 +1433,50 @@ function formatContent(content) {
 // Quiz methods
 const startQuiz = async () => {
   if (!canAttemptQuiz.value) return
+  
   quizLoading.value = true
   contentLoading.value = true
+  
   try {
-    console.log('Starting quiz for:', props.current_topic.quiz.id)
+    // Preserve the tab parameter when making the request
     const response = await fetch(route('student.quizzes.start', props.current_topic.quiz.id), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
       }
     })
-    console.log('Response status:', response.status)
-    if (response.ok) {
-      const data = await response.json()
-      console.log('Quiz start response:', data)
+    
+    const data = await response.json()
+    
+    if (data.success) {
       currentQuizAttempt.value = data.attempt
-      userAnswers.value = new Array(props.current_topic.quiz.questions.length).fill(null)
+      userAnswers.value = new Array(data.quiz.questions.length).fill(null)
       currentQuestionIndex.value = 0
       selectedAnswer.value = null
       quizState.value = 'active'
-      // Start timer if time limit exists
-      if (props.current_topic.quiz.time_limit_minutes) {
-        startTimer(props.current_topic.quiz.time_limit_minutes * 60)
+      
+      if (props.current_topic.quiz) {
+        props.current_topic.quiz.questions = data.quiz.questions
       }
+      
+      if (data.quiz.time_limit_minutes) {
+        startTimer(data.quiz.time_limit_minutes * 60)
+      }
+      
+      // Update URL to show quiz tab
+      router.replace(route('student.courses.learn', {
+        course: props.course.id,
+        topic: props.current_topic.id,
+        tab: 'quiz'
+      }), {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true
+      })
     } else {
-      const errorData = await response.json()
-      console.error('Server error:', errorData)
-      throw new Error(errorData.error || 'Failed to start quiz')
+      throw new Error(data.message || 'Failed to start quiz')
     }
   } catch (error) {
     console.error('Failed to start quiz:', error)
@@ -1486,82 +1519,116 @@ const previousQuestion = () => {
 
 const submitQuiz = async () => {
   if (timerInterval.value) {
-    clearInterval(timerInterval.value);
+    clearInterval(timerInterval.value)
   }
-  quizLoading.value = true;
-  contentLoading.value = true;
+
+  quizLoading.value = true
+  //contentLoading.value = true
+
   try {
-    console.log('Submitting quiz attempt:', {
-      attemptId: currentQuizAttempt.value.id,
-      answers: userAnswers.value,
-      answersCount: userAnswers.value.filter(answer => answer !== null).length
-    });
-    const getCsrfToken = () => {
-      const metaTag = document.querySelector('meta[name="csrf-token"]');
-      return metaTag ? metaTag.getAttribute('content') : null;
-    };
-    const csrfToken = getCsrfToken();
-    const headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'X-Requested-With': 'XMLHttpRequest'
-    };
-    if (csrfToken) {
-      headers['X-CSRF-TOKEN'] = csrfToken;
-    }
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+
     const response = await fetch(route('student.quizzes.submit', currentQuizAttempt.value.id), {
       method: 'POST',
-      headers: headers,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrfToken
+      },
       body: JSON.stringify({
         answers: userAnswers.value,
         _token: csrfToken
       })
-    });
-    console.log('Submit response status:', response.status);
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Quiz submitted successfully:', data);
-      quizResults.value = data;
-      quizState.value = 'results';
+    })
+
+    const data = await response.json()
+
+    if (data.success) {
+      quizResults.value = data.results
+      quizState.value = 'results'
+
+      // Reload the current topic to get updated quiz attempts
+      setTimeout(() => {
+        router.reload({
+          preserveScroll: true,
+          only: ['current_topic']
+        })
+      }, 500)
     } else {
-      let errorData;
-      try {
-        errorData = await response.json();
-      } catch (e) {
-        errorData = { error: `Server error: ${response.status} ${response.statusText}` };
-      }
-      console.error('Server error response:', errorData);
-      throw new Error(errorData.error || errorData.message || `Failed to submit quiz: ${response.status}`);
+      throw new Error(data.message || 'Failed to submit quiz')
     }
   } catch (error) {
-    console.error('Failed to submit quiz:', error);
-    alert('Failed to submit quiz: ' + error.message);
+    console.error('Failed to submit quiz:', error)
+    alert('Failed to submit quiz: ' + error.message)
   } finally {
-    quizLoading.value = false;
-    contentLoading.value = false;
+    quizLoading.value = false
+    contentLoading.value = false
+  }
+}
+
+const viewAttemptResults = async (attempt) => {
+  try {
+    const response = await fetch(route('student.quiz-attempts.result', {
+      attempt: attempt.id
+    }), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      }
+    })
+
+    const data = await response.json()
+
+    if (data.success) {
+      // Store the results and show them in a modal or set as current results
+      quizResults.value = data.results
+      quizState.value = 'results'
+      activeTab.value = 'quiz'
+    } else {
+      throw new Error(data.message || 'Failed to load attempt results')
+    }
+  } catch (error) {
+    console.error('Failed to load attempt results:', error)
+    alert('Failed to load attempt results: ' + error.message)
   }
 }
 
 const retakeQuiz = () => {
-  quizState.value = 'overview'
-  quizResults.value = null
-  currentQuizAttempt.value = null
+  if (canAttemptQuiz.value) {
+    quizState.value = 'overview'
+    quizResults.value = null
+    currentQuizAttempt.value = null
+    userAnswers.value = []
+    selectedAnswer.value = null
+    currentQuestionIndex.value = 0
+    timeRemaining.value = 0
+  } else {
+    alert('You have no attempts left for this quiz.')
+  }
 }
 
-const viewAttemptResults = (attempt) => {
-  alert(`Viewing results for attempt ${attempt.attempt_number}. This would show detailed results.`)
-}
+
 
 const generateQuiz = async (topic) => {
   quizLoading.value = true
   contentLoading.value = true
+  
   try {
     await router.post(route('student.outlines.generate-quiz', {
       course: props.course.id,
       outline: topic.id
     }), {}, {
       onSuccess: () => {
-        router.reload()
+        // After generating quiz, reload and show quiz tab
+        router.reload({
+          only: ['current_topic'],
+          onSuccess: () => {
+            // Set active tab to quiz
+            activeTab.value = 'quiz'
+          }
+        })
       },
       onError: (errors) => {
         console.error('Failed to generate quiz:', errors)
@@ -1818,11 +1885,14 @@ const estimateReadTime = (content) => {
 
 // Set default active tab based on available tabs
 const setDefaultActiveTab = () => {
-  const outlineType = props.current_topic.type || 'topic'
-  const tabs = filteredTabs.value
+  // Only set default if no tab is specified in URL
+  if (!props.active_tab) {
+    const outlineType = props.current_topic.type || 'topic'
+    const tabs = filteredTabs.value
 
-  if (tabs.length > 0) {
-    activeTab.value = tabs[0].id
+    if (tabs.length > 0) {
+      activeTab.value = tabs[0].id
+    }
   }
 }
 
@@ -1876,8 +1946,40 @@ onMounted(() => {
 })
 
 // Watch for topic changes and update active tab
-watch(() => props.current_topic, () => {
-  setDefaultActiveTab()
+watch(activeTab, (newTab) => {
+  // Create URLSearchParams from current URL
+  const currentUrl = new URL(window.location.href)
+  const searchParams = new URLSearchParams(currentUrl.search)
+  
+  // Update or remove the tab parameter
+  if (newTab && newTab !== 'content') {
+    searchParams.set('tab', newTab)
+  } else {
+    searchParams.delete('tab')
+  }
+  
+  // Update the URL without reloading
+  const newUrl = `${currentUrl.pathname}?${searchParams.toString()}`
+  window.history.replaceState({}, '', newUrl)
+})
+
+// When topic changes, check if we need to show quiz tab
+watch(() => props.current_topic, (newTopic, oldTopic) => {
+  // If topic changed, check if we should switch tabs
+  if (newTopic.id !== oldTopic?.id) {
+    // If URL has a tab parameter, use it
+    if (props.active_tab) {
+      activeTab.value = props.active_tab
+    } else {
+      // Otherwise use default based on topic type
+      setDefaultActiveTab()
+    }
+    
+    // If the new topic has a quiz that was just generated, show quiz tab
+    if (newTopic.has_quiz && props.show_quiz_tab) {
+      activeTab.value = 'quiz'
+    }
+  }
 }, { immediate: true })
 
 onMounted(async () => {

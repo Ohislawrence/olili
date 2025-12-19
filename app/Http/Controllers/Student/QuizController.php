@@ -10,6 +10,7 @@ use App\Models\CourseOutline;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class QuizController extends Controller
 {
@@ -17,95 +18,201 @@ class QuizController extends Controller
 
     public function startAttempt(Quiz $quiz)
     {
-        $student = auth()->user();
+        try {
+            $user = Auth::user();
 
-        // Load course for authorization
-        $quiz->load(['courseOutline.module.course']);
-        // $this->authorize('view', $quiz->courseOutline->module->course);
+            // Check if user can attempt the quiz
+            if (!$quiz->canUserAttempt($user)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You have no attempts left for this quiz.'
+                ], 403);
+            }
 
-        if (!$quiz->canUserAttempt($student)) {
+            // Create a new quiz attempt
+            $attempt = QuizAttempt::create([
+                'user_id' => $user->id,
+                'quiz_id' => $quiz->id,
+                'attempt_number' => QuizAttempt::where('user_id', $user->id)
+                    ->where('quiz_id', $quiz->id)
+                    ->max('attempt_number') + 1,
+                'started_at' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'attempt' => [
+                    'id' => $attempt->id,
+                    'attempt_number' => $attempt->attempt_number,
+                    'started_at' => $attempt->started_at,
+                ],
+                'quiz' => [
+                    'id' => $quiz->id,
+                    'title' => $quiz->title,
+                    'questions' => $quiz->questions,
+                    'time_limit_minutes' => $quiz->time_limit_minutes,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to start quiz attempt: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'You have reached the maximum number of attempts for this quiz.',
-            ], 403);
+                'message' => 'Failed to start quiz attempt.'
+            ], 500);
         }
-
-        $attempt = QuizAttempt::create([
-            'user_id' => $student->id,
-            'quiz_id' => $quiz->id,
-        ]);
-
-        $attempt->startAttempt();
-
-        return response()->json([
-            'quiz' => $quiz,
-            'attempt' => $attempt,
-            'questions' => $quiz->questions,
-            'time_limit' => $quiz->time_limit_minutes,
-            'module_context' => [
-                'module_title' => $quiz->courseOutline->module->title,
-                'topic_title' => $quiz->courseOutline->title,
-            ],
-        ], 200);
     }
 
     public function submitAttempt(QuizAttempt $attempt, Request $request)
     {
-        //$this->authorize('update', $attempt);
+        try {
+            $user = Auth::user();
 
-        $request->validate([
-            'answers' => 'required|array',
-        ]);
-
-        $quiz = $attempt->quiz;
-
-        // Load the full hierarchy for progress tracking
-        $quiz->load(['courseOutline.module.course']);
-
-        // Calculate score
-        $scoreData = $quiz->calculateScore($request->answers);
-
-        // Complete the attempt
-        $attempt->completeAttempt($request->answers, $scoreData);
-
-        // Record progress
-        if ($attempt->quiz->courseOutline) {
-            $progressService = app(\App\Services\ProgressTrackingService::class);
-            $progressService->recordActivity(
-                $attempt->user,
-                $quiz->courseOutline->module->course,
-                $quiz->courseOutline->id,
-                'quiz_attempt',
-                $attempt->time_taken_seconds / 60, // Convert to minutes
-                true,
-                $attempt->percentage
-            );
-
-            // If quiz was passed and it's associated with a topic, mark topic as completed
-            if ($attempt->is_passed && $quiz->courseOutline) {
-                $topic = $quiz->courseOutline;
-                if (!$topic->is_completed) {
-                    $topic->markAsCompleted();
-
-                    // Update module completion status
-                    $progressService->updateModuleCompletion($topic->module);
-                }
+            // Verify the attempt belongs to the current user
+            if ($attempt->user_id !== $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access to quiz attempt.'
+                ], 403);
             }
-        }
 
-         return response()->json([
-        'attempt' => $attempt->load(['quiz.courseOutline.module.course']),
-        'score_data' => $scoreData,
-        'questions' => $quiz->questions,
-        'user_answers' => $request->answers,
-        'module_context' => [
-            'module_title' => $quiz->courseOutline->module->title,
-            'course_title' => $quiz->courseOutline->module->course->title,
-        ],
-    ]);
+            $request->validate([
+                'answers' => 'required|array',
+            ]);
+
+            $quiz = $attempt->quiz;
+            $answers = $request->input('answers');
+
+            // Calculate score
+            $scoreData = $quiz->calculateScore($answers);
+
+            // Complete the attempt
+            $attempt->completeAttempt($answers, $scoreData);
+
+            // Generate detailed results
+            $detailedResults = $this->generateDetailedResults($quiz, $answers);
+
+            // Get AI feedback
+            $aiFeedback = $this->generateAIFeedback($quiz, $answers, $scoreData);
+
+            // Update the attempt with AI feedback
+            $attempt->update(['ai_feedback' => $aiFeedback]);
+
+            // Return comprehensive results
+            return response()->json([
+                'success' => true,
+                'results' => [
+                    'score' => $scoreData['score'],
+                    'total_points' => $scoreData['total_points'],
+                    'percentage' => $scoreData['percentage'],
+                    'is_passed' => $scoreData['percentage'] >= $quiz->passing_score,
+                    'passing_score' => $quiz->passing_score,
+                    'detailed_results' => $detailedResults,
+                    'ai_feedback' => $aiFeedback,
+                    'attempt_id' => $attempt->id,
+                    'completed_at' => $attempt->completed_at,
+                    'time_taken_seconds' => $attempt->time_taken_seconds,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to submit quiz attempt: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to submit quiz attempt.'
+            ], 500);
+        }
     }
 
+    private function generateDetailedResults($quiz, $userAnswers)
+    {
+        $detailedResults = [];
 
+        foreach ($quiz->questions ?? [] as $index => $question) {
+            $userAnswer = $userAnswers[$index] ?? null;
+            $correctAnswer = $question['correct_answer'] ?? null;
+            $questionType = $question['type'] ?? 'multiple_choice';
+
+            $isCorrect = $quiz->isAnswerCorrect($userAnswer, $correctAnswer, $questionType);
+
+            $detailedResults[] = [
+                'question' => $question['question'] ?? 'Question ' . ($index + 1),
+                'question_type' => $questionType,
+                'user_answer' => is_array($userAnswer) ? implode(', ', $userAnswer) : $userAnswer,
+                'correct_answer' => is_array($correctAnswer) ? implode(', ', $correctAnswer) : $correctAnswer,
+                'is_correct' => $isCorrect,
+                'explanation' => $question['explanation'] ?? null,
+                'points' => $question['points'] ?? 1,
+            ];
+        }
+
+        return $detailedResults;
+    }
+
+    private function generateAIFeedback($quiz, $answers, $scoreData)
+    {
+        // This is where you would integrate with your AI service
+        // For now, returning a simple feedback structure
+        $percentage = $scoreData['percentage'];
+
+        if ($percentage >= 90) {
+            $feedback = "Excellent work! You've demonstrated a strong understanding of this topic.";
+        } elseif ($percentage >= 75) {
+            $feedback = "Good job! You have a solid grasp of the material.";
+        } elseif ($percentage >= $quiz->passing_score) {
+            $feedback = "You passed! Review the areas you missed to strengthen your understanding.";
+        } else {
+            $feedback = "Keep practicing! Review the material and try again.";
+        }
+
+        return [
+            'overall_feedback' => $feedback,
+            'strengths' => [],
+            'areas_to_improve' => [],
+            'suggested_resources' => [],
+        ];
+    }
+
+    public function getCourseQuizResults(QuizAttempt $attempt)
+    {
+        try {
+            $user = Auth::user();
+
+            // Verify the attempt belongs to the current user
+            if ($attempt->user_id !== $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access to quiz results.'
+                ], 403);
+            }
+
+            $quiz = $attempt->quiz;
+
+            return response()->json([
+                'success' => true,
+                'results' => [
+                    'id' => $attempt->id,
+                    'score' => $attempt->score,
+                    'percentage' => $attempt->percentage,
+                    'is_passed' => $attempt->is_passed,
+                    'completed_at' => $attempt->completed_at,
+                    'time_taken_seconds' => $attempt->time_taken_seconds,
+                    'time_taken_formatted' => $attempt->getTimeTakenFormatted(),
+                    'answers' => $attempt->answers,
+                    'feedback' => $attempt->getDetailedFeedback(),
+                    'quiz_title' => $quiz->title,
+                    'passing_score' => $quiz->passing_score,
+                    'attempt_number' => $attempt->attempt_number,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to get quiz results: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve quiz results.'
+            ], 500);
+        }
+    }
+
+//below are not is use
     public function index(Request $request)
     {
         $student = auth()->user();

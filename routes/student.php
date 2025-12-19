@@ -37,14 +37,10 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('/courses/{course}/chat/initialize', [ChatController::class, 'initializePopupChat'])->name('courses.chat.initialize');
 
     // Content Quiz - Fixed route names to avoid conflicts
-    Route::post('/courses/{course}/outlines/{outline}/generate-quiz', [CourseController::class, 'generateQuiz'])
-        ->name('outlines.generate-quiz');
-    Route::post('/courses/quizzes/{quiz}/start', [QuizController::class, 'startAttempt'])
-        ->name('quizzes.start');
-    Route::post('/courses/quiz-attempts/{attempt}/submit', [QuizController::class, 'submitAttempt'])
-        ->name('quizzes.submit');
-    Route::post('/courses/{course}/quiz-attempts/{attempt}/result', [QuizController::class, 'getCourseQuizResults'])
-        ->name('quiz-attempts.result');
+    Route::post('/courses/{course}/outlines/{outline}/generate-quiz', [CourseController::class, 'generateQuiz'])->name('outlines.generate-quiz');
+    Route::post('/quizzes/{quiz}/start', [QuizController::class, 'startAttempt'])->name('quizzes.start');
+    Route::post('/quiz-attempts/{attempt}/submit', [QuizController::class, 'submitAttempt'])->name('quizzes.submit');
+    Route::post('/courses/quiz-attempts/{attempt}/result', [QuizController::class, 'getCourseQuizResults'])->name('quiz-attempts.result');
 
 
     // Course Catalog

@@ -93,7 +93,7 @@ class QuizAttempt extends Model
     {
         $lastAttempt = self::where('user_id', $this->user_id)
             ->where('quiz_id', $this->quiz_id)
-            ->orderBy('attempt_number', 'desc')
+            ->latest('attempt_number')
             ->first();
 
         return $lastAttempt ? $lastAttempt->attempt_number + 1 : 1;

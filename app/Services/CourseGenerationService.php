@@ -219,6 +219,7 @@ class CourseGenerationService
             // Update course with improved title and description
             $course->update([
                 'title' => $outlineData['course']['title'] ?? $course->title,
+                'slug' => Str::slug($outlineData['course']['title']),
                 'description' => $outlineData['course']['description'] ?? $course->description
             ]);
 
@@ -446,7 +447,7 @@ class CourseGenerationService
             // Use the existing AI service
             $response = $this->aiService->chat($messages, [
                 'temperature' => 0.7,
-                'max_tokens' => 4000, // Increased for complete JSON
+                'max_tokens' => 4000,
             ], 'admin_course_generation');
 
             Log::debug('Admin AI Response received', [
@@ -471,6 +472,7 @@ class CourseGenerationService
             if (isset($structure['course'])) {
                 $course->update([
                     'title' => $structure['course']['title'] ?? $course->title,
+                    'slug' => Str::slug($structure['course']['title']),
                     'description' => $structure['course']['description'] ?? $course->description
                 ]);
             }

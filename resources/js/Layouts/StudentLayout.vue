@@ -420,13 +420,7 @@ router.on('finish', () => {
 })
 
 // Watch for flash messages and auto-hide them
-watch(() => page.props.flash, (newFlash, oldFlash) => {
-  if (newFlash.success || newFlash.error || newFlash.flash.status ||  newFlash.message) {
-    nextTick(() => {
-      autoHideFlash()
-    })
-  }
-}, { deep: true })
+
 
 // Fetch unread notification count
 const fetchUnreadCount = async () => {

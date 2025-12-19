@@ -203,88 +203,98 @@ class CourseController extends Controller
     }
 
     public function learn(Course $course, Request $request)
-    {
-        $student = auth()->user();
-        //$this->authorize('view', $course);
-        //dd($course->chatSessions);
-        $course->load([
-            'chatSessions',
-            'progressTracking',
-        ]);
+{
+    $student = auth()->user();
+    
+    // Get the requested tab from query parameters
+    $activeTab = $request->get('tab', 'content');
+    
+    $course->load([
+        'chatSessions',
+        'progressTracking',
+    ]);
 
-        $currentTopicId = $request->get('topic');
-        $currentTopic = null;
+    $currentTopicId = $request->get('topic');
+    $currentTopic = null;
 
-        if ($currentTopicId) {
-            $currentTopic = CourseOutline::whereHas('module', function ($query) use ($course) {
-                    $query->where('course_id', $course->id);
-                })
-                ->where('id', $currentTopicId)
-                ->with([
-                    'contents',
-                    'quiz' => function($query) use ($student) {
-                        $query->with(['attempts' => function($query) use ($student) {
-                            $query->where('user_id', $student->id)
-                                ->orderBy('created_at', 'desc');
-                        }]);
-                    },
-                    'module'
-                ])
-                ->firstOrFail();
-        } else {
-            $currentTopic = $this->getNextTopic($course);
+    if ($currentTopicId) {
+        $currentTopic = CourseOutline::whereHas('module', function ($query) use ($course) {
+                $query->where('course_id', $course->id);
+            })
+            ->where('id', $currentTopicId)
+            ->with([
+                'contents',
+                'quiz' => function($query) use ($student) {
+                    $query->with(['attempts' => function($query) use ($student) {
+                        $query->where('user_id', $student->id)
+                            ->orderBy('created_at', 'desc');
+                    }]);
+                },
+                'module'
+            ])
+            ->firstOrFail();
+    } else {
+        $currentTopic = $this->getNextTopic($course);
 
-            if (!$currentTopic) {
-                // All topics completed
-                $course->update([
-                    'status' => 'completed',
-                    'actual_completion_date' => now(),
-                ]);
+        if (!$currentTopic) {
+            $course->update([
+                'status' => 'completed',
+                'actual_completion_date' => now(),
+            ]);
 
-                return redirect()->route('student.courses.show', $course->id)
-                    ->with('success', 'Congratulations! You have completed this course.');
-            }
+            return redirect()->route('student.courses.show', $course->id)
+                ->with('success', 'Congratulations! You have completed this course.');
         }
-
-        // Get course structure for navigation
-        $courseStructure = $course->modules()
-            ->with(['topics' => function ($query) {
-                $query->orderBy('order');
-            }])
-            ->orderBy('order')
-            ->get()
-            ->map(function ($module) {
-                return [
-                    'id' => $module->id,
-                    'title' => $module->title,
-                    'description' => $module->description,
-                    'order' => $module->order,
-                    'is_completed' => $module->is_completed,
-                    'estimated_duration_minutes' => $module->estimated_duration_minutes,
-                    'topics' => $module->topics->map(function ($topic) {
-                        return [
-                            'id' => $topic->id,
-                            'title' => $topic->title,
-                            'type' => $topic->type,
-                            'order' => $topic->order,
-                            'is_completed' => $topic->is_completed,
-                            'has_quiz' => $topic->has_quiz,
-                            'has_project' => $topic->has_project,
-                            'estimated_duration_minutes' => $topic->estimated_duration_minutes,
-                        ];
-                    }),
-                ];
-            });
-        $courseStats = $this->progressService->calculateCourseProgress($course);
-
-        return Inertia::render('Student/Courses/Learn', [
-            'course' => $course->load(['capstoneProject','modules']),
-            'current_topic' => $currentTopic->load('contents'),
-            'course_structure' => $courseStructure,
-            'current_module' => $currentTopic->module,
-            'course_stats' => $courseStats,
-        ]);
     }
+
+    // Get course structure for navigation
+    $courseStructure = $course->modules()
+        ->with(['topics' => function ($query) {
+            $query->orderBy('order');
+        }])
+        ->orderBy('order')
+        ->get()
+        ->map(function ($module) {
+            return [
+                'id' => $module->id,
+                'title' => $module->title,
+                'description' => $module->description,
+                'order' => $module->order,
+                'is_completed' => $module->is_completed,
+                'estimated_duration_minutes' => $module->estimated_duration_minutes,
+                'topics' => $module->topics->map(function ($topic) {
+                    return [
+                        'id' => $topic->id,
+                        'title' => $topic->title,
+                        'type' => $topic->type,
+                        'order' => $topic->order,
+                        'is_completed' => $topic->is_completed,
+                        'has_quiz' => $topic->has_quiz,
+                        'has_project' => $topic->has_project,
+                        'estimated_duration_minutes' => $topic->estimated_duration_minutes,
+                    ];
+                }),
+            ];
+        });
+    
+    $courseStats = $this->progressService->calculateCourseProgress($course);
+
+    // Check if we need to show a specific tab
+    $showQuizTab = false;
+    if ($request->has('tab') && $request->tab === 'quiz') {
+        $showQuizTab = true;
+    }
+
+    return Inertia::render('Student/Courses/Learn', [
+        'course' => $course->load(['capstoneProject','modules']),
+        'current_topic' => $currentTopic->load('contents'),
+        'course_structure' => $courseStructure,
+        'current_module' => $currentTopic->module,
+        'course_stats' => $courseStats,
+        'active_tab' => $activeTab, // Pass the active tab to the component
+        'show_quiz_tab' => $showQuizTab, // Pass flag for showing quiz tab
+    ]);
+}
 
     public function completeTopic(CourseOutline $topic, Request $request)
     {
@@ -326,35 +336,39 @@ class CourseController extends Controller
     }
 
     public function generateQuiz(Request $request, $courseId, $outlineId)
-    {
-        // Find the models manually
-        $course = Course::findOrFail($courseId);
-        $outline = CourseOutline::findOrFail($outlineId);
+{
+    // Find the models manually
+    $course = Course::findOrFail($courseId);
+    $outline = CourseOutline::findOrFail($outlineId);
 
-        //$this->authorize('update', $course);
-
-        // Verify the outline belongs to the course
-        if ($outline->module->course_id !== $course->id) {
-            return redirect()->back()
-                ->with('error', 'Topic does not belong to this course.');
-        }
-
-        try {
-            $quiz = $this->contentGenerationService->generateQuizForOutline($outline, 5);
-
-            return redirect()->back()->with('success', 'Quiz generated successfully!');
-
-        } catch (\Exception $e) {
-            \Log::error('Quiz generation failed', [
-                'outline_id' => $outline->id,
-                'course_id' => $course->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return redirect()->back()
-                ->with('error', 'Failed to generate quiz: ' . $e->getMessage());
-        }
+    // Verify the outline belongs to the course
+    if ($outline->module->course_id !== $course->id) {
+        return redirect()->back()
+            ->with('error', 'Topic does not belong to this course.');
     }
+
+    try {
+        $quiz = $this->contentGenerationService->generateQuizForOutline($outline, 5);
+
+        // Redirect back to the learn page with quiz tab active
+        return redirect()->route('student.courses.learn', [
+            'course' => $course->id,
+            'topic' => $outline->id,
+            'tab' => 'quiz'
+        ])->with('success', 'Quiz generated successfully!')
+          ->with('quiz_generated', true); // Add flash data to indicate quiz was generated
+
+    } catch (\Exception $e) {
+        \Log::error('Quiz generation failed', [
+            'outline_id' => $outline->id,
+            'course_id' => $course->id,
+            'error' => $e->getMessage()
+        ]);
+
+        return redirect()->back()
+            ->with('error', 'Failed to generate quiz: ' . $e->getMessage());
+    }
+}
 
     public function updateProgress(Course $course, Request $request)
     {
