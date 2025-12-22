@@ -11,33 +11,17 @@ use App\Models\User;
 use App\Notifications\CourseCreationReminder as NotificationsCourseCreationReminder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use App\Helpers\CertificateHelper;
+use App\Models\Course;
 
 class TestingController extends Controller
 {
-    public function test()
-    {
-        $user = User::where('id', 2)->first();
+    public function test(){
+        $user = User::find(4);
+        $course = Course::find(35);
 
-    // Make sure we have a User object
-    if (!$user) {
-        dd('User not found');
-    }
+        $details = CertificateHelper::getEligibilityDetails($user, $course);
 
-    // PASS USER OBJECT
-    $notification = new \App\Notifications\CourseCreationReminder($user, 1);
-
-    // Get the mail message
-    $mailMessage = $notification->toMail($user);
-
-    // Render the view to check
-    $view = $mailMessage->view;
-    $data = $mailMessage->viewData;
-
-    dd([
-        'user_in_data' => isset($data['user']),
-        'user_class' => get_class($data['user'] ?? null),
-        'view_data' => $data,
-        'rendered' => $mailMessage->render(),
-    ]);
+        dd($details);
     }
 }

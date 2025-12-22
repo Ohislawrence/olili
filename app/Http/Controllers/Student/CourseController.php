@@ -10,6 +10,7 @@ use App\Models\Module;
 use App\Models\CourseOutline;
 use App\Models\CourseContent;
 use App\Models\ExamBoard;
+use App\Services\CertificateGenerationService;
 use App\Services\CourseGenerationService;
 use App\Services\ContentGenerationService;
 use App\Services\CourseNotificationService;
@@ -503,6 +504,11 @@ class CourseController extends Controller
     public function submit(CapstoneProject $capstoneProject, Request $request)
     {
         //$this->authorize('update', $capstoneProject);
+        // Check if course is completed or near completion
+        if ($capstoneProject->course->progress_percentage < 80) {
+            return redirect()->route('student.courses.show', $capstoneProject->course->id)
+                ->with('error', 'You need to complete at least 80% of the course before starting the capstone project.');
+        }
 
         $request->validate([
             'submission' => 'required|string|min:100',
@@ -564,5 +570,26 @@ class CourseController extends Controller
         ];
     }
 
+    protected function markCourseAsCompleted(Course $course)
+    {
+        $course->update([
+            'status' => 'completed',
+            'actual_completion_date' => now(),
+        ]);
+
+        // Generate certificate if eligible
+        if (app(CertificateGenerationService::class)->isEligibleForCertificate($course->studentProfile->user, $course)) {
+            try {
+                $organization = $course->studentProfile->user->organizationProfile;
+                app(CertificateGenerationService::class)->generateCertificate(
+                    $course->studentProfile->user,
+                    $course,
+                    $organization
+                );
+            } catch (\Exception $e) {
+                \Log::error('Failed to generate certificate: ' . $e->getMessage());
+            }
+        }
+    }
 
 }

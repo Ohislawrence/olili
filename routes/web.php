@@ -18,6 +18,7 @@ use App\Http\Controllers\ContactController;
 use App\Mail\WelcomeStudentMail;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\Api\PushSubscriptionController;
+use App\Http\Controllers\Student\CertificateController;
 
 // Public routes
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
@@ -167,6 +168,9 @@ Route::get('/test-queue-email', function () {
 
     return "Email queued! Check your queue worker.";
 });// routes/web.php (if you need web routes too)
+
+//cert view public
+Route::get('/certificates/verify/{hash}', [CertificateController::class, 'verify'])->name('certificates.verify');
 
 
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {

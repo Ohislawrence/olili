@@ -62,8 +62,8 @@
                 </div>
             </div>
 
-            <!-- Plans Grid -->
-            <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <!-- Plans Grid - Changed to 3 columns -->
+            <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div
                     v-for="plan in filteredPlans"
                     :key="plan.id"
@@ -130,11 +130,11 @@
                             <div class="space-y-2 text-xs text-gray-600">
                                 <div v-if="plan.max_courses" class="flex justify-between">
                                     <span>Max Courses:</span>
-                                    <span class="font-medium">{{ plan.max_courses === 999999 ? 'Unlimited' : plan.max_courses }}</span>
+                                    <span class="font-medium">{{ plan.max_courses === -1 ? 'Unlimited' : plan.max_courses }}</span>
                                 </div>
                                 <div v-if="plan.max_ai_requests_per_month" class="flex justify-between">
                                     <span>AI Requests/Month:</span>
-                                    <span class="font-medium">{{ plan.max_ai_requests_per_month === 999999 ? 'Unlimited' : plan.max_ai_requests_per_month.toLocaleString() }}</span>
+                                    <span class="font-medium">{{ plan.max_ai_requests_per_month === -1 ? 'Unlimited' : plan.max_ai_requests_per_month.toLocaleString() }}</span>
                                 </div>
                                 <div v-if="plan.ai_grading" class="flex justify-between">
                                     <span>AI Grading:</span>
@@ -292,10 +292,9 @@ const billingCycle = ref('monthly');
 const selectedRole = ref(props.role);
 const loading = ref(false);
 
-// Available roles
+// Available roles - REMOVED TUTOR
 const availableRoles = [
     { value: 'student', label: 'For Students' },
-    { value: 'tutor', label: 'For Tutors' },
     { value: 'organization', label: 'For Organizations' }
 ];
 
@@ -387,5 +386,24 @@ const openFeatureModal = (plan) => {
 /* Ensure popular plan stays on top */
 .pricing-card.ring-2 {
     z-index: 10;
+}
+
+/* Responsive grid adjustments */
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1025px) {
+    .grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 </style>

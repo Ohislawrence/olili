@@ -10,6 +10,7 @@ use App\Http\Controllers\Student\ProfileController;
 use App\Http\Controllers\Student\CapstoneProjectController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Student\CatalogController;
+use App\Http\Controllers\Student\CertificateController;
 use App\Http\Controllers\Student\CourseShareController;
 use App\Http\Controllers\Student\CourseTutorController;
 use App\Http\Controllers\Student\FlashcardController;
@@ -59,6 +60,18 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('courses/share/{token}/reject', [CourseShareController::class, 'reject'])->name('share.reject');
     Route::get('courses/shared/pending', [CourseShareController::class, 'pendingShares'])->name('courses.shared.pending');
     Route::get('courses/me/shared', [CourseShareController::class, 'sharedCourses'])->name('courses.shared');
+
+
+    // routes/student.php
+    Route::prefix('certificates')->name('certificates.')->group(function () {
+        Route::get('/', [CertificateController::class, 'index'])->name('index');
+        Route::get('/{certificate}', [CertificateController::class, 'show'])->name('show');
+        Route::get('/{certificate}/download', [CertificateController::class, 'download'])->name('download');
+        Route::post('/{certificate}/share', [CertificateController::class, 'share'])->name('share');
+        Route::post('/courses/{course}/request-certificate', [CertificateController::class, 'requestCertificate'])->name('request');
+    });
+
+
 
     // General Quizzes - Fixed parameter order and names
     Route::get('/quizzes', [QuizController::class, 'index'])->name('quizzes.index');
