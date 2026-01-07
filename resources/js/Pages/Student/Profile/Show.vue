@@ -185,10 +185,10 @@
                   <AcademicCapIcon class="h-8 w-8 text-gray-400 mx-auto mb-2" />
                   <p class="text-gray-500">No courses in progress.</p>
                   <Link
-                    :href="route('student.courses.create')"
+                    :href="route('student.catalog.browse')"
                     class="mt-2 inline-flex items-center text-sm text-emerald-600 hover:text-emerald-500 font-medium"
                   >
-                    Create your first course
+                    Browse Courses
                   </Link>
                 </div>
               </div>
@@ -297,18 +297,18 @@
                   Edit Profile
                 </Link>
                 <Link
-                  :href="route('student.courses.create')"
-                  class="w-full flex items-center justify-center px-4 py-2.5 border border-transparent text-sm font-semibold rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all duration-200"
-                >
-                  <PlusIcon class="h-4 w-4 mr-2" />
-                  New Course
-                </Link>
-                <Link
                   :href="route('student.courses.index')"
                   class="w-full flex items-center justify-center px-4 py-2.5 border border-emerald-300 text-sm font-semibold rounded-lg text-emerald-700 bg-white hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all duration-200"
                 >
                   <AcademicCapIcon class="h-4 w-4 mr-2" />
                   View Courses
+                </Link>
+                <Link
+                  :href="route('student.certificates.index')"
+                  class="w-full flex items-center justify-center px-4 py-2.5 border border-emerald-300 text-sm font-semibold rounded-lg text-emerald-700 bg-white hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all duration-200"
+                >
+                  <AcademicCapIcon class="h-4 w-4 mr-2" />
+                  Certificates
                 </Link>
               </div>
             </div>

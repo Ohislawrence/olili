@@ -121,7 +121,14 @@ class User extends Authenticatable
 
     public function courses()
     {
-        return $this->hasManyThrough(Course::class, StudentProfile::class);
+        return $this->hasManyThrough(
+            Course::class,
+            StudentProfile::class,
+            'user_id', // Foreign key on student_profiles table
+            'student_profile_id', // Foreign key on courses table
+            'id', // Local key on users table
+            'id' // Local key on student_profiles table
+        )->select('courses.*', 'student_profiles.user_id as laravel_through_key');
     }
 
     public function quizAttempts()
@@ -1019,9 +1026,72 @@ class User extends Authenticatable
         return $this->activePushSubscriptions;
     }
 
+    public function courseEnrollments()
+    {
+        return $this->hasMany(CourseEnrollment::class);
+    }
+
+    public function enrolledCourses()
+    {
+        return $this->belongsToMany(Course::class, 'course_enrollments', 'user_id', 'course_id')
+            ->using(CourseEnrollment::class)
+            ->withPivot([
+                'id', 'status', 'progress_percentage', 'enrolled_at',
+                'started_at', 'completed_at', 'paused_at', 'dropped_at'
+            ])
+            ->withTimestamps()
+            ->wherePivot('status', '!=', 'dropped'); // Exclude dropped courses
+    }
+
+    public function completedCourses()
+    {
+        return $this->enrolledCourses()->wherePivot('status', 'completed');
+    }
+
+    public function activeCourses()
+    {
+        return $this->enrolledCourses()->wherePivot('status', 'active');
+    }
+
     public function enrollments()
     {
         return $this->hasMany(CourseEnrollment::class);
+    }
+
+    public function certificates()
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
+    public function activeCertificates()
+    {
+        return $this->certificates()->where('status', 'active');
+    }
+
+    /**
+     * Get expired certificates
+     */
+    public function expiredCertificates()
+    {
+        return $this->certificates()->where('status', 'expired');
+    }
+
+    /**
+     * Get revoked certificates
+     */
+    public function revokedCertificates()
+    {
+        return $this->certificates()->where('status', 'revoked');
+    }
+
+    /**
+     * Get recent certificates (last 30 days)
+     */
+    public function recentCertificates()
+    {
+        return $this->certificates()
+            ->where('issue_date', '>=', now()->subDays(30))
+            ->orderBy('issue_date', 'desc');
     }
 
 }

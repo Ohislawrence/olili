@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Api\WebPushController;
 
+
+
 Route::middleware(['auth:sanctum'])->group(function () {
     // Real-time chat
     Route::post('/chat/{session}/message', [ChatController::class, 'sendMessage']);
@@ -35,3 +37,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 Route::get('/api/featured-blog-posts', [BlogPostController::class, 'featured']);
+
+
+
+Route::middleware(['auth:sanctum'])->group(function () {
+
+});

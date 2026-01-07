@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\StudentProfile;
 use App\Models\ExamBoard;
+use App\Models\Course;
 use App\Services\ProgressTrackingService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -23,11 +24,18 @@ class ProfileController extends Controller
         $totalStudyMinutes = $student->progressTracking()->sum('time_spent_minutes') ?? 0;
         $totalStudyHours = $totalStudyMinutes / 60;
 
+        // Fix: Specify table name for status column to avoid ambiguity
         $stats = [
-            'total_courses' => $student->courses()->count(),
-            'completed_courses' => $student->courses()->where('status', 'completed')->count(),
-            'active_courses' => $student->courses()->where('status', 'active')->count(),
-            'total_study_hours' => round($totalStudyHours, 1), // Round to 1 decimal place
+            'total_courses' => $student->courseEnrollments()
+                ->where('status', '!=', 'dropped') // Exclude dropped courses
+                ->count(),
+            'completed_courses' => $student->courseEnrollments()
+                ->where('course_enrollments.status', 'completed') // Specify table
+                ->count(),
+            'active_courses' => $student->courseEnrollments()
+                ->whereIn('course_enrollments.status', ['enrolled', 'active']) // Specify table
+                ->count(),
+            'total_study_hours' => round($totalStudyHours, 1),
         ];
 
         return Inertia::render('Student/Profile/Show', [
@@ -161,31 +169,39 @@ class ProfileController extends Controller
 
     public function getCourseProgress()
     {
-          $student = auth()->user();
-    $progressService = app(ProgressTrackingService::class);
+        $student = auth()->user();
+        $progressService = app(ProgressTrackingService::class);
 
-    $courses = $student->courses()
-        ->select('courses.id', 'courses.title', 'courses.status', 'courses.progress_percentage')
-        ->get()
-        ->map(function ($course) use ($progressService) {
-            $progress = $progressService->calculateCourseProgress($course);
+        // Fix: Get courses through enrollments and specify table for status
+        $courses = $student->courseEnrollments()
+            ->where('status', '!=', 'dropped') // Exclude dropped courses
+            ->with('course')
+            ->get()
+            ->map(function ($enrollment) use ($progressService, $student) {
+                $course = $enrollment->course;
+                if (!$course) {
+                    return null;
+                }
 
-            return [
-                'id' => $course->id,
-                'title' => $course->title,
-                'status' => $course->status,
-                'progress_percentage' => $progress['overall_completion_percentage'],
-                'completed_modules' => $progress['completed_modules'],
-                'total_modules' => $progress['total_modules'],
-                'completed_topics' => $progress['completed_topics'],
-                'total_topics' => $progress['total_topics'],
-            ];
-        });
+                $progress = $progressService->calculateCourseProgress($course, $student->id);
 
-    return response()->json([
-        'courses' => $courses
-    ]);
+                return [
+                    'id' => $course->id,
+                    'title' => $course->title,
+                    'status' => $enrollment->status, // Use enrollment status, not course status
+                    'progress_percentage' => $progress['overall_completion_percentage'],
+                    'completed_modules' => $progress['completed_modules'],
+                    'total_modules' => $progress['total_modules'],
+                    'completed_topics' => $progress['completed_topics'],
+                    'total_topics' => $progress['total_topics'],
+                    'enrollment_id' => $enrollment->id,
+                ];
+            })
+            ->filter() // Remove null values
+            ->values(); // Reset array keys
 
-
+        return response()->json([
+            'courses' => $courses
+        ]);
     }
 }

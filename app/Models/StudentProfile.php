@@ -33,6 +33,34 @@ class StudentProfile extends Model
         'target_grade' => 'decimal:1',
     ];
 
+
+
+    public function enrollments()
+    {
+        return $this->hasMany(CourseEnrollment::class);
+    }
+
+    public function enrolledCourses()
+    {
+        return $this->hasManyThrough(
+            Course::class,
+            CourseEnrollment::class,
+            'student_profile_id',
+            'id',
+            'id',
+            'course_id'
+        );
+    }
+
+    public function activeEnrollments()
+    {
+        return $this->enrollments()->whereIn('status', ['enrolled', 'active']);
+    }
+
+    public function completedEnrollments()
+    {
+        return $this->enrollments()->where('status', 'completed');
+    }
     // Relationships
     public function user(): BelongsTo
     {
@@ -44,9 +72,9 @@ class StudentProfile extends Model
         return $this->belongsTo(ExamBoard::class);
     }
 
-    public function courses(): HasMany
+    public function courses()
     {
-        return $this->hasMany(Course::class);
+        return $this->hasMany(Course::class, 'student_profile_id');
     }
 
     // Scopes

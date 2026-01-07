@@ -15,6 +15,7 @@ use App\Http\Controllers\Student\CourseShareController;
 use App\Http\Controllers\Student\CourseTutorController;
 use App\Http\Controllers\Student\FlashcardController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Student\CourseContentController;
 
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'role:student'])->prefix('student')->name('student.')->group(function () {
 
@@ -23,14 +24,20 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('/dashboard/progress-chart', [DashboardController::class, 'getProgressChart'])->name('dashboard.progress-chart');
 
     // Courses
-    Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
-    Route::middleware(['subscription:create_course'])->get('/courses/create', [CourseController::class, 'create'])->name('courses.create');
-    Route::middleware(['subscription:create_course'])->post('/courses', [CourseController::class, 'store'])->name('courses.store');
-    Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
-    Route::post('/courses/{course}/start', [CourseController::class, 'startCourse'])->name('courses.start');
+    Route::get('/courses/browse', [CourseController::class, 'browse'])->name('catalog.browse');
+    Route::get('/courses/enrolled/browse', [CourseController::class, 'index'])->name('courses.index');
+    Route::post('/courses/{course}/enroll', [CourseController::class, 'enroll'])->name('courses.enroll');
+    Route::post('/courses/{course}/drop', [CourseController::class, 'dropCourse'])->name('courses.drop');
+
+    //Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
+    //Route::middleware(['subscription:create_course'])->get('/courses/create', [CourseController::class, 'create'])->name('courses.create');
+    //Route::middleware(['subscription:create_course'])->post('/courses', [CourseController::class, 'store'])->name('courses.store');
+    Route::get('/course/enroll/{course}', [CourseController::class, 'show'])->name('courses.show');
+    Route::get('/course/{course}', [CourseController::class, 'preview'])->name('courses.preview');
+    Route::get('/courses/{course}/start', [CourseController::class, 'startCourse'])->name('courses.start');
     Route::get('/courses/{course}/learn', [CourseController::class, 'learn'])->name('courses.learn');
-    Route::put('/courses/{course}/pause', [CourseController::class, 'pauseCourse'])->name('courses.pause');
-    Route::put('/courses/{course}/resume', [CourseController::class, 'resumeCourse'])->name('courses.resume');
+    Route::post('/courses/{course}/pause', [CourseController::class, 'pauseCourse'])->name('courses.pause');
+    Route::post('/courses/{course}/resume', [CourseController::class, 'resumeCourse'])->name('courses.resume');
     Route::post('/outlines/{outline}/complete', [CourseController::class, 'completeOutline'])->name('outlines.complete');
     Route::post('/outlines/{outline}/generate-content', [CourseController::class, 'generateContent'])->name('outlines.generate-content');
     Route::post('/courses/{course}/update-progress', [CourseController::class, 'updateProgress'])->name('courses.update-progress');
@@ -62,13 +69,17 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('courses/me/shared', [CourseShareController::class, 'sharedCourses'])->name('courses.shared');
 
 
-    // routes/student.php
+    // certificates
     Route::prefix('certificates')->name('certificates.')->group(function () {
         Route::get('/', [CertificateController::class, 'index'])->name('index');
         Route::get('/{certificate}', [CertificateController::class, 'show'])->name('show');
         Route::get('/{certificate}/download', [CertificateController::class, 'download'])->name('download');
         Route::post('/{certificate}/share', [CertificateController::class, 'share'])->name('share');
-        Route::post('/courses/{course}/request-certificate', [CertificateController::class, 'requestCertificate'])->name('request');
+        Route::get('/request', [CertificateController::class, 'request'])->name('request');
+        Route::post('/courses/{course}/request-certificate', [CertificateController::class, 'requestCertificate'])->name('post.request');
+
+        Route::get('/request', [CertificateController::class, 'request'])->name('get.request');
+        Route::post('/export-all', [CertificateController::class, 'exportAll'])->name('export-all');
     });
 
 
@@ -134,5 +145,28 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
             Route::get('/sessions/{chatSession}/messages', [CourseTutorController::class, 'getMessages'])->name('messages');
             Route::delete('/sessions/{chatSession}/close', [CourseTutorController::class, 'closeSession'])->name('close-session');
         });
+    });
+
+    //API
+    Route::prefix('courses/{course}')->group(function () {
+        // Get topic content
+        Route::get('topics/{topic}/content', [CourseContentController::class, 'getTopicContent'])
+            ->name('api.courses.topics.content');
+
+        // Get quiz details
+        Route::get('topics/{topic}/quiz', [CourseContentController::class, 'getQuizDetails'])
+            ->name('api.courses.topics.quiz');
+
+        // Get project details
+        Route::get('topics/{topic}/project', [CourseContentController::class, 'getProjectDetails'])
+            ->name('api.courses.topics.project');
+
+        // Generate content
+        Route::post('topics/{topic}/generate-content', [CourseContentController::class, 'generateContent'])
+            ->name('api.courses.topics.generate-content');
+
+        // Generate quiz
+        Route::post('topics/{topic}/generate-quiz', [CourseContentController::class, 'generateQuiz'])
+            ->name('api.courses.topics.generate-quiz');
     });
 });

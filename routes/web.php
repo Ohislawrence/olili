@@ -27,9 +27,18 @@ Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 Route::get('/features', [FrontpageController::class, 'features'])->name('features');
 Route::get('/about', [FrontpageController::class, 'about'])->name('about');
 Route::get('/pricing', [FrontpageController::class, 'pricing'])->name('pricing');
+Route::get('/learning-paths', [FrontpageController::class, 'pricing'])->name('learning-paths');
+Route::get('/ai-tutor', [FrontpageController::class, 'pricing'])->name('ai-tutor');
 Route::get('/help', [FrontpageController::class, 'help'])->name('help');
 Route::get('/contact', [FrontpageController::class, 'contact'])->name('contact');
 Route::get('/faq', [FrontpageController::class, 'faq'])->name('faq');
+
+Route::get('/terms', [FrontpageController::class, 'pricing'])->name('terms');
+Route::get('/privacy', [FrontpageController::class, 'pricing'])->name('privacy');
+Route::get('/teams', [FrontpageController::class, 'pricing'])->name('teams');
+Route::get('/cookies', [FrontpageController::class, 'pricing'])->name('cookies');
+Route::get('/accessibility', [FrontpageController::class, 'pricing'])->name('accessibility');
+Route::get('/gdpr', [FrontpageController::class, 'pricing'])->name('gdpr');
 
 // Courses routes
 Route::get('/course', [FrontpageController::class, 'coursesIndex'])->name('courses.index');

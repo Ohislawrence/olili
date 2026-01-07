@@ -49,7 +49,7 @@ class DeepSeekService extends BaseAiService
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ])
-            ->timeout(120)
+            ->timeout(300)
             ->read_timeout(120)
             ->connectTimeout(30)
             ->retry(3, 100)

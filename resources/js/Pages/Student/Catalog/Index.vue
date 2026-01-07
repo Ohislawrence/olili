@@ -259,7 +259,7 @@
                 <div v-else>
                   <div class="space-y-2">
                     <Link
-                      :href="route('student.catalog.show', course.id)"
+                      :href="route('student.courses.show', course.id)"
                       class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

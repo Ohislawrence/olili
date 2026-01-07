@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\ExamBoard;
+use App\Models\StudentProfile;
 use App\Models\User;
 use App\Services\CourseGenerationService;
 use Illuminate\Http\Request;
@@ -25,8 +26,7 @@ class CoursesController extends Controller
 
     public function index(Request $request)
     {
-        $query = Course::with(['examBoard', 'creator'])
-            ->createdByAdmin()
+        $query = Course::with(['examBoard', 'creator','enrolled','activeEnrollments'])
             ->latest();
 
         // Filters
@@ -237,9 +237,7 @@ class CoursesController extends Controller
 
     public function destroy(Course $course)
     {
-        if ($course->created_by !== 'admin') {
-            abort(404);
-        }
+
 
         // Check if there are active enrollments
         if ($course->current_enrollment > 0) {
@@ -416,6 +414,9 @@ public function regenerate(Course $course)
             $module->delete();
         });
 
+        $adminID = auth()->user();
+        $stuID = $adminID->studentProfile->id; // StudentProfile::where('user_id', $adminID)->first();
+
         // Regenerate course using AI
         $courseData = [
             'title' => $course->title,
@@ -427,6 +428,7 @@ public function regenerate(Course $course)
             'learning_objectives' => $course->learning_objectives,
             'prerequisites' => $course->prerequisites,
             'exam_board_id' => $course->exam_board_id,
+            'student_profile_id' => $stuID,
         ];
 
         $courseGenerationService = app(CourseGenerationService::class);

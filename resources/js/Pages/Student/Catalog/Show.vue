@@ -1,14 +1,14 @@
 <!-- resources/js/Pages/Student/Catalog/Show.vue -->
 <template>
   <StudentLayout>
-    <Head :title="course.title" />
+    <Head :title="course?.title || 'Course Preview'" />
 
-    <div class="py-6">
+    <div class="py-6" v-if="course">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Back Button -->
         <div class="mb-6">
           <button
-            @click="$inertia.visit(route('student.catalog.index'))"
+            @click="$inertia.visit(route('student.catalog.browse'))"
             class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -21,10 +21,8 @@
         <!-- Course Header -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
           <div class="md:flex">
-
-
             <!-- Course Info -->
-            <div class="md:w-2/3 p-6 md:p-8">
+            <div class="md:w-full p-6 md:p-8">
               <div class="flex flex-col h-full">
                 <!-- Header -->
                 <div class="mb-6">
@@ -55,19 +53,19 @@
                 <!-- Stats -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                   <div class="text-center">
-                    <div class="text-2xl font-bold text-emerald-600">{{ course.estimated_duration_hours }}</div>
+                    <div class="text-2xl font-bold text-emerald-600">{{ course.estimated_duration_hours || 0 }}</div>
                     <div class="text-sm text-gray-600">Hours</div>
                   </div>
                   <div class="text-center">
-                    <div class="text-2xl font-bold text-emerald-600">{{ module_count }}</div>
+                    <div class="text-2xl font-bold text-emerald-600">{{ module_count || 0 }}</div>
                     <div class="text-sm text-gray-600">Modules</div>
                   </div>
                   <div class="text-center">
-                    <div class="text-2xl font-bold text-emerald-600">{{ topic_count }}</div>
+                    <div class="text-2xl font-bold text-emerald-600">{{ topic_count || 0 }}</div>
                     <div class="text-sm text-gray-600">Topics</div>
                   </div>
                   <div class="text-center">
-                    <div class="text-2xl font-bold text-emerald-600">{{ enrollment_stats.total }}</div>
+                    <div class="text-2xl font-bold text-emerald-600">{{ enrollment_stats?.total || 0 }}</div>
                     <div class="text-sm text-gray-600">Enrolled</div>
                   </div>
                 </div>
@@ -92,9 +90,9 @@
 
                   <!-- Action Buttons -->
                   <div class="space-y-3">
-                    <div v-if="is_enrolled">
+                    <div v-if="is_enrolled && enrolled_course">
                       <Link
-                        :href="route('student.courses.show', enrolled_course.id)"
+                        :href="route('student.courses.learn', { course: course.id })"
                         class="w-full inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -108,12 +106,17 @@
                       <div v-if="can_enroll" class="space-y-3">
                         <button
                           @click="enrollCourse"
-                          class="w-full inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                          :disabled="isEnrolling"
+                          class="w-full inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg v-if="!isEnrolling" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                           </svg>
-                          Enroll in this Course
+                          <svg v-else class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          {{ isEnrolling ? 'Enrolling...' : 'Enroll in this Course' }}
                         </button>
                         <div class="text-center text-sm text-gray-600">
                           Free enrollment • Start learning immediately
@@ -122,10 +125,10 @@
                       <div v-else class="text-center">
                         <div class="bg-red-50 border border-red-200 rounded-lg p-4">
                           <p class="text-red-800 font-medium">
-                            {{ enrollment_stats.total >= enrollment_stats.limit ? 'Course is full' : 'You cannot enroll in this course' }}
+                            {{ enrollment_stats?.total >= enrollment_stats?.limit ? 'Course is full' : 'You cannot enroll in this course' }}
                           </p>
-                          <p v-if="enrollment_stats.total >= enrollment_stats.limit" class="text-sm text-red-700 mt-1">
-                            All {{ enrollment_stats.limit }} spots have been filled
+                          <p v-if="enrollment_stats?.total >= enrollment_stats?.limit" class="text-sm text-red-700 mt-1">
+                            All {{ enrollment_stats?.limit }} spots have been filled
                           </p>
                         </div>
                       </div>
@@ -155,7 +158,7 @@
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h2 class="text-xl font-bold text-gray-900 mb-4">Course Description</h2>
               <div class="prose max-w-none">
-                <p class="text-gray-700 whitespace-pre-wrap">{{ course.description }}</p>
+                <p class="text-gray-700 whitespace-pre-wrap">{{ course.description || 'No description available.' }}</p>
               </div>
             </div>
 
@@ -177,11 +180,11 @@
             </div>
 
             <!-- Course Content -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div v-if="course.modules && course.modules.length" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div class="flex items-center justify-between mb-6">
                 <h2 class="text-xl font-bold text-gray-900">Course Content</h2>
                 <div class="text-sm text-gray-600">
-                  {{ module_count }} modules • {{ topic_count }} topics
+                  {{ module_count || 0 }} modules • {{ topic_count || 0 }} topics
                 </div>
               </div>
 
@@ -196,14 +199,14 @@
                     <div class="flex items-center justify-between">
                       <h3 class="font-medium text-gray-900">{{ module.title }}</h3>
                       <div class="text-sm text-gray-500">
-                        {{ module.topics.length }} topics • {{ module.estimated_duration_minutes }} min
+                        {{ module.topics?.length || 0 }} topics • {{ module.estimated_duration_minutes || 0 }} min
                       </div>
                     </div>
                     <p v-if="module.description" class="mt-1 text-sm text-gray-600">{{ module.description }}</p>
                   </div>
 
                   <!-- Topics List -->
-                  <div class="divide-y divide-gray-200">
+                  <div v-if="module.topics && module.topics.length" class="divide-y divide-gray-200">
                     <div
                       v-for="topic in module.topics"
                       :key="topic.id"
@@ -211,7 +214,7 @@
                     >
                       <div class="flex items-start">
                         <div class="flex-shrink-0 h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center mr-3 mt-1">
-                          <span class="text-gray-600 text-sm font-medium">{{ topic.order }}</span>
+                          <span class="text-gray-600 text-sm font-medium">{{ topic.order || '' }}</span>
                         </div>
                         <div class="flex-1">
                           <h4 class="text-sm font-medium text-gray-900">{{ topic.title }}</h4>
@@ -221,7 +224,7 @@
                               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
-                              {{ topic.estimated_duration_minutes }} min
+                              {{ topic.estimated_duration_minutes || 0 }} min
                             </div>
                             <div v-if="topic.has_quiz" class="flex items-center mr-4">
                               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -240,8 +243,15 @@
                       </div>
                     </div>
                   </div>
+                  <div v-else class="px-5 py-3 text-center text-sm text-gray-500">
+                    No topics in this module
+                  </div>
                 </div>
               </div>
+            </div>
+            <div v-else class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h2 class="text-xl font-bold text-gray-900 mb-4">Course Content</h2>
+              <p class="text-gray-600">Course content is being prepared. Please check back later.</p>
             </div>
           </div>
 
@@ -291,8 +301,8 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                   <span>
-                    {{ enrollment_stats.total }} enrolled
-                    <span v-if="enrollment_stats.limit"> of {{ enrollment_stats.limit }}</span>
+                    {{ enrollment_stats?.total || 0 }} enrolled
+                    <span v-if="enrollment_stats?.limit"> of {{ enrollment_stats?.limit }}</span>
                   </span>
                 </div>
               </div>
@@ -370,15 +380,41 @@ import StudentLayout from '@/Layouts/StudentLayout.vue'
 import { Head, Link } from '@inertiajs/vue3'
 
 const page = usePage()
+const isEnrolling = ref(false)
 
 const props = defineProps({
-  course: Object,
-  is_enrolled: Boolean,
-  enrolled_course: Object,
-  can_enroll: Boolean,
-  module_count: Number,
-  topic_count: Number,
-  enrollment_stats: Object,
+  course: {
+    type: Object,
+    default: () => ({})
+  },
+  is_enrolled: {
+    type: Boolean,
+    default: false
+  },
+  enrolled_course: {
+    type: Object,
+    default: null
+  },
+  can_enroll: {
+    type: Boolean,
+    default: false
+  },
+  module_count: {
+    type: Number,
+    default: 0
+  },
+  topic_count: {
+    type: Number,
+    default: 0
+  },
+  enrollment_stats: {
+    type: Object,
+    default: () => ({
+      total: 0,
+      limit: null,
+      available: null
+    })
+  },
 })
 
 // Methods
@@ -393,25 +429,35 @@ const getLevelBadgeClass = (level) => {
 }
 
 const enrollCourse = async () => {
+  if (isEnrolling.value) return
+
+  isEnrolling.value = true
+
   try {
-    await router.post(route('student.catalog.enroll', props.course.id), {}, {
+    await router.post(route('student.courses.enroll', props.course.id), {}, {
       preserveScroll: true,
+      preserveState: true,
       onSuccess: () => {
-        page.props.flash.success = 'Successfully enrolled in the course!'
+        // Redirect to the course show page after enrollment
+        router.visit(route('student.courses.show', props.course.id))
       },
       onError: (errors) => {
         alert(errors.message || 'Failed to enroll in the course')
+      },
+      onFinish: () => {
+        isEnrolling.value = false
       }
     })
   } catch (error) {
     console.error('Enrollment failed:', error)
+    isEnrolling.value = false
   }
 }
 
 const shareCourse = (platform) => {
   const url = window.location.href
-  const title = props.course.title
-  const text = `Check out this course: ${props.course.title}`
+  const title = props.course?.title || 'Course Preview'
+  const text = `Check out this course: ${title}`
 
   const shareUrls = {
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,

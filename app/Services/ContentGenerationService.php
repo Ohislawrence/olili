@@ -3,6 +3,8 @@
 
 namespace App\Services;
 
+use App\Models\CapstoneProject;
+use App\Models\Course;
 use App\Models\CourseOutline;
 use App\Models\CourseContent;
 use App\Models\Quiz;
@@ -25,7 +27,7 @@ class ContentGenerationService
         $messages = [
             [
                 'role' => 'system',
-                'content' => "You are an expert educator and content creator. Create engaging, educational content that helps students learn effectively based on the course structure and learning objectives. "
+                'content' => "You are an expert educator and content creator. Create engaging, educational content that helps students learn effectively based on the course structure and learning objectives. The content should be appropriate for the course level and target audience."
             ],
             [
                 'role' => 'user',
@@ -63,7 +65,7 @@ class ContentGenerationService
     {
         // Load the full hierarchy with error handling
         try {
-            $outline->load(['module.course.studentProfile', 'module']);
+            $outline->load(['module.course', 'module']);
         } catch (\Exception $e) {
             Log::error('Failed to load course hierarchy', [
                 'outline_id' => $outline->id,
@@ -84,9 +86,6 @@ class ContentGenerationService
         $course = $outline->module->course;
         $module = $outline->module;
 
-        // Student profile might be optional
-        $studentProfile = $course->studentProfile;
-
         $prompt = "
         Create educational content for the following topic:
 
@@ -94,6 +93,7 @@ class ContentGenerationService
         - Course: {$course->title}
         - Subject: {$course->subject}
         - Level: {$course->level}
+        - Course Description: " . ($course->description ?? 'No description') . "
 
         MODULE CONTEXT:
         - Module: {$module->title}
@@ -106,38 +106,23 @@ class ContentGenerationService
         - Topic Learning Objectives: " . $this->formatArrayForPrompt($outline->learning_objectives ?? []) . "
         - Key Concepts: " . $this->formatArrayForPrompt($outline->key_concepts ?? []) . "
         - Resources: " . $this->formatArrayForPrompt($outline->resources ?? []) . "
-
-        STUDENT CONTEXT:";
-
-        if ($studentProfile) {
-            $prompt .= "
-            - Current Level: {$studentProfile->current_level}
-            - Target Level: {$studentProfile->target_level}
-            - Learning Goals: " . $this->formatLearningGoals($studentProfile->learning_goals) . "";
-        } else {
-            $prompt .= "
-            - Level: {$course->level} (course level)";
-        }
-
-        $prompt .= "
+        - Estimated Duration: " . ($outline->estimated_duration_minutes ?? 'Not specified') . " minutes
 
         CONTENT TYPE: {$contentType}
         ";
 
         if ($contentType === 'text') {
-            $studentLevel = $studentProfile->current_level ?? $course->level;
-            $targetLevel = $studentProfile->target_level ?? $course->level;
-
             $prompt .= "
             Please create comprehensive written content that:
-            - Starts with an engaging introduction connecting to the module context
-            - Explains concepts clearly with examples appropriate for the student's level
-            - Uses appropriate terminology for {$studentLevel} level
+            - Starts with an engaging introduction connecting to the module and course context
+            - Explains concepts clearly with examples appropriate for {$course->level} level
+            - Uses appropriate terminology for {$course->level} level
             - Includes practical examples and real-world applications
-            - Connects back to the module learning objectives
+            - Connects back to the module and course learning objectives
             - Summarizes key takeaways
             - Suggests further reading or exercises based on available resources
             - Provides clear transitions between concepts
+            - Is suitable for self-paced learning
 
             Format the content using Markdown for better readability with headings, bullet points, and examples.
             ";
@@ -148,19 +133,21 @@ class ContentGenerationService
             - Reinforces the key concepts from both topic and module
             - Provides immediate feedback and explanations
             - Adapts to different learning styles
-            - Connects to the broader module context
+            - Connects to the broader module and course context
             - Includes clear instructions and learning objectives
+            - Is suitable for {$course->level} level students
             ";
         } elseif ($contentType === 'video_script') {
             $prompt .= "
             Create a video script that:
-            - Starts with a hook related to the module context
+            - Starts with a hook related to the module and course context
             - Clearly explains the topic concepts in an engaging way
-            - Uses analogies and examples appropriate for the student's level
+            - Uses analogies and examples appropriate for {$course->level} level
             - Includes visual cues for what should be shown on screen
             - Summarizes key points at the end
             - Suggests practical applications
             - Keeps the content dynamic and engaging (5-10 minute duration)
+            - Includes timings for different sections
             ";
         } elseif ($contentType === 'exercise') {
             $prompt .= "
@@ -170,22 +157,22 @@ class ContentGenerationService
             - Provides example solutions or expected outcomes
             - Connects to real-world applications
             - Includes varying difficulty levels to accommodate different student abilities
+            - Aligns with {$course->level} level expectations
+            - Relates to the course subject: {$course->subject}
             ";
         }
-
-        $studentLevel = $studentProfile->current_level ?? $course->level;
-        $targetLevel = $studentProfile->target_level ?? $course->level;
-        $learningGoals = $studentProfile ? $this->formatLearningGoals($studentProfile->learning_goals) : 'General learning';
 
         $prompt .= "
 
         CONTENT CREATION GUIDELINES:
-        - Align content with both topic and module learning objectives
-        - Use language and examples appropriate for {$studentLevel} level moving toward {$targetLevel}
-        - Ensure content builds on previous knowledge from the module
-        - Include practical applications that relate to student goals: {$learningGoals}
-        - Make content engaging and accessible
+        - Align content with topic, module, and course learning objectives
+        - Use language and examples appropriate for {$course->level} level
+        - Ensure content builds on previous knowledge from the module and course
+        - Include practical applications relevant to the course subject: {$course->subject}
+        - Make content engaging, accessible, and suitable for self-study
         - Break down complex concepts into digestible parts
+        - Consider the estimated duration for this topic: " . ($outline->estimated_duration_minutes ?? 'flexible') . " minutes
+        - Content should be comprehensive but not overwhelming for {$course->level} level students
         ";
 
         return $prompt;
@@ -200,19 +187,11 @@ class ContentGenerationService
             return "None specified";
         }
 
-        return implode(', ', $items);
-    }
-
-    /**
-     * Format learning goals for prompt
-     */
-    protected function formatLearningGoals($learningGoals): string
-    {
-        if (is_array($learningGoals)) {
-            return implode(', ', $learningGoals);
+        if (is_array($items)) {
+            return implode(', ', $items);
         }
 
-        return $learningGoals ?? 'General knowledge acquisition';
+        return (string) $items;
     }
 
     protected function cleanJsonResponse(string $response): string
@@ -336,13 +315,16 @@ class ContentGenerationService
 
     protected function buildQuizPrompt(CourseOutline $outline, int $questionCount): string
     {
-        // Your existing loading logic...
-        $outline->load(['module']);
+        // Load course and module data
+        $outline->load(['module.course', 'module']);
         $module = $outline->module;
+        $course = $outline->module->course ?? null;
 
         if (!$module) {
             throw new \Exception("Topic is not associated with a module");
         }
+
+        $courseContext = $course ? "Course Level: {$course->level}" : "Course level not specified";
 
         return "
     IMPORTANT: You MUST return ONLY valid JSON. Do not include any explanatory text before or after the JSON.
@@ -350,6 +332,10 @@ class ContentGenerationService
     Create a quiz with exactly {$questionCount} questions for the following topic:
 
     COURSE CONTEXT:
+    - Course Level: " . ($course->level ?? 'General') . "
+    - Subject: " . ($course->subject ?? 'General') . "
+
+    MODULE CONTEXT:
     - Module: {$module->title}
     - Module Learning Objectives: " . $this->formatArrayForPrompt($module->learning_objectives ?? []) . "
 
@@ -358,6 +344,8 @@ class ContentGenerationService
     - Topic Description: " . ($outline->description ?? 'No description') . "
     - Key Concepts: " . $this->formatArrayForPrompt($outline->key_concepts ?? []) . "
     - Learning Objectives: " . $this->formatArrayForPrompt($outline->learning_objectives ?? []) . "
+    - Topic Type: {$outline->type}
+    - Estimated Duration: " . ($outline->estimated_duration_minutes ?? 'Not specified') . " minutes
 
     CRITICAL: Return ONLY the following JSON structure, nothing else:
 
@@ -380,6 +368,14 @@ class ContentGenerationService
         \"passing_score\": " . ceil(70) . ",
         \"time_limit_minutes\": " . ceil($questionCount * 1.5) . "
     }
+
+    QUIZ DESIGN GUIDELINES:
+    - Questions should be appropriate for " . ($course->level ?? 'general') . " level
+    - Questions should test understanding of the key concepts listed
+    - Include a mix of difficulty levels (easy, medium, hard)
+    - Make sure explanations are clear and educational
+    - Questions should relate to real-world applications where possible
+    - Avoid trick questions - focus on genuine understanding
 
     RULES:
     - Return ONLY valid JSON, no other text
@@ -498,5 +494,297 @@ class ContentGenerationService
         }
 
         return $generatedContent;
+    }
+
+    /**
+     * Generate project requirements for a project topic
+     */
+    public function generateProjectRequirements(CourseOutline $outline): array
+    {
+        $prompt = $this->buildProjectRequirementsPrompt($outline);
+
+        $messages = [
+            [
+                'role' => 'system',
+                'content' => "You are an expert project designer. Create clear, achievable project requirements that help students apply their knowledge in practical ways."
+            ],
+            [
+                'role' => 'user',
+                'content' => $prompt
+            ]
+        ];
+
+        try {
+            $requirementsContent = $this->aiService->chat($messages, [
+                'temperature' => 0.7,
+                'max_tokens' => 2000,
+            ], 'project_generation');
+
+            // Parse the requirements
+            $requirements = $this->parseProjectRequirements($requirementsContent);
+
+            // Update the outline with requirements
+            $outline->update([
+                'project_requirements' => $requirements
+            ]);
+
+            return $requirements;
+
+        } catch (\Exception $e) {
+            Log::error('Project requirements generation failed', [
+                'outline_id' => $outline->id,
+                'error' => $e->getMessage()
+            ]);
+            throw new \Exception("Project requirements generation failed: " . $e->getMessage());
+        }
+    }
+
+    protected function buildProjectRequirementsPrompt(CourseOutline $outline): string
+    {
+        $outline->load(['module.course', 'module']);
+        $module = $outline->module;
+        $course = $outline->module->course ?? null;
+
+        return "
+        Create project requirements for the following topic:
+
+        COURSE CONTEXT:
+        - Course: " . ($course->title ?? 'General Course') . "
+        - Subject: " . ($course->subject ?? 'General') . "
+        - Level: " . ($course->level ?? 'Beginner') . "
+
+        MODULE CONTEXT:
+        - Module: {$module->title}
+        - Module Description: " . ($module->description ?? 'No description') . "
+
+        TOPIC DETAILS:
+        - Topic: {$outline->title}
+        - Topic Description: " . ($outline->description ?? 'No description') . "
+        - Key Concepts: " . $this->formatArrayForPrompt($outline->key_concepts ?? []) . "
+        - Learning Objectives: " . $this->formatArrayForPrompt($outline->learning_objectives ?? []) . "
+        - Estimated Duration: " . ($outline->estimated_duration_minutes ?? 60) . " minutes
+
+        Please create a set of clear, actionable project requirements that:
+        1. Allow students to demonstrate understanding of the key concepts
+        2. Are appropriate for the course level: " . ($course->level ?? 'Beginner') . "
+        3. Can be completed within the estimated duration
+        4. Include clear deliverables
+        5. Provide opportunities for creativity and application
+        6. Include clear success criteria
+
+        Return the requirements as a numbered list.
+        ";
+    }
+
+    protected function parseProjectRequirements(string $content): array
+    {
+        // Split by lines and filter out empty ones
+        $lines = array_filter(explode("\n", $content), function($line) {
+            return trim($line) !== '';
+        });
+
+        $requirements = [];
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            // Check if line starts with a number or bullet point
+            if (preg_match('/^(\d+[\.\)]|\*|\-)\s+(.+)$/', $line, $matches)) {
+                $requirements[] = trim($matches[2]);
+            } elseif (!empty($line) && !preg_match('/^(Requirements|Project|Deliverables):/i', $line)) {
+                // Add non-empty lines that aren't headers
+                $requirements[] = $line;
+            }
+        }
+
+        // If no requirements found, create some defaults
+        if (empty($requirements)) {
+            $requirements = [
+                "Apply the key concepts learned in this topic",
+                "Create a practical example or implementation",
+                "Document your approach and reasoning",
+                "Submit your work for review"
+            ];
+        }
+
+        return array_values(array_unique($requirements));
+    }
+
+    public function generateCapstoneProject(Course $course, CourseOutline $topic = null): array
+    {
+        try {
+            Log::info('Generating capstone project', [
+                'course_id' => $course->id,
+                'course_title' => $course->title,
+                'topic_id' => $topic?->id
+            ]);
+
+            $prompt = $this->buildCapstonePrompt($course, $topic);
+
+            $messages = [
+                [
+                    'role' => 'system',
+                    'content' => "You are an expert educational project designer. Create a comprehensive capstone project that tests students' mastery of the entire course."
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $prompt
+                ]
+            ];
+
+            $response = $this->aiService->chat($messages, [
+                'temperature' => 0.7,
+                'max_tokens' => 2000,
+            ], 'capstone_generation');
+
+            // Clean and parse response
+            $cleanedContent = $this->cleanJsonResponse($response);
+            $projectData = json_decode($cleanedContent, true);
+
+            // If JSON parsing fails, use fallback
+            if (json_last_error() !== JSON_ERROR_NONE || empty($projectData)) {
+                Log::warning('AI returned invalid JSON for capstone, using fallback', [
+                    'json_error' => json_last_error_msg(),
+                    'course_id' => $course->id
+                ]);
+
+                $projectData = $this->createFallbackCapstone($course);
+            }
+
+            // Create or update capstone project in database
+            $capstoneProject = CapstoneProject::updateOrCreate(
+                ['course_id' => $course->id],
+                [
+                    'title' => $projectData['title'] ?? 'Capstone Project: ' . $course->title,
+                    'description' => $projectData['description'] ?? 'Final project to demonstrate course mastery',
+                    'requirements' => $projectData['requirements'] ?? $this->defaultRequirements($course),
+                    'evaluation_criteria' => $projectData['evaluation_criteria'] ?? $this->defaultEvaluationCriteria(),
+                    'due_date' => $course->target_completion_date ?? now()->addWeeks(2),
+                    'status' => 'assigned',
+                    'ai_model_used' => $this->aiService->getProviderCode(),
+                ]
+            );
+
+            Log::info('Capstone project generated successfully', [
+                'course_id' => $course->id,
+                'capstone_id' => $capstoneProject->id,
+                'title' => $capstoneProject->title
+            ]);
+
+            return [
+                'capstone_project' => $capstoneProject,
+                'project_data' => $projectData,
+                'success' => true
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Capstone project generation failed', [
+                'course_id' => $course->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            throw new \Exception("Capstone project generation failed: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Build prompt for capstone project generation
+     */
+    private function buildCapstonePrompt(Course $course, ?CourseOutline $topic = null): string
+    {
+        $courseInfo = [
+            'Title' => $course->title,
+            'Subject' => $course->subject,
+            'Level' => $course->level,
+            'Description' => $course->description,
+            'Learning Objectives' => is_array($course->learning_objectives)
+                ? implode(', ', $course->learning_objectives)
+                : $course->learning_objectives,
+        ];
+
+        if ($topic) {
+            $courseInfo['Topic'] = $topic->title;
+            $courseInfo['Topic Description'] = $topic->description;
+            $courseInfo['Topic Concepts'] = is_array($topic->key_concepts)
+                ? implode(', ', $topic->key_concepts)
+                : '';
+        }
+
+        $prompt = "Create a capstone project for the following course:\n\n";
+
+        foreach ($courseInfo as $key => $value) {
+            if (!empty($value)) {
+                $prompt .= "{$key}: {$value}\n";
+            }
+        }
+
+        $prompt .= "\nReturn ONLY valid JSON in this format:\n";
+        $prompt .= '{
+            "title": "Project Title",
+            "description": "Brief project description (2-3 sentences)",
+            "requirements": ["Requirement 1", "Requirement 2", "Requirement 3"],
+            "evaluation_criteria": [
+                {"criteria": "Criteria 1", "weight": 0.3},
+                {"criteria": "Criteria 2", "weight": 0.3},
+                {"criteria": "Criteria 3", "weight": 0.2},
+                {"criteria": "Criteria 4", "weight": 0.2}
+            ]
+        }';
+
+        $prompt .= "\n\nRequirements: 3-5 clear, measurable requirements.";
+        $prompt .= "\nEvaluation Criteria: 4 criteria that total 1.0 weight.";
+        $prompt .= "\nMake it challenging but achievable for the course level.";
+
+        return $prompt;
+    }
+
+    /**
+     * Create fallback capstone project if AI fails
+     */
+    private function createFallbackCapstone(Course $course): array
+    {
+        return [
+            'title' => 'Capstone Project: ' . $course->title,
+            'description' => 'Demonstrate your mastery of ' . $course->subject . ' by completing this comprehensive final project.',
+            'requirements' => [
+                'Apply all key concepts learned throughout the course',
+                'Create a practical solution or analysis',
+                'Document your process and methodology',
+                'Present your findings effectively',
+            ],
+            'evaluation_criteria' => [
+                ['criteria' => 'Concept Application', 'weight' => 0.3],
+                ['criteria' => 'Technical Accuracy', 'weight' => 0.3],
+                ['criteria' => 'Completeness', 'weight' => 0.2],
+                ['criteria' => 'Presentation Quality', 'weight' => 0.2],
+            ]
+        ];
+    }
+
+    /**
+     * Default requirements for capstone project
+     */
+    private function defaultRequirements(Course $course): array
+    {
+        return [
+            'Demonstrate understanding of course concepts',
+            'Apply knowledge to a real-world problem',
+            'Create comprehensive documentation',
+            'Include testing and validation',
+            'Present findings in a clear format',
+        ];
+    }
+
+    /**
+     * Default evaluation criteria
+     */
+    private function defaultEvaluationCriteria(): array
+    {
+        return [
+            ['criteria' => 'Concept Understanding', 'weight' => 0.3],
+            ['criteria' => 'Practical Application', 'weight' => 0.3],
+            ['criteria' => 'Completeness', 'weight' => 0.2],
+            ['criteria' => 'Documentation & Presentation', 'weight' => 0.2],
+        ];
     }
 }

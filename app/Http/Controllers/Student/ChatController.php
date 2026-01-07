@@ -27,7 +27,7 @@ class ChatController extends Controller
         $student = auth()->user();
 
         // FIXED: Get courses first to ensure we only show chats for courses the student owns
-        $courses = $student->courses()
+        $courses = $student->enrolledCourses()
             ->where('status', 'active')
             ->get(['courses.id', 'courses.title']);
 
@@ -75,7 +75,7 @@ class ChatController extends Controller
         if ($courseId) {
             try {
                 // FIXED: Ensure the course belongs to the student
-                $course = $student->courses()
+                $course = $student->enrolledCourses()
                     ->where('courses.id', $courseId)
                     ->where('status', 'active')
                     ->firstOrFail();
@@ -127,7 +127,7 @@ class ChatController extends Controller
         }
 
         // FIXED: Get only student's courses
-        $courses = $student->courses()
+        $courses = $student->enrolledCourses()
             ->where('status', 'active')
             ->get(['courses.id', 'courses.title']);
 
@@ -153,7 +153,7 @@ class ChatController extends Controller
         try {
             // FIXED: Verify course access if course_id is provided
             if ($request->course_id) {
-                $course = $student->courses()
+                $course = $student->enrolledCourses()
                     ->where('courses.id', $request->course_id)
                     ->where('status', 'active')
                     ->firstOrFail();
@@ -635,8 +635,12 @@ class ChatController extends Controller
         try {
             // Verify course access
             $course = Course::where('id', $course->id)
-                ->where('student_profile_id', $student->studentProfile->id)
                 ->firstOrFail();
+
+            $enrollment = $student->courseEnrollments()
+            ->where('course_id', $course->id)
+            ->where('status', '!=', 'dropped')
+            ->first();
 
             // Get or create active session
             $session = $this->chatService->getOrCreateSession(

@@ -8,64 +8,82 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough; // Add this import
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use App\Services\CourseCodeService;
+use App\Services\ProgressTrackingService;
+use Carbon\Carbon;
 
 class Course extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'student_profile_id',
+        'code',
         'exam_board_id',
         'title',
+        'slug',
+        'thumbnail_url',
         'subject',
         'description',
+        'syllabus',
         'level',
+        'tags',
         'status',
         'start_date',
         'target_completion_date',
-        'actual_completion_date',
         'estimated_duration_hours',
-        'actual_duration_hours',
-        'progress_percentage',
         'learning_objectives',
         'prerequisites',
         'ai_model_used',
         'generation_parameters',
-        'created_by', // 'admin' or 'student'
+        'created_by',
+        'created_by_user_id',
         'is_public',
+        'visibility',
         'enrollment_limit',
         'current_enrollment',
-        'visibility',
-        'slug',
+        'price',
+        'is_paid',
         'is_shared',
         'shared_by',
-        'created_by_user_id',
-
+        'needs_content_generation',
+        'content_generated_at',
+        'content_generation_status',
+        'content_generation_summary',
+        'content_generation_job_id',
+        'content_generation_started_at',
+        'content_generation_retry_count',
+        'quiz_generated_at',
+        'quiz_generation_status',
+        'quiz_generation_summary',
+        'quiz_generation_job_id',
+        'quiz_generation_started_at',
+        'quiz_generation_retry_count',
+        'est_completion_time',
     ];
 
     protected $casts = [
-        'start_date' => 'date',
-        'target_completion_date' => 'date',
-        'actual_completion_date' => 'date',
+        'start_date' => 'datetime',
+        'target_completion_date' => 'datetime',
         'progress_percentage' => 'decimal:2',
         'learning_objectives' => 'array',
         'prerequisites' => 'array',
         'generation_parameters' => 'array',
+        'tags' => 'array',
         'is_public' => 'boolean',
+        'is_paid' => 'boolean',
         'enrollment_limit' => 'integer',
         'current_enrollment' => 'integer',
-        'visibility' => 'string', // 'public', 'private', 'unlisted'
+        'price' => 'decimal:2',
+        'visibility' => 'string',
+        'needs_content_generation' => 'boolean',
+    'content_generated_at' => 'datetime',
+    'quiz_generated_at' => 'datetime',
+    'content_generation_started_at' => 'datetime',
+    'quiz_generation_started_at' => 'datetime',
+    'content_generation_summary' => 'array',
+    'quiz_generation_summary' => 'array',
     ];
-
-
-
-    public function scopeWithProgress($query)
-    {
-        return $query->withCount(['modules', 'modules as completed_modules_count' => function ($q) {
-            $q->where('is_completed', true);
-        }]);
-    }
 
     // Relationships
     public function modules(): HasMany
@@ -78,177 +96,16 @@ class Course extends Model
         return $this->hasManyThrough(
             CourseOutline::class,
             Module::class,
-            'course_id', // Foreign key on modules table
-            'module_id', // Foreign key on course_outlines table
-            'id', // Local key on courses table
-            'id' // Local key on modules table
+            'course_id',
+            'module_id',
+            'id',
+            'id'
         );
-    }
-
-    public function studentProfile(): BelongsTo
-    {
-        return $this->belongsTo(StudentProfile::class);
     }
 
     public function examBoard(): BelongsTo
     {
         return $this->belongsTo(ExamBoard::class);
-    }
-
-    // Remove these outdated relationships
-    public function outlines()
-    {
-        return $this->modules()->orderBy('order');
-     }
-
-    public function capstoneProject(): HasOne
-    {
-        return $this->hasOne(CapstoneProject::class);
-    }
-
-    public function chatSessions(): HasMany
-    {
-        return $this->hasMany(ChatSession::class);
-    }
-
-    public function progressTracking(): HasMany
-    {
-        return $this->hasMany(ProgressTracking::class);
-    }
-
-    // Remove these commented out methods
-    // public function modules()
-    // public function topics()
-
-    public function quizzes(): HasManyThrough
-    {
-        return $this->hasManyThrough(
-            Quiz::class,
-            CourseOutline::class,
-            'module_id', // Foreign key on course_outlines table
-            'course_outline_id', // Foreign key on quizzes table
-            'id', // Local key on courses table
-            'id' // Local key on course_outlines table
-        )->whereHas('courseOutline', function ($query) {
-            $query->where('has_quiz', true);
-        });
-    }
-
-    // Scopes
-    public function scopeActive($query)
-    {
-        return $query->where('status', 'active');
-    }
-
-    public function scopeCompleted($query)
-    {
-        return $query->where('status', 'completed');
-    }
-
-    public function scopeBySubject($query, $subject)
-    {
-        return $query->where('subject', $subject);
-    }
-
-    public function scopeByLevel($query, $level)
-    {
-        return $query->where('level', $level);
-    }
-
-    public function scopeDueSoon($query)
-    {
-        return $query->where('target_completion_date', '<=', now()->addDays(7))
-                    ->where('status', 'active');
-    }
-
-    // Methods
-    public function updateProgress()
-    {
-        $totalModules = $this->modules()->count();
-        $completedModules = $this->modules()->where('is_completed', true)->count();
-
-        $this->progress_percentage = $totalModules > 0 ? ($completedModules / $totalModules) * 100 : 0;
-
-        if ($this->progress_percentage >= 100) {
-            $this->status = 'completed';
-            $this->actual_completion_date = now();
-        }
-
-        $this->save();
-    }
-
-    public function getNextTopic()
-    {
-        // Get all modules with their pending topics
-        $modules = $this->modules()
-            ->with(['topics' => function ($query) {
-                $query->where('is_completed', false)
-                      ->orderBy('order');
-            }])
-            ->orderBy('order')
-            ->get();
-
-        foreach ($modules as $module) {
-            if ($module->topics->count() > 0) {
-                return $module->topics->first();
-            }
-        }
-
-        return null;
-    }
-
-    public function getDurationStats()
-    {
-        $estimatedHours = $this->estimated_duration_hours;
-        $actualHours = $this->actual_duration_hours;
-        $completionRate = $estimatedHours > 0 ? ($actualHours / $estimatedHours) * 100 : 0;
-
-        return [
-            'estimated_hours' => $estimatedHours,
-            'actual_hours' => $actualHours,
-            'completion_rate' => $completionRate,
-            'is_behind_schedule' => $completionRate > 100,
-        ];
-    }
-
-    public function getLearningObjectivesArray()
-    {
-        return $this->learning_objectives ?? [];
-    }
-
-    public function sendDueNotification(): void
-    {
-        if ($this->status !== 'active') {
-            return;
-        }
-
-        $notificationService = app(\App\Services\CourseNotificationService::class);
-
-        if ($this->target_completion_date->isFuture()) {
-            $daysRemaining = now()->diffInDays($this->target_completion_date);
-            if ($daysRemaining <= 7) {
-                $notificationService->sendDueSoonNotification($this, $daysRemaining);
-            }
-        } else {
-            $notificationService->sendImmediateOverdueNotification($this);
-        }
-    }
-
-    public function getAllTopicsAttribute()
-    {
-        return $this->modules->flatMap(function($module) {
-            return $module->topics;
-        });
-    }
-
-    public function flashcards()
-    {
-        return $this->hasMany(Flashcard::class);
-    }
-
-    public function flashcardSets()
-    {
-        return $this->hasMany(FlashcardSet::class);
     }
 
     public function creator(): BelongsTo
@@ -264,11 +121,31 @@ class Course extends Model
     public function enrolledStudents()
     {
         return $this->belongsToMany(User::class, 'course_enrollments')
-            ->withPivot(['enrolled_at', 'progress_percentage', 'status'])
+            ->withPivot(['status', 'progress_percentage', 'enrolled_at', 'completed_at'])
             ->withTimestamps();
     }
 
-    // New scopes
+    public function enrolled()
+    {
+        return $this->enrollments()->whereIn('status', ['enrolled']);
+    }
+
+    public function activeEnrollments()
+    {
+        return $this->enrollments()->whereIn('status', [ 'active']);
+    }
+
+    public function completedEnrollments()
+    {
+        return $this->enrollments()->where('status', 'completed');
+    }
+
+    public function capstoneProject(): HasOne
+    {
+        return $this->hasOne(CapstoneProject::class);
+    }
+
+    // Scopes
     public function scopePublic($query)
     {
         return $query->where('is_public', true)
@@ -278,23 +155,24 @@ class Course extends Model
     public function scopeAvailableForEnrollment($query)
     {
         return $query->public()
+                    ->where('status', 'active')
                     ->where(function($q) {
                         $q->whereNull('enrollment_limit')
-                        ->orWhereColumn('current_enrollment', '<', 'enrollment_limit');
+                          ->orWhereColumn('current_enrollment', '<', 'enrollment_limit');
                     });
     }
 
-    public function scopeCreatedByAdmin($query)
+    public function scopeFree($query)
     {
-        return $query->where('created_by', 'admin');
+        return $query->where('is_paid', false)->orWhere('price', 0);
     }
 
-    public function scopeCreatedByStudent($query)
+    public function scopePaid($query)
     {
-        return $query->where('created_by', 'student');
+        return $query->where('is_paid', true)->where('price', '>', 0);
     }
 
-    // New methods
+    // Methods
     public function isPublic(): bool
     {
         return $this->is_public && $this->visibility === 'public';
@@ -306,151 +184,186 @@ class Course extends Model
         return $this->current_enrollment >= $this->enrollment_limit;
     }
 
-
-
-    public function enrollStudent(User $user): bool
+    public function canEnroll(User $user): bool
     {
-        if (!$this->canEnroll($user)) {
+        // Check if course is available
+        if (!$this->isPublic() || $this->status !== 'active') {
             return false;
         }
+
+        // Check if course is full
+        if ($this->isFull()) {
+            return false;
+        }
+
+        // Check if user is already enrolled
+        if ($this->enrollments()->where('user_id', $user->id)->exists()) {
+            return false;
+        }
+
+        // Check payment requirements
+        if ($this->is_paid && $this->price > 0) {
+            // Add payment check logic here
+            // For now, just return false
+            return false;
+        }
+
+        return true;
+    }
+
+    public function enrollStudent(User $user): ?CourseEnrollment
+    {
+        if (!$this->canEnroll($user)) {
+            return null;
+        }
+        $numberOfWeeks = $this->estimated_duration_hours / 6;
+        $expectedCompletionDate = Carbon::now()->addWeeks(ceil($numberOfWeeks));
 
         try {
             \DB::beginTransaction();
 
             // Create enrollment record
-            CourseEnrollment::create([
+            $enrollment = CourseEnrollment::create([
                 'course_id' => $this->id,
                 'user_id' => $user->id,
+                'student_profile_id' => $user->studentProfile->id,
+                'status' => 'enrolled',
                 'enrolled_at' => now(),
-                'status' => 'active',
+                'total_modules' => $this->modules()->count(),
+                'est_completion_time' => $expectedCompletionDate,
             ]);
-
-            // Clone the course for the student
-            $this->cloneForStudent($user);
 
             // Increment enrollment count
             $this->increment('current_enrollment');
 
             \DB::commit();
-            return true;
+            return $enrollment;
         } catch (\Exception $e) {
             \DB::rollBack();
             \Log::error("Failed to enroll student: " . $e->getMessage());
-            return false;
+            return null;
         }
     }
 
-    private function cloneForStudent(User $user)
+    /**
+     * Optional: Clone course content for student personalization
+     */
+
+
+    // Progress tracking methods for the course as a whole
+    public function getAverageProgress()
     {
-        // Clone the course and all its content for the student
-        $newCourse = $this->replicate();
-        $newCourse->student_profile_id = $user->studentProfile->id;
-        $newCourse->created_by = 'student';
-        $newCourse->is_public = false;
-        $newCourse->original_course_id = $this->id; // Track original public course
-        $newCourse->save();
+        return $this->enrollments()->avg('progress_percentage') ?? 0;
+    }
 
-        // Clone modules
-        foreach ($this->modules as $module) {
-            $newModule = $module->replicate();
-            $newModule->course_id = $newCourse->id;
-            $newModule->save();
+    public function getCompletionRate()
+    {
+        $total = $this->enrollments()->count();
+        $completed = $this->completedEnrollments()->count();
 
-            // Clone topics
-            foreach ($module->topics as $topic) {
-                $newTopic = $topic->replicate();
-                $newTopic->module_id = $newModule->id;
-                $newTopic->save();
+        return $total > 0 ? ($completed / $total) * 100 : 0;
+    }
 
-                // Clone contents
-                foreach ($topic->contents as $content) {
-                    $newContent = $content->replicate();
-                    $newContent->course_outline_id = $newTopic->id;
-                    $newContent->save();
-                }
+    // Course management methods
+    public function publish()
+    {
+        $this->update([
+            'status' => 'active',
+            'is_public' => true,
+            'visibility' => 'public',
+            'start_date' => now(),
+        ]);
+    }
 
-                // Clone quiz if exists
-                if ($topic->quiz) {
-                    $newQuiz = $topic->quiz->replicate();
-                    $newQuiz->course_outline_id = $newTopic->id;
-                    $newQuiz->save();
+    public function unpublish()
+    {
+        $this->update([
+            'status' => 'draft',
+            'is_public' => false,
+        ]);
+    }
 
-                    // Clone quiz questions
-                    foreach ($topic->quiz->questions as $question) {
-                        $newQuestion = $question->replicate();
-                        $newQuestion->quiz_id = $newQuiz->id;
-                        $newQuestion->save();
-                    }
-                }
+    // Certificate methods
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
+    public function generateCertificateForUser(User $user): ?Certificate
+    {
+        $enrollment = $this->enrollments()
+            ->where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->first();
+
+        if (!$enrollment) {
+            return null;
+        }
+
+        return Certificate::create([
+            'course_id' => $this->id,
+            'user_id' => $user->id,
+            'course_enrollment_id' => $enrollment->id,
+            'completion_date' => $enrollment->completed_at,
+            'grade' => $this->calculateGrade($enrollment),
+            'certificate_number' => $this->generateCertificateNumber(),
+            'status' => 'active',
+        ]);
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($course) {
+            if (empty($course->code)) {
+                $codeService = app(CourseCodeService::class);
+                $course->code = $codeService->generate($course, 'standard');
             }
-        }
-    }
-    public function canEnroll(User $user): bool
-    {
-        if (!$this->isPublic()) return false;
-        if ($this->isFull()) return false;
-        if ($this->enrolledStudents()->where('user_id', $user->id)->exists()) return false;
+        });
 
-        return true;
-    }
-
-    public function shares()
-    {
-        return $this->hasMany(CourseShare::class);
-    }
-
-    public function sharedWithMe()
-    {
-        return $this->hasMany(CourseShare::class, 'recipient_id', 'created_by');
-    }
-
-    // Add a method to clone course for sharing
-    public function cloneForUser(User $user, int $sharerId = null): Course
-    {
-        $clonedCourse = $this->replicate();
-        $clonedCourse->created_by = $user->id;
-        $clonedCourse->student_profile_id = $user->studentProfile->id;
-        $clonedCourse->original_course_id = $this->id;
-        $clonedCourse->is_shared = true;
-        $clonedCourse->shared_by = $sharerId;
-        $clonedCourse->status = 'draft';
-        $clonedCourse->save();
-
-        // Clone modules
-        foreach ($this->modules as $module) {
-            $clonedModule = $module->replicate();
-            $clonedModule->course_id = $clonedCourse->id;
-            $clonedModule->save();
-
-            // Clone topics
-            foreach ($module->topics as $topic) {
-                $clonedTopic = $topic->replicate();
-                $clonedTopic->module_id = $clonedModule->id;
-                $clonedTopic->save();
+        static::updating(function ($course) {
+            if ($course->isDirty(['subject', 'exam_board_id', 'level'])) {
+                $codeService = app(CourseCodeService::class);
+                $course->code = $codeService->generate($course, 'standard');
             }
-        }
-
-        return $clonedCourse;
-    }
-
-    public function scopeSharedWith($query, User $user)
-    {
-        return $query->where(function($q) use ($user) {
-            $q->whereHas('shares', function($query) use ($user) {
-                $query->where('recipient_email', $user->email)
-                    ->orWhere('recipient_id', $user->id);
-            });
         });
     }
 
-    public function scopeAcceptedShares($query, User $user)
+    public function updateProgress()
     {
-        return $query->whereHas('shares', function($query) use ($user) {
-            $query->where(function($q) use ($user) {
-                $q->where('recipient_email', $user->email)
-                    ->orWhere('recipient_id', $user->id);
-            })
-            ->where('status', 'accepted');
-        });
+        // This method can update course-level progress statistics if needed
+        // For example, you might want to update enrollment progress percentages
+
+        $enrollments = $this->enrollments()->whereIn('status', ['active', 'started'])->get();
+
+        foreach ($enrollments as $enrollment) {
+            // Calculate progress for this enrollment
+            $progress = app(ProgressTrackingService::class)->calculateCourseProgress($this, $enrollment->user_id);
+
+            // Update enrollment progress percentage
+            $enrollment->update([
+                'progress_percentage' => $progress['overall_completion_percentage']
+            ]);
+
+            // Check if course is completed
+            if ($progress['overall_completion_percentage'] >= 100 && !$enrollment->completed_at) {
+                $enrollment->complete();
+            }
+        }
+
+        return $this;
     }
+
+    public function chatSessions(): HasMany
+    {
+        return $this->hasMany(ChatSession::class);
+    }
+
+    public function progressTracking(): HasMany
+    {
+        return $this->hasMany(ProgressTracking::class);
+    }
+
+
 }

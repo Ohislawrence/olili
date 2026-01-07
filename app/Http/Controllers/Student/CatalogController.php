@@ -208,7 +208,7 @@ class CatalogController extends Controller
         try {
             if ($course->enrollStudent($student)) {
                 // Get the cloned course
-                $clonedCourse = $student->courses()
+                $clonedCourse = $student->enrolledCourses()
                     ->where('original_course_id', $course->id)
                     ->first();
 

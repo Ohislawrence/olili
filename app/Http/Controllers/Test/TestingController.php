@@ -17,11 +17,9 @@ use App\Models\Course;
 class TestingController extends Controller
 {
     public function test(){
-        $user = User::find(4);
-        $course = Course::find(35);
+        $adminID = auth()->user();
+        $stuID = $adminID->studentProfile->id;
 
-        $details = CertificateHelper::getEligibilityDetails($user, $course);
-
-        dd($details);
+        dd($stuID);
     }
 }

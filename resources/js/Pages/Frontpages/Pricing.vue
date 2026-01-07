@@ -1,58 +1,82 @@
 <template>
     <AppLayout>
-        <Head title="Subscription Plans" />
+        <Head title="Pricing Plans - Olilearn" />
+        <MetaTags
+            title="Olilearn Pricing - Choose Your Perfect Learning Plan"
+            description="Affordable pricing plans for our expert-curated courses and AI tutoring platform. Start with a free plan or upgrade for unlimited access and advanced features."
+            image="/images/olingolearn.png"
+        />
 
         <!-- Hero Section -->
-        <section class="relative py-20 bg-gradient-to-br from-emerald-600 to-teal-600 text-white overflow-hidden">
-            <!-- Animated background elements -->
-            <div class="absolute inset-0">
-                <div class="absolute top-20 left-10 w-24 h-24 bg-white/10 rounded-full animate-pulse-slow"></div>
-                <div class="absolute top-1/3 right-20 w-32 h-32 bg-white/5 rounded-full animate-float"></div>
-                <div class="absolute bottom-20 left-1/4 w-28 h-28 bg-white/10 rounded-full animate-bounce-slow"></div>
-                <div class="absolute top-1/2 right-1/3 w-20 h-20 bg-emerald-400/20 rounded-full animate-ping-slow"></div>
+        <section class="relative py-16 bg-gradient-to-br from-emerald-50 via-teal-50 to-white">
+            <!-- Decorative elements -->
+            <div class="absolute inset-0 overflow-hidden">
+                <div class="absolute -top-40 -right-40 w-80 h-80 bg-emerald-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+                <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-teal-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
             </div>
 
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-                <div class="inline-flex items-center px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white text-sm font-medium mb-8 animate-fade-in">
-                    <span class="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
-                    Flexible Pricing Options
-                </div>
-                <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight animate-fade-in-up">
-                    Choose Your
-                    <span class="block bg-gradient-to-r from-white to-emerald-200 bg-clip-text text-transparent">
-                        Perfect Plan
-                    </span>
-                </h1>
-                <p class="text-xl md:text-2xl mb-12 text-emerald-100 max-w-3xl mx-auto animate-fade-in-up" style="animation-delay: 0.3s;">
-                    Select the ideal plan for your learning journey. All plans include our core AI features and personalized learning tools.
-                </p>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <!-- Breadcrumb -->
+                <nav class="mb-8">
+                    <ol class="flex items-center space-x-2 text-sm">
+                        <li>
+                            <Link :href="route('welcome')" class="text-emerald-600 hover:text-emerald-700 transition-colors">
+                                Home
+                            </Link>
+                        </li>
+                        <li class="text-gray-400">/</li>
+                        <li class="font-medium text-gray-700">Pricing</li>
+                    </ol>
+                </nav>
 
-                <!-- Key Benefits -->
-                <div class="flex flex-wrap justify-center gap-6 animate-fade-in-up" style="animation-delay: 0.6s;">
-                    <div class="flex items-center text-emerald-100">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                <div class="text-center max-w-3xl mx-auto">
+                    <!-- Badge -->
+                    <div class="inline-flex items-center px-4 py-2 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-700 text-sm font-medium mb-6">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        No hidden fees
+                        Simple, Transparent Pricing
                     </div>
-                    <div class="flex items-center text-emerald-100">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                        </svg>
-                        Cancel anytime
-                    </div>
-                    <div class="flex items-center text-emerald-100">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                        </svg>
-                        14-day free trial
+
+                    <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+                        Choose Your
+                        <span class="block text-emerald-700 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                            Learning Plan
+                        </span>
+                    </h1>
+
+                    <p class="text-lg text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+                        Start with free courses and upgrade for unlimited access to expert-curated content
+                        and premium AI tutor features.
+                    </p>
+
+                    <!-- Key Benefits -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                        <div class="flex items-center justify-center text-gray-600 p-3 bg-white rounded-xl border border-gray-200 shadow-sm">
+                            <svg class="w-4 h-4 text-emerald-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            Free Starter Plan
+                        </div>
+                        <div class="flex items-center justify-center text-gray-600 p-3 bg-white rounded-xl border border-gray-200 shadow-sm">
+                            <svg class="w-4 h-4 text-emerald-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            Cancel Anytime
+                        </div>
+                        <div class="flex items-center justify-center text-gray-600 p-3 bg-white rounded-xl border border-gray-200 shadow-sm">
+                            <svg class="w-4 h-4 text-emerald-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            14-Day Free Trial
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Pricing Plans Section -->
-        <section class="py-24 bg-gradient-to-b from-slate-50 to-emerald-50">
+        <!-- Pricing Plans Component -->
+        <section class="py-16 bg-gradient-to-b from-slate-50 to-emerald-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <PricingPlans
                     :plans="subscriptionPlans"
@@ -60,91 +84,166 @@
                     :show-enterprise="true"
                     section-id="pricing-plans"
                     header-badge="Simple Pricing"
-                    header-title="AFFORDABLE"
-                    header-subtitle="PLANS FOR EVERYONE"
-                    header-description="Choose the perfect plan for your learning needs. All plans include our core AI features."
+                    header-title="CHOOSE YOUR PLAN"
+                    header-subtitle="FOR SUCCESS"
+                    header-description="Select the perfect plan for your learning journey. All plans include access to our expert-curated courses and AI tutoring features."
                 />
             </div>
         </section>
 
-        <!-- FAQ Section -->
-        <section class="py-20 bg-white">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16">
-                    <div class="inline-flex items-center px-4 py-2 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-700 text-sm font-medium mb-4">
-                        <span class="w-2 h-2 bg-emerald-500 rounded-full mr-2"></span>
-                        Frequently Asked Questions
-                    </div>
-                    <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                        HAVE QUESTIONS?
-                        <span class="block text-emerald-700 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">WE'VE GOT ANSWERS</span>
-                    </h2>
-                    <p class="text-xl text-gray-700 max-w-2xl mx-auto">
-                        Everything you need to know about our pricing and plans.
-                    </p>
-                </div>
+        <!-- Feature Comparison -->
+        <section class="py-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-8 text-center">
+                        Plan Comparison
+                    </h3>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div
-                        v-for="(faq, index) in faqs"
-                        :key="index"
-                        class="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group"
-                        :style="{ 'animation-delay': index * 0.1 + 's' }"
-                    >
-                        <h3 class="text-lg font-bold text-gray-900 mb-3 group-hover:text-emerald-700 transition-colors">
-                            {{ faq.question }}
-                        </h3>
-                        <p class="text-gray-700 leading-relaxed">
-                            {{ faq.answer }}
-                        </p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th class="text-left py-4 text-sm font-medium text-gray-700">Features</th>
+                                    <th class="text-center py-4 text-sm font-medium text-gray-700">Free</th>
+                                    <th class="text-center py-4 text-sm font-medium text-gray-700">Pro</th>
+                                    <th class="text-center py-4 text-sm font-medium text-gray-700">Team</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr v-for="feature in features" :key="feature.name">
+                                    <td class="py-4 text-sm text-gray-700">{{ feature.name }}</td>
+                                    <td class="text-center py-4">
+                                        <span v-if="feature.free === true" class="text-emerald-500">✓</span>
+                                        <span v-else-if="typeof feature.free === 'string'" class="text-xs text-gray-600">{{ feature.free }}</span>
+                                        <span v-else class="text-gray-300">✗</span>
+                                    </td>
+                                    <td class="text-center py-4">
+                                        <span v-if="feature.pro === true" class="text-emerald-500">✓</span>
+                                        <span v-else-if="typeof feature.pro === 'string'" class="text-xs text-gray-600">{{ feature.pro }}</span>
+                                        <span v-else class="text-gray-300">✗</span>
+                                    </td>
+                                    <td class="text-center py-4">
+                                        <span v-if="feature.team === true" class="text-emerald-500">✓</span>
+                                        <span v-else-if="typeof feature.team === 'string'" class="text-xs text-gray-600">{{ feature.team }}</span>
+                                        <span v-else class="text-gray-300">✗</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Final CTA Section -->
-        <section class="py-24 bg-gradient-to-br from-emerald-600 to-teal-600 text-white">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <h2 class="text-4xl font-bold mb-6 animate-fade-in-up">
-                    Ready to Start Your
-                    <span class="block bg-gradient-to-r from-white to-emerald-200 bg-clip-text text-transparent">
-                        Learning Journey?
-                    </span>
-                </h2>
-                <p class="text-xl mb-12 text-emerald-100 max-w-2xl mx-auto animate-fade-in-up" style="animation-delay: 0.3s;">
-                    Join thousands of learners who are already transforming their education with AI.
-                </p>
-
-                <div class="flex flex-col sm:flex-row gap-6 justify-center animate-fade-in-up" style="animation-delay: 0.6s;">
-                    <Link
-                        :href="route('register')"
-                        class="group relative inline-flex items-center justify-center px-8 py-4 bg-white text-emerald-700 font-bold rounded-xl hover:bg-emerald-50 transform transition-all duration-300 hover:scale-105 hover:shadow-xl shadow-lg hover:shadow-emerald-500/25"
-                    >
-                        <span class="relative z-10 flex items-center">
-                            <AcademicCapIcon class="h-5 w-5 mr-3" />
-                            Start Learning Free
-                        </span>
-                        <span class="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                        <span class="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:rotate-1"></span>
-                    </Link>
-
-                    <Link
-                        :href="route('contact')"
-                        class="relative inline-flex items-center justify-center px-8 py-4 border-2 border-white text-white font-bold rounded-xl hover:bg-white hover:text-emerald-700 transform transition-all duration-300 hover:scale-105 hover:shadow-xl shadow-lg group"
-                    >
-                        <span class="relative z-10 flex items-center">
-                            <ChatBubbleLeftRightIcon class="h-5 w-5 mr-3" />
-                            Contact Sales
-                        </span>
-                        <span class="absolute inset-0 bg-gradient-to-r from-white/10 to-emerald-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                    </Link>
+        <!-- FAQ Section -->
+        <section class="py-16 bg-gradient-to-b from-white to-gray-50">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <div class="inline-flex items-center px-4 py-2 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-700 text-sm font-medium mb-6">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Frequently Asked Questions
+                    </div>
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+                        Common Questions About Our Plans
+                    </h2>
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                        Find answers to the most frequently asked questions about our pricing and plans.
+                    </p>
                 </div>
 
-                <div class="mt-12 flex items-center justify-center text-sm text-emerald-200 animate-fade-in-up" style="animation-delay: 0.9s;">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    Free 14-day trial • No credit card required • Cancel anytime
+                <div class="space-y-4">
+                    <div
+                        v-for="faq in faqs"
+                        :key="faq.question"
+                        class="bg-white rounded-xl p-6 border border-gray-200 hover:border-emerald-300 transition-colors cursor-pointer group"
+                        @click="toggleFaq(faq)"
+                    >
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-medium text-gray-900 group-hover:text-emerald-700 transition-colors">
+                                {{ faq.question }}
+                            </h3>
+                            <svg
+                                class="w-5 h-5 text-gray-400 group-hover:text-emerald-600 transition-transform duration-300"
+                                :class="{ 'rotate-180': faq.open }"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                        <transition
+                            enter-active-class="transition-all duration-300 ease-out"
+                            leave-active-class="transition-all duration-300 ease-in"
+                            enter-from-class="opacity-0 max-h-0"
+                            enter-to-class="opacity-100 max-h-96"
+                            leave-from-class="opacity-100 max-h-96"
+                            leave-to-class="opacity-0 max-h-0"
+                        >
+                            <div v-show="faq.open" class="mt-4 text-gray-600">
+                                {{ faq.answer }}
+                            </div>
+                        </transition>
+                    </div>
+                </div>
+
+                <div class="mt-8 text-center">
+                    <Link
+                        :href="route('faq')"
+                        class="inline-flex items-center text-emerald-600 hover:text-emerald-700 font-medium transition-colors group"
+                    >
+                        View all FAQs
+                        <svg class="ml-2 w-4 h-4 transform transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                        </svg>
+                    </Link>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final CTA -->
+        <section class="py-16 bg-gradient-to-br from-emerald-50 to-teal-50">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <div class="bg-white rounded-3xl p-8 md:p-12 border border-gray-200 shadow-lg">
+                    <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl flex items-center justify-center text-emerald-600 text-2xl">
+                        🎯
+                    </div>
+
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+                        Ready to Transform Your Learning?
+                    </h2>
+
+                    <p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+                        Start with our free plan today and experience expert-curated courses with AI tutoring.
+                        Upgrade anytime to unlock premium features.
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <Link
+                            :href="route('register')"
+                            class="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                        >
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Start Free Trial
+                        </Link>
+                        <Link
+                            :href="route('courses.index')"
+                            class="inline-flex items-center justify-center px-8 py-4 bg-white text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all duration-300 border-2 border-gray-200 hover:border-gray-300"
+                        >
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                            </svg>
+                            Browse Free Courses
+                        </Link>
+                    </div>
+
+                    <p class="text-sm text-gray-500 mt-6">
+                        No credit card required • 14-day free trial • Cancel anytime
+                    </p>
                 </div>
             </div>
         </section>
@@ -154,128 +253,181 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/GuestLayout.vue'
-import PricingPlans from '@/Components/PricingPlans.vue'
-import { AcademicCapIcon, ChatBubbleLeftRightIcon } from '@heroicons/vue/24/outline'
-import MetaTags from '@/Components/MetaTags.vue';
+import PricingPlans from '@/Components/PricingPlans.vue' // Added the import
+import MetaTags from '@/Components/MetaTags.vue'
+import { ref } from 'vue'
 
 const props = defineProps({
     subscriptionPlans: Array
 })
 
-const faqs = [
+// Sample plans data for the PricingPlans component
+const plans = ref([
     {
-        question: "Can I change plans later?",
-        answer: "Yes, you can upgrade or downgrade your plan at any time. Changes will be prorated accordingly and take effect immediately."
+        name: 'Free',
+        price: 0,
+        description: 'Perfect for getting started',
+        features: [
+            'Access to free courses',
+            'Basic AI tutor access',
+            'Community support',
+            'Limited course selection'
+        ],
+        cta: 'Get Started Free',
+        ctaLink: route('register'),
+        popular: false
     },
     {
-        question: "Is there a free trial?",
-        answer: "All paid plans include a 14-day free trial. No credit card is required to start your trial period."
+        name: 'Pro',
+        price: 3500,
+        description: 'Best for serious learners',
+        features: [
+            'All courses unlocked',
+            'Premium AI tutor access',
+            'Downloadable certificates',
+            'Priority email support',
+            'Offline content access'
+        ],
+        cta: 'Start 14-Day Free Trial',
+        ctaLink: route('register'),
+        popular: true
+    },
+    {
+        name: 'Team',
+        price: 2500,
+        description: 'For schools & institutions',
+        features: [
+            'Everything in Pro plus:',
+            'Team management dashboard',
+            'Progress tracking analytics',
+            'Custom learning paths',
+            'Dedicated account manager'
+        ],
+        cta: 'Contact for Pricing',
+        ctaLink: route('contact'),
+        popular: false
+    }
+])
+
+const features = [
+    { name: 'Access to Free Courses', free: 'Limited', pro: true, team: true },
+    { name: 'Access to All Courses', free: false, pro: true, team: true },
+    { name: 'AI Tutor Access', free: 'Basic', pro: 'Premium', team: 'Premium' },
+    { name: 'Download Certificates', free: false, pro: true, team: true },
+    { name: 'Offline Content Access', free: false, pro: true, team: true },
+    { name: 'Priority Email Support', free: false, pro: true, team: true },
+    { name: 'Progress Analytics', free: 'Basic', pro: 'Advanced', team: 'Advanced' },
+    { name: 'Team Management', free: false, pro: false, team: true },
+    { name: 'Dedicated Support', free: false, pro: false, team: true },
+    { name: 'Custom Learning Paths', free: false, pro: false, team: true }
+]
+
+const faqs = ref([
+    {
+        question: "Can I try the Pro plan for free?",
+        answer: "Yes! All new users get a 14-day free trial of our Pro plan. No credit card is required to start your trial. You'll get full access to all premium features during the trial period.",
+        open: false
     },
     {
         question: "What payment methods do you accept?",
-        answer: "We accept all major credit cards, PayPal, and bank transfers for enterprise plans. Payments are processed securely through Paystack."
+        answer: "We accept all major credit and debit cards, PayPal, and bank transfers (for Nigerian customers). All payments are processed securely through Paystack.",
+        open: false
     },
     {
-        question: "Can I cancel anytime?",
-        answer: "Yes, you can cancel your subscription at any time. You'll retain full access to premium features until the end of your current billing period."
+        question: "Can I switch between plans?",
+        answer: "Yes, you can upgrade or downgrade your plan at any time. When you upgrade, you'll get immediate access to the new features. Downgrades take effect at the end of your current billing cycle.",
+        open: false
     },
     {
-        question: "Do you offer discounts for students?",
-        answer: "Yes, we offer special educational discounts for students and academic institutions. Contact our support team for more information."
+        question: "Do you offer student discounts?",
+        answer: "Yes, we offer special pricing for verified students. Please contact our support team with your student ID for more information about student discounts.",
+        open: false
     },
     {
-        question: "What happens after my trial ends?",
-        answer: "After your trial ends, you'll automatically switch to our free plan unless you choose to subscribe to a paid plan during your trial period."
+        question: "What happens if I cancel my subscription?",
+        answer: "If you cancel, you'll continue to have access to premium features until the end of your current billing period. After that, your account will revert to the Free plan, and you'll lose access to premium features.",
+        open: false
     },
     {
-        question: "How often is new content added?",
-        answer: "We continuously add new courses and learning materials. Our AI also generates personalized content based on your learning needs."
-    },
-    {
-        question: "Can I access content offline?",
-        answer: "Yes, premium subscribers can download course materials and content for offline access, perfect for learning without internet."
+        question: "Can I get a refund?",
+        answer: "We offer a 14-day money-back guarantee for all annual subscriptions. If you're not satisfied with our service within the first 14 days, contact our support team for a full refund.",
+        open: false
     }
-]
+])
+
+const toggleFaq = (faq) => {
+    faq.open = !faq.open
+}
 </script>
 
 <style scoped>
-/* Enhanced animations */
-@keyframes fade-in-up {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
+/* Animations */
+@keyframes blob {
+    0% {
+        transform: translate(0px, 0px) scale(1);
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+    33% {
+        transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+        transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+        transform: translate(0px, 0px) scale(1);
     }
 }
 
-@keyframes pulse-slow {
-    0%, 100% { opacity: 0.5; transform: scale(1); }
-    50% { opacity: 0.8; transform: scale(1.05); }
+.animate-blob {
+    animation: blob 7s infinite;
 }
 
-@keyframes float {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-20px) rotate(5deg); }
+.animation-delay-2000 {
+    animation-delay: 2s;
 }
 
-@keyframes bounce-slow {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+/* Pricing card hover effects */
+.transform {
+    transition: transform 0.3s ease;
 }
 
-@keyframes ping-slow {
-    0% { transform: scale(1); opacity: 1; }
-    75%, 100% { transform: scale(2); opacity: 0; }
+.hover\:-translate-y-1:hover {
+    transform: translateY(-0.25rem);
 }
 
-.animate-fade-in-up {
-    animation: fade-in-up 0.8s ease-out forwards;
+/* Table styling */
+table {
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
-.animate-pulse-slow {
-    animation: pulse-slow 4s ease-in-out infinite;
+th, td {
+    padding: 1rem;
+    text-align: left;
 }
 
-.animate-float {
-    animation: float 6s ease-in-out infinite;
+th:first-child, td:first-child {
+    border-radius: 0.5rem 0 0 0.5rem;
 }
 
-.animate-bounce-slow {
-    animation: bounce-slow 3s infinite;
+th:last-child, td:last-child {
+    border-radius: 0 0.5rem 0.5rem 0;
 }
 
-.animate-ping-slow {
-    animation: ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-/* Gradient backgrounds */
-.bg-gradient-animated {
-    background-size: 400% 400%;
-    animation: gradient 8s ease infinite;
-}
-
-@keyframes gradient {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-/* Hover effects */
-.hover-lift {
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.hover-lift:hover {
-    transform: translateY(-8px);
+/* FAQ transition */
+.transition-all {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .animate-fade-in-up {
-        animation: fade-in-up 0.6s ease-out forwards;
+    .grid-cols-1 > * {
+        margin-bottom: 2rem;
+    }
+
+    .grid-cols-1 > *:last-child {
+        margin-bottom: 0;
     }
 }
 </style>

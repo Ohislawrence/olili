@@ -74,9 +74,7 @@ class ProgressTracking extends Model
             'performance_metrics' => array_merge($this->performance_metrics ?? [], $metrics),
         ]);
 
-        if ($completed && $this->courseOutline) {
-            $this->courseOutline->markAsCompleted();
-        }
+
     }
 
     public function getPerformanceMetricsArray()

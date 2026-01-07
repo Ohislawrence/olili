@@ -219,27 +219,50 @@ class FrontpageController extends Controller
      */
     public function coursesIndex(Request $request)
     {
-        $query = Course::where('created_by', 'admin')->where('visibility', 'public')->with(['modules', 'examBoard'])
-            ->active()
-            ->withProgress()->latest();
+        $query = Course::where('visibility', 'public')
+            ->with(['modules', 'examBoard'])
+            ->latest();
 
         // Filter by subject
-        if ($request->has('subject')) {
-            $query->bySubject($request->subject);
+        if ($request->has('subject') && !empty($request->subject)) {
+            // Handle both single subject string and array of subjects
+            $subjects = is_array($request->subject) ? $request->subject : [$request->subject];
+            $query->whereIn('subject', $subjects);
         }
 
         // Filter by level
-        if ($request->has('level')) {
-            $query->byLevel($request->level);
+        if ($request->has('level') && !empty($request->level)) {
+            // Handle both single level string and array of levels
+            $levels = is_array($request->level) ? $request->level : [$request->level];
+            $query->whereIn('level', $levels);
         }
 
+        // Apply pagination
         $courses = $query->paginate(12);
+
+        // Transform the paginated results
+        $courses->getCollection()->transform(function ($course) {
+            return [
+                'id' => $course->id,
+                'title' => $course->title,
+                'subject' => $course->subject,
+                'description' => $course->description,
+                'level' => $course->level,
+                'estimated_duration_hours' => $course->estimated_duration_hours,
+                'modules_count' => $course->modules->count(),
+                'status' => $course->status,
+                'slug' => $course->slug,
+                // Include any other fields you need
+                'created_at' => $course->created_at,
+                'updated_at' => $course->updated_at,
+            ];
+        });
 
         return Inertia::render('Frontpages/Courses/Index', [
             'courses' => $courses,
             'filters' => $request->only(['subject', 'level']),
-            'subjects' => Course::where('created_by', 'admin')->where('visibility', 'public')->active()->distinct()->pluck('subject'),
-            'levels' => Course::where('created_by', 'admin')->where('visibility', 'public')->active()->distinct()->pluck('level'),
+            'subjects' => Course::where('visibility', 'public')->distinct()->pluck('subject'),
+            'levels' => Course::where('visibility', 'public')->distinct()->pluck('level'),
             'meta' => [
                 'title' => 'Explore Courses',
                 'description' => 'Discover our AI-powered courses designed to help you learn smarter and faster.',
@@ -255,11 +278,9 @@ class FrontpageController extends Controller
     public function courseShow($id)
     {
         $course = Course::where('created_by', 'admin')->where('visibility', 'public')->with(['modules', 'examBoard', 'modules.topics'])
-            ->withProgress()
             ->findOrFail($id);
 
         $relatedCourses = Course::where('created_by', 'admin')->where('visibility', 'public')->with(['modules'])
-            ->active()
             ->where('id', '!=', $course->id)
             ->where('subject', $course->subject)
             ->limit(3)

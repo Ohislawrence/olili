@@ -1,99 +1,236 @@
 <template>
     <MetaTags
         title="About Olilearn"
-        description="Learn how Olilearn revolutionizes education with AI-powered personalized learning for students, parents, and tutors."
+        description="Discover how Olilearn combines expert-created courses with AI-powered tutoring to deliver exceptional learning experiences for students worldwide."
         image="/images/olingolearn.png"
     />
     <AppLayout>
-        <Head title="Your personal AI tutor that grows with you" />
+        <Head title="Expert Courses, AI Tutor - Your Complete Learning Solution" />
+
         <!-- Hero Section -->
-        <section class="relative py-20 bg-gradient-to-br from-emerald-600 to-teal-600 text-white overflow-hidden">
+        <section class="relative py-20 bg-gradient-to-br from-emerald-50 via-teal-50 to-white overflow-hidden">
             <!-- Background Elements -->
-            <div class="absolute inset-0">
-                <div class="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full animate-pulse-slow"></div>
-                <div class="absolute top-1/4 right-20 w-32 h-32 bg-white/5 rounded-full animate-float"></div>
-                <div class="absolute bottom-20 left-1/3 w-24 h-24 bg-white/10 rounded-full animate-bounce-slow"></div>
+            <div class="absolute inset-0 overflow-hidden">
+                <div class="absolute -top-40 -right-40 w-80 h-80 bg-emerald-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+                <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-teal-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
             </div>
 
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div class="text-center">
-                    <div class="inline-flex items-center px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white text-sm font-medium mb-8">
-                        <span class="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
-                        Our Story
+                    <!-- Badge -->
+                    <div class="inline-flex items-center px-4 py-2 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-700 text-sm font-medium mb-8">
+                        <span class="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
+                        Redefining Modern Education
                     </div>
-                    <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-                        Revolutionizing
-                        <span class="block bg-gradient-to-r from-white to-emerald-200 bg-clip-text text-transparent">
-                            Education with AI
+
+                    <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+                        Expert Courses
+                        <span class="block text-emerald-700 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                            Meets AI-Powered Tutoring
                         </span>
                     </h1>
-                    <p class="text-xl md:text-2xl mb-12 text-emerald-100 max-w-3xl mx-auto">
-                        We believe everyone deserves access to personalized, effective learning.
-                        Olilearn combines cutting-edge artificial intelligence with proven educational methodologies
-                        to make this vision a reality.
+
+                    <p class="text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
+                        At Olilearn, we combine professionally created courses with intelligent AI tutors
+                        to provide students with a complete, effective learning experience that adapts to
+                        their individual needs and pace.
                     </p>
+
+                    <!-- Stats -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
+                        <div class="text-center p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+                            <div class="text-2xl font-bold text-emerald-700">100+</div>
+                            <div class="text-sm text-gray-600">Expert Courses</div>
+                        </div>
+                        <div class="text-center p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+                            <div class="text-2xl font-bold text-emerald-700">24/7</div>
+                            <div class="text-sm text-gray-600">AI Tutor Support</div>
+                        </div>
+                        <div class="text-center p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+                            <div class="text-2xl font-bold text-emerald-700">10K+</div>
+                            <div class="text-sm text-gray-600">Active Students</div>
+                        </div>
+                        <div class="text-center p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+                            <div class="text-2xl font-bold text-emerald-700">98%</div>
+                            <div class="text-sm text-gray-600">Satisfaction Rate</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Our Model Section -->
+        <section class="py-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                        How Olilearn Works
+                    </h2>
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                        A powerful combination of expert-curated content and intelligent AI assistance
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Expert Courses -->
+                    <div class="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300">
+                        <div class="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 text-2xl mb-6">
+                            📚
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Expert-Created Courses</h3>
+                        <p class="text-gray-600 mb-4">
+                            Our team of professional educators and subject matter experts create comprehensive,
+                            structured courses designed to deliver maximum learning impact.
+                        </p>
+                        <ul class="space-y-2 text-gray-600">
+                            <li class="flex items-center">
+                                <svg class="w-4 h-4 text-emerald-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Professionally structured curriculum
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="w-4 h-4 text-emerald-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Quality-controlled content
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="w-4 h-4 text-emerald-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Regular updates and improvements
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- AI Tutor -->
+                    <div class="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300">
+                        <div class="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 text-2xl mb-6">
+                            🤖
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Personal AI Tutor</h3>
+                        <p class="text-gray-600 mb-4">
+                            Every student gets their own AI tutor that provides personalized guidance,
+                            answers questions, and helps reinforce learning 24/7.
+                        </p>
+                        <ul class="space-y-2 text-gray-600">
+                            <li class="flex items-center">
+                                <svg class="w-4 h-4 text-emerald-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Available anytime, anywhere
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="w-4 h-4 text-emerald-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Personalized learning support
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="w-4 h-4 text-emerald-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Instant answers to questions
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Student Experience -->
+                    <div class="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300">
+                        <div class="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 text-2xl mb-6">
+                            🎓
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Seamless Student Experience</h3>
+                        <p class="text-gray-600 mb-4">
+                            Students enroll in expertly crafted courses and receive personalized
+                            AI tutoring support throughout their learning journey.
+                        </p>
+                        <ul class="space-y-2 text-gray-600">
+                            <li class="flex items-center">
+                                <svg class="w-4 h-4 text-emerald-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Enroll in curated courses
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="w-4 h-4 text-emerald-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Progress tracking and analytics
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="w-4 h-4 text-emerald-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Certificates of completion
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </section>
 
         <!-- Mission & Vision -->
-        <section class="py-24 bg-white">
+        <section class="py-16 bg-gradient-to-br from-emerald-50 to-teal-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                     <!-- Mission -->
                     <div>
                         <div class="inline-flex items-center px-4 py-2 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-700 text-sm font-medium mb-6">
                             <span class="w-2 h-2 bg-emerald-500 rounded-full mr-2"></span>
                             Our Mission
                         </div>
-                        <h2 class="text-4xl font-bold text-gray-900 mb-6">
-                            Making Quality Education
-                            <span class="block text-emerald-700 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                                Accessible to All
+                        <h2 class="text-3xl font-bold text-gray-900 mb-6">
+                            Combining Expertise with AI for
+                            <span class="block text-emerald-700">
+                                Optimal Learning Outcomes
                             </span>
                         </h2>
                         <p class="text-lg text-gray-700 mb-6 leading-relaxed">
-                            We're on a mission to democratize education by leveraging artificial intelligence
-                            to provide personalized learning experiences that adapt to each individual's needs,
-                            pace, and learning style.
+                            We believe the best learning happens when expert knowledge meets personalized
+                            support. That's why we've created a platform where professional educators
+                            design comprehensive courses, and AI tutors provide individualized guidance
+                            to each student.
                         </p>
-                        <p class="text-lg text-gray-700 leading-relaxed">
-                            Our platform breaks down traditional barriers to education, making high-quality
-                            learning accessible to students worldwide, regardless of their background, location,
-                            or economic circumstances.
-                        </p>
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 mr-3 flex-shrink-0">
+                                    ✓
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-1">Expert-Curated Content</h4>
+                                    <p class="text-gray-600 text-sm">Courses created by professional educators and subject matter experts</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 mr-3 flex-shrink-0">
+                                    ✓
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-1">Personalized AI Support</h4>
+                                    <p class="text-gray-600 text-sm">24/7 AI tutoring that adapts to each student's learning style and pace</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Vision -->
                     <div class="relative">
-                        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-8 text-white relative overflow-hidden shadow-lg">
-                            <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-                            <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
+                        <div class="bg-white rounded-2xl p-8 border border-gray-200 shadow-lg relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full -translate-y-16 translate-x-16"></div>
+                            <div class="absolute bottom-0 left-0 w-24 h-24 bg-teal-50 rounded-full translate-y-12 -translate-x-12"></div>
 
                             <div class="relative z-10">
-                                <div class="inline-flex items-center px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white text-sm font-medium mb-6">
+                                <div class="inline-flex items-center px-4 py-2 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-700 text-sm font-medium mb-6">
                                     Our Vision
                                 </div>
-                                <h3 class="text-2xl font-bold mb-4">A World Where Everyone Can Learn</h3>
-                                <p class="text-emerald-100 mb-6">
-                                    We envision a future where artificial intelligence empowers every learner
-                                    to reach their full potential, transforming education from a one-size-fits-all
-                                    model to a personalized journey of discovery and growth.
+                                <h3 class="text-2xl font-bold text-gray-900 mb-4">A World Where Every Student Has Access to Expert Education and Personal Guidance</h3>
+                                <p class="text-gray-600 mb-6">
+                                    We envision a future where quality education is enhanced by intelligent technology,
+                                    creating a learning experience that's both structured and personalized,
+                                    accessible to students everywhere.
                                 </p>
-                                <div class="space-y-3">
-                                    <div class="flex items-center text-emerald-100">
-                                        <CheckCircleIcon class="h-5 w-5 mr-3" />
-                                        Personalized learning paths for every student
-                                    </div>
-                                    <div class="flex items-center text-emerald-100">
-                                        <CheckCircleIcon class="h-5 w-5 mr-3" />
-                                        AI-powered tutoring available 24/7
-                                    </div>
-                                    <div class="flex items-center text-emerald-100">
-                                        <CheckCircleIcon class="h-5 w-5 mr-3" />
-                                        Global access to quality education
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -101,187 +238,214 @@
             </div>
         </section>
 
-        <!-- Our Story -->
-        <section class="py-24 bg-gradient-to-br from-slate-50 to-emerald-50">
+        <!-- Benefits Section -->
+        <section class="py-16 bg-white">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16">
-                    <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                        OUR
-                        <span class="block text-emerald-700 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">JOURNEY</span>
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                        Why Choose Olilearn?
                     </h2>
-                    <p class="text-xl text-gray-800 max-w-2xl mx-auto">
-                        From a simple idea to transforming how people learn around the world.
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                        The perfect balance of structured learning and personalized support
                     </p>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div
-                        v-for="milestone in milestones"
-                        :key="milestone.year"
-                        class="bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all duration-500 group text-center"
-                    >
-                        <div class="w-16 h-16 mx-auto mb-6 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-600 text-2xl font-bold transform transition-transform group-hover:scale-110">
-                            {{ milestone.year }}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Benefit 1 -->
+                    <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300">
+                        <div class="w-12 h-12 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-xl flex items-center justify-center text-emerald-600 text-xl mb-4">
+                            🎯
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-4">{{ milestone.title }}</h3>
-                        <p class="text-gray-700 leading-relaxed">{{ milestone.description }}</p>
+                        <h3 class="text-lg font-bold text-gray-900 mb-3">Quality-Checked Courses</h3>
+                        <p class="text-gray-600 text-sm">
+                            Every course is created and reviewed by experts to ensure accuracy,
+                            relevance, and educational effectiveness.
+                        </p>
+                    </div>
+
+                    <!-- Benefit 2 -->
+                    <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300">
+                        <div class="w-12 h-12 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-xl flex items-center justify-center text-emerald-600 text-xl mb-4">
+                            🤖
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-3">24/7 AI Tutor</h3>
+                        <p class="text-gray-600 text-sm">
+                            Get instant answers and personalized guidance whenever you need it,
+                            making learning continuous and flexible.
+                        </p>
+                    </div>
+
+                    <!-- Benefit 3 -->
+                    <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300">
+                        <div class="w-12 h-12 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-xl flex items-center justify-center text-emerald-600 text-xl mb-4">
+                            📈
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-3">Progress Tracking</h3>
+                        <p class="text-gray-600 text-sm">
+                            Monitor your learning journey with detailed analytics and insights
+                            into your strengths and areas for improvement.
+                        </p>
+                    </div>
+
+                    <!-- Benefit 4 -->
+                    <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300">
+                        <div class="w-12 h-12 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-xl flex items-center justify-center text-emerald-600 text-xl mb-4">
+                            🏆
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-3">Certification</h3>
+                        <p class="text-gray-600 text-sm">
+                            Earn recognized certificates upon course completion to showcase
+                            your skills and knowledge.
+                        </p>
+                    </div>
+
+                    <!-- Benefit 5 -->
+                    <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300">
+                        <div class="w-12 h-12 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-xl flex items-center justify-center text-emerald-600 text-xl mb-4">
+                            🔄
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-3">Regular Updates</h3>
+                        <p class="text-gray-600 text-sm">
+                            Courses are continuously updated with the latest information and
+                            teaching methodologies.
+                        </p>
+                    </div>
+
+                    <!-- Benefit 6 -->
+                    <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300">
+                        <div class="w-12 h-12 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-xl flex items-center justify-center text-emerald-600 text-xl mb-4">
+                            🌍
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-3">Global Community</h3>
+                        <p class="text-gray-600 text-sm">
+                            Join thousands of learners from around the world in a supportive
+                            learning community.
+                        </p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Team Section -->
-        <section class="py-24 bg-white">
+        <!-- Student Journey -->
+        <section class="py-16 bg-gradient-to-br from-emerald-50 to-teal-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16">
-                    <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                        MEET OUR
-                        <span class="block text-emerald-700 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">TEAM</span>
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                        The Student Journey
                     </h2>
-                    <p class="text-xl text-gray-800 max-w-2xl mx-auto">
-                        Passionate educators, AI experts, and innovators working together to transform learning.
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                        From enrollment to mastery - your path to success
                     </p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                    <div
-                        v-for="member in teamMembers"
-                        :key="member.name"
-                        class="bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-500 group text-center"
-                    >
-                        <div class="w-24 h-24 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-2xl font-bold">
-                            {{ member.initials }}
+                <div class="relative">
+                    <!-- Timeline line -->
+                    <div class="absolute left-4 md:left-1/2 transform md:-translate-x-1/2 h-full w-1 bg-emerald-200"></div>
+
+                    <!-- Steps -->
+                    <div class="space-y-8 relative">
+                        <!-- Step 1 -->
+                        <div class="flex flex-col md:flex-row items-center gap-6">
+                            <div class="w-24 h-24 bg-white rounded-2xl border-4 border-emerald-100 flex items-center justify-center text-emerald-600 text-2xl shadow-lg z-10">
+                                1️⃣
+                            </div>
+                            <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm md:w-1/2">
+                                <h3 class="text-xl font-bold text-gray-900 mb-3">Browse & Enroll</h3>
+                                <p class="text-gray-600">
+                                    Explore our catalog of expert-created courses and enroll in the ones
+                                    that match your learning goals and interests.
+                                </p>
+                            </div>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-2">{{ member.name }}</h3>
-                        <p class="text-emerald-600 font-semibold mb-4">{{ member.role }}</p>
-                        <p class="text-gray-700 text-sm mb-4">{{ member.bio }}</p>
-                        <div class="flex justify-center space-x-3">
-                            <a v-if="member.linkedin" :href="member.linkedin" class="text-gray-400 hover:text-emerald-600 transition-colors">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"></path>
-                                </svg>
-                            </a>
-                            <a v-if="member.twitter" :href="member.twitter" class="text-gray-400 hover:text-emerald-600 transition-colors">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"></path>
-                                </svg>
-                            </a>
+
+                        <!-- Step 2 -->
+                        <div class="flex flex-col md:flex-row-reverse items-center gap-6">
+                            <div class="w-24 h-24 bg-white rounded-2xl border-4 border-emerald-100 flex items-center justify-center text-emerald-600 text-2xl shadow-lg z-10">
+                                2️⃣
+                            </div>
+                            <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm md:w-1/2">
+                                <h3 class="text-xl font-bold text-gray-900 mb-3">Learn with Structure</h3>
+                                <p class="text-gray-600">
+                                    Follow the professionally designed curriculum, complete modules,
+                                    and master concepts through structured learning paths.
+                                </p>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </section>
 
-        <!-- Values Section -->
-        <section class="py-24 bg-gradient-to-br from-emerald-50 to-teal-50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16">
-                    <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                        OUR
-                        <span class="block text-emerald-700 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">VALUES</span>
-                    </h2>
-                    <p class="text-xl text-gray-800 max-w-2xl mx-auto">
-                        The principles that guide everything we do at Olilearn.
-                    </p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                    <div
-                        v-for="value in values"
-                        :key="value.title"
-                        class="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all duration-500 group text-center"
-                    >
-                        <div class="w-16 h-16 mx-auto mb-6 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-600 text-2xl transform transition-transform group-hover:scale-110">
-                            {{ value.icon }}
+                        <!-- Step 3 -->
+                        <div class="flex flex-col md:flex-row items-center gap-6">
+                            <div class="w-24 h-24 bg-white rounded-2xl border-4 border-emerald-100 flex items-center justify-center text-emerald-600 text-2xl shadow-lg z-10">
+                                3️⃣
+                            </div>
+                            <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm md:w-1/2">
+                                <h3 class="text-xl font-bold text-gray-900 mb-3">Get AI Tutor Support</h3>
+                                <p class="text-gray-600">
+                                    Use your personal AI tutor for instant help with difficult concepts,
+                                    practice questions, and personalized guidance.
+                                </p>
+                            </div>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-4">{{ value.title }}</h3>
-                        <p class="text-gray-700 leading-relaxed">{{ value.description }}</p>
-                    </div>
-                </div>
-            </div>
-        </section>
 
-        <!-- Impact Stats -->
-        <section class="py-24 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16">
-                    <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                        OUR
-                        <span class="block text-emerald-700 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">IMPACT</span>
-                    </h2>
-                    <p class="text-xl text-gray-800 max-w-2xl mx-auto">
-                        Making a difference in the lives of learners worldwide.
-                    </p>
-                </div>
-
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-                    <div class="p-6 bg-white rounded-2xl border border-emerald-100 shadow-sm">
-                        <div class="text-3xl md:text-4xl font-bold text-emerald-700 mb-2">50K+</div>
-                        <div class="text-emerald-600 font-medium">Active Learners</div>
-                    </div>
-                    <div class="p-6 bg-white rounded-2xl border border-emerald-100 shadow-sm">
-                        <div class="text-3xl md:text-4xl font-bold text-emerald-700 mb-2">98%</div>
-                        <div class="text-emerald-600 font-medium">Success Rate</div>
-                    </div>
-                    <div class="p-6 bg-white rounded-2xl border border-emerald-100 shadow-sm">
-                        <div class="text-3xl md:text-4xl font-bold text-emerald-700 mb-2">1.5M+</div>
-                        <div class="text-emerald-600 font-medium">Learning Hours</div>
-                    </div>
-                    <div class="p-6 bg-white rounded-2xl border border-emerald-100 shadow-sm">
-                        <div class="text-3xl md:text-4xl font-bold text-emerald-700 mb-2">25+</div>
-                        <div class="text-emerald-600 font-medium">Countries</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Partners & Recognition -->
-        <section class="py-24 bg-gradient-to-br from-slate-50 to-emerald-50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16">
-                    <h2 class="text-4xl font-bold text-gray-900 mb-4">
-                        TRUSTED
-                        <span class="block text-emerald-700 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">BY MANY</span>
-                    </h2>
-                    <p class="text-xl text-gray-800 max-w-2xl mx-auto">
-                        We're proud to work with educational institutions and organizations worldwide.
-                    </p>
-                </div>
-
-                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 items-center">
-                    <div
-                        v-for="partner in partners"
-                        :key="partner.name"
-                        class="bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 flex items-center justify-center h-24"
-                    >
-                        <div class="text-3xl text-gray-400">{{ partner.logo }}</div>
+                        <!-- Step 4 -->
+                        <div class="flex flex-col md:flex-row-reverse items-center gap-6">
+                            <div class="w-24 h-24 bg-white rounded-2xl border-4 border-emerald-100 flex items-center justify-center text-emerald-600 text-2xl shadow-lg z-10">
+                                4️⃣
+                            </div>
+                            <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm md:w-1/2">
+                                <h3 class="text-xl font-bold text-gray-900 mb-3">Achieve & Earn</h3>
+                                <p class="text-gray-600">
+                                    Complete courses, earn certificates, and track your progress as you
+                                    build new skills and knowledge.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- CTA Section -->
-        <section class="py-24 bg-gradient-to-br from-emerald-600 to-teal-600 text-white">
+        <section class="py-16 bg-white">
             <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <h2 class="text-4xl font-bold mb-6">Join Our Learning Revolution</h2>
-                <p class="text-xl text-emerald-100 mb-8">
-                    Be part of the movement that's transforming education through artificial intelligence.
-                </p>
-                <div class="flex flex-col sm:flex-row gap-6 justify-center">
-                    <Link
-                        :href="route('register')"
-                        class="inline-flex items-center justify-center bg-white text-emerald-700 px-8 py-4 rounded-xl font-bold hover:bg-emerald-50 transform transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
-                    >
-                        <AcademicCapIcon class="h-5 w-5 mr-2" />
-                        Start Learning Free
-                    </Link>
-                    <Link
-                        :href="route('contact')"
-                        class="inline-flex items-center justify-center bg-transparent border-2 border-white text-white px-8 py-4 rounded-xl font-bold hover:bg-white/10 transform transition-all duration-300 hover:scale-105"
-                    >
-                        <ChatBubbleLeftRightIcon class="h-5 w-5 mr-2" />
-                        Contact Us
-                    </Link>
+                <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-8 md:p-12 border border-emerald-100">
+                    <div class="inline-flex items-center px-4 py-2 rounded-full bg-white border border-emerald-200 text-emerald-700 text-sm font-medium mb-6">
+                        <span class="w-2 h-2 bg-emerald-500 rounded-full mr-2"></span>
+                        Start Your Learning Journey
+                    </div>
+
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+                        Ready to Experience Expert Education with AI Support?
+                    </h2>
+
+                    <p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+                        Join thousands of students who are already benefiting from our unique
+                        combination of professionally created courses and personalized AI tutoring.
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <Link
+                            :href="route('courses.index')"
+                            class="inline-flex items-center justify-center bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-4 rounded-xl font-bold hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                        >
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                            </svg>
+                            Explore Courses
+                        </Link>
+                        <Link
+                            :href="route('register')"
+                            class="inline-flex items-center justify-center bg-white text-gray-700 px-8 py-4 rounded-xl font-bold hover:bg-gray-50 transition-all duration-300 border-2 border-gray-200 hover:border-gray-300"
+                        >
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                            </svg>
+                            Create Account
+                        </Link>
+                    </div>
+
+                    <p class="text-sm text-gray-500 mt-6">
+                        No credit card required • Start with free courses
+                    </p>
                 </div>
             </div>
         </section>
@@ -292,123 +456,36 @@
 import { Link, Head } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/GuestLayout.vue';
 import MetaTags from '@/Components/MetaTags.vue';
-import {
-    AcademicCapIcon,
-    ChatBubbleLeftRightIcon,
-    CheckCircleIcon
-} from '@heroicons/vue/24/outline';
-
-const milestones = [
-    {
-        year: '2022',
-        title: 'Foundation',
-        description: 'Olilearn was founded by a team of educators and AI researchers with a shared vision for personalized learning.'
-    },
-    {
-        year: '2023',
-        title: 'Platform Launch',
-        description: 'Launched our first AI-powered learning platform with adaptive courses and intelligent tutoring.'
-    },
-    {
-        year: '2024',
-        title: 'Global Expansion',
-        description: 'Expanded to serve learners in 25+ countries with localized content and multilingual support.'
-    }
-];
-
-const teamMembers = [
-    {
-        name: 'Dr. Sarah Chen',
-        role: 'CEO & Co-Founder',
-        initials: 'SC',
-        bio: 'Former Stanford AI researcher with 10+ years in educational technology.',
-        linkedin: '#',
-        twitter: '#'
-    },
-    {
-        name: 'Michael Rodriguez',
-        role: 'CTO',
-        initials: 'MR',
-        bio: 'AI engineer specializing in machine learning and adaptive learning systems.',
-        linkedin: '#',
-        twitter: '#'
-    },
-    {
-        name: 'Dr. Emily Watson',
-        role: 'Head of Education',
-        initials: 'EW',
-        bio: 'Curriculum expert with PhD in Educational Psychology from Harvard.',
-        linkedin: '#',
-        twitter: '#'
-    },
-    {
-        name: 'David Kim',
-        role: 'Product Lead',
-        initials: 'DK',
-        bio: 'Product manager focused on creating intuitive learning experiences.',
-        linkedin: '#',
-        twitter: '#'
-    }
-];
-
-const values = [
-    {
-        icon: '🎯',
-        title: 'Personalization',
-        description: 'We believe every learner is unique and deserves an educational experience tailored to their needs.'
-    },
-    {
-        icon: '💡',
-        title: 'Innovation',
-        description: 'We continuously push the boundaries of what\'s possible with AI in education.'
-    },
-    {
-        icon: '🌍',
-        title: 'Accessibility',
-        description: 'Quality education should be available to everyone, regardless of location or background.'
-    },
-    {
-        icon: '🤝',
-        title: 'Collaboration',
-        description: 'We work together with educators, students, and institutions to create the best learning tools.'
-    }
-];
-
-const partners = [
-    { name: 'Stanford University', logo: '🎓' },
-    { name: 'MIT', logo: '🔬' },
-    { name: 'Google for Education', logo: '⚡' },
-    { name: 'Microsoft Education', logo: '💻' },
-    { name: 'UNESCO', logo: '🌐' },
-    { name: 'Khan Academy', logo: '📚' }
-];
 </script>
 
 <style scoped>
-@keyframes pulse-slow {
-    0%, 100% { opacity: 0.5; transform: scale(1); }
-    50% { opacity: 0.8; transform: scale(1.05); }
+@keyframes blob {
+    0% {
+        transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+        transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+        transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+        transform: translate(0px, 0px) scale(1);
+    }
 }
 
-@keyframes float {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-20px) rotate(5deg); }
+.animate-blob {
+    animation: blob 7s infinite;
 }
 
-@keyframes bounce-slow {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+.animation-delay-2000 {
+    animation-delay: 2s;
 }
 
-.animate-pulse-slow {
-    animation: pulse-slow 4s ease-in-out infinite;
-}
-
-.animate-float {
-    animation: float 6s ease-in-out infinite;
-}
-
-.animate-bounce-slow {
-    animation: bounce-slow 3s infinite;
+/* Timeline for mobile */
+@media (max-width: 768px) {
+    .relative > div:first-child {
+        left: 2rem !important;
+    }
 }
 </style>
