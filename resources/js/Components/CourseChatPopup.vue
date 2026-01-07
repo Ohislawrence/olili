@@ -105,7 +105,7 @@
                   <ChatBubbleLeftRightIcon class="h-8 w-8 text-white" />
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                  Welcome to AI Tutor!
+                  Welcome to Oli AI Tutor!
                 </h3>
                 <p class="text-sm text-gray-600 max-w-xs mx-auto">
                   Ask me anything about <strong class="text-emerald-600">{{ course.title }}</strong>. I'm here to help you learn!
@@ -233,6 +233,8 @@
 
 <script setup>
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
+import { marked } from "marked"
+import DOMPurify from "dompurify"
 import {
   ChatBubbleLeftRightIcon,
   XMarkIcon,
@@ -240,6 +242,8 @@ import {
   ChevronDownIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/vue/24/outline'
+import hljs from "highlight.js"
+import "highlight.js/styles/github-dark.css"
 
 const props = defineProps({
   course: {
@@ -541,13 +545,36 @@ const createSessionWithContext = async () => {
 }
 
 // Helper functions
-const formatMessage = (message) => {
-  if (!message) return ''
-  return message
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 rounded text-xs">$1</code>')
-    .replace(/\n/g, '<br>')
+
+function formatMessage(message) {
+  if (!message) return ""
+
+  // Remove model artifacts
+  const cleaned = message.replace(/<\｜begin▁of▁sentence\｜>/g, "")
+
+  // Configure marked ONCE per call (safe here)
+  marked.setOptions({
+    gfm: true,
+    breaks: true,
+    headerIds: false,
+    langPrefix: "language-",
+
+    highlight(code, lang) {
+      // If language is known, use it
+      if (lang && hljs.getLanguage(lang)) {
+        return hljs.highlight(code, { language: lang }).value
+      }
+
+      // Fallback: auto-detect
+      return hljs.highlightAuto(code).value
+    }
+  })
+
+  const html = marked.parse(cleaned)
+
+  return DOMPurify.sanitize(html, {
+    USE_PROFILES: { html: true }
+  })
 }
 
 const formatTime = (dateString) => {
@@ -589,3 +616,21 @@ onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
 })
 </script>
+
+<style>
+pre {
+  background: #0f172a; /* dark slate */
+  color: #e5e7eb;
+  padding: 1rem;
+  border-radius: 12px;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+pre code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+</style>
+

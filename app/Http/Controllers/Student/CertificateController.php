@@ -12,6 +12,7 @@ use Inertia\Inertia;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 
+
 class CertificateController extends Controller
 {
     protected $certificateService;
@@ -24,16 +25,57 @@ class CertificateController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        
-        $certificates = $user->certificates()
+
+        // Get filters
+        $filters = $request->only(['search', 'status', 'sort']);
+
+        // Build query
+        $query = $user->certificates()
             ->with(['course', 'organization'])
-            ->orderBy('issue_date', 'desc')
-            ->paginate(12);
+            ->latest();
+
+        // Apply filters
+        if (!empty($filters['search'])) {
+            $query->where(function ($q) use ($filters) {
+                $q->where('certificate_number', 'like', "%{$filters['search']}%")
+                  ->orWhere('title', 'like', "%{$filters['search']}%")
+                  ->orWhereHas('course', function ($q) use ($filters) {
+                      $q->where('title', 'like', "%{$filters['search']}%");
+                  });
+            });
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['sort'])) {
+            switch ($filters['sort']) {
+                case 'oldest':
+                    $query->oldest();
+                    break;
+                case 'course':
+                    $query->orderBy('title');
+                    break;
+                default:
+                    $query->latest();
+            }
+        }
+
+        $certificates = $query->paginate(12);
+
+        // Calculate stats
+        $stats = [
+            'total_certificates' => $user->certificates()->count(),
+            'active_certificates' => $user->certificates()->where('status', 'active')->count(),
+            'expired_certificates' => $user->certificates()->where('status', 'expired')->count(),
+            'total_downloads' => $user->certificates()->sum('download_count'),
+        ];
 
         return Inertia::render('Student/Certificates/Index', [
             'certificates' => $certificates,
-            'total_certificates' => $user->certificates()->count(),
-            'active_certificates' => $user->certificates()->active()->count(),
+            'stats' => $stats,
+            'filters' => $filters,
         ]);
     }
 
@@ -45,7 +87,7 @@ class CertificateController extends Controller
         }
 
         $certificate->load(['course', 'organization']);
-        
+
         $certificateData = $certificate->getCertificateData();
         $shareableImage = $this->certificateService->generateShareableImage($certificate);
 
@@ -64,49 +106,50 @@ class CertificateController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        if (!$certificate->canDownload()) {
-            abort(403, 'Certificate is not available for download');
-        }
-
         // Increment download count
-        $certificate->incrementDownloadCount();
+        $certificate->increment('download_count');
 
-        // Get PDF path from metadata
-        $pdfPath = $certificate->metadata['pdf_path'] ?? null;
-        
-        if ($pdfPath && Storage::disk('public')->exists(str_replace('/storage/', '', $pdfPath))) {
-            return response()->download(
-                storage_path('app/public/' . str_replace('/storage/', '', $pdfPath)),
-                "Certificate-{$certificate->certificate_number}.pdf"
-            );
-        }
+        // Get certificate data
+        $certificateData = $certificate->getCertificateData();
 
-        // Generate PDF on the fly if not exists
-        $data = $certificate->getCertificateData();
+        // Generate PDF
         $pdf = Pdf::loadView('certificates.pdf', [
-            'certificate' => $data,
-            'template' => $certificate->organization?->certificateTemplate,
+            'certificate' => $certificateData,
+            'user' => auth()->user(),
         ]);
 
-        return $pdf->download("Certificate-{$certificate->certificate_number}.pdf");
+        return $pdf->download("certificate-{$certificate->certificate_number}.pdf");
     }
 
-    public function share(Certificate $certificate)
+    public function share(Certificate $certificate, Request $request)
     {
-        // Generate shareable image
-        $imageUrl = $this->certificateService->generateShareableImage($certificate);
-        
-        $shareLinks = [
-            'linkedin' => "https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name={$certificate->course->title}&organizationName=" . urlencode($certificate->organization?->name ?? 'Olilearn') . "&issueYear={$certificate->issue_date->year}&certUrl=" . urlencode($certificate->verification_url),
-            'twitter' => "https://twitter.com/intent/tweet?text=" . urlencode("I just completed '{$certificate->course->title}' on Olilearn! Check out my certificate: {$certificate->verification_url}"),
+        // Authorization
+        if ($certificate->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        $request->validate([
+            'platform' => 'required|in:linkedin,twitter,facebook,link',
+        ]);
+
+        $urls = [
+            'linkedin' => "https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=" . urlencode($certificate->course->title) . "&organizationName=" . urlencode($certificate->organization?->name ?? 'Olilearn') . "&issueYear=" . date('Y', strtotime($certificate->issue_date)) . "&certUrl=" . urlencode($certificate->verification_url),
+            'twitter' => "https://twitter.com/intent/tweet?text=" . urlencode("I just completed '{$certificate->course->title}' on Olilearn! Check out my certificate: ") . "&url=" . urlencode($certificate->verification_url),
             'facebook' => "https://www.facebook.com/sharer/sharer.php?u=" . urlencode($certificate->verification_url),
+            'link' => $certificate->verification_url,
         ];
 
+        if ($request->platform === 'link') {
+            // Copy to clipboard
+            return response()->json([
+                'url' => $urls['link'],
+                'message' => 'Link copied to clipboard',
+            ]);
+        }
+
         return response()->json([
-            'image_url' => $imageUrl,
-            'verification_url' => $certificate->verification_url,
-            'share_links' => $shareLinks,
-            'certificate_number' => $certificate->certificate_number,
+            'url' => $urls[$request->platform],
+            'message' => 'Share URL generated',
         ]);
     }
 
@@ -125,13 +168,38 @@ class CertificateController extends Controller
         ]);
     }
 
+    public function request()
+    {
+        $user = auth()->user();
+
+        // Get completed courses
+        $completedCourses = $user->enrolledCourses()
+            ->where('status', 'completed')
+            ->with(['modules', 'capstoneProject'])
+            ->get();
+
+        // Get existing certificates
+        $certificates = $user->certificates()->get(['id', 'course_id']);
+
+        return Inertia::render('Student/Certificates/Request', [
+            'completedCourses' => $completedCourses,
+            'certificates' => $certificates,
+        ]);
+    }
+
     public function requestCertificate(Course $course)
     {
         $user = auth()->user();
-        
-        // Check if already has certificate
+
+        // Check if user owns the course
+        if ($course->student_profile_id !== $user->studentProfile->id) {
+            abort(403, 'Unauthorized');
+        }
+
+        // Check if certificate already exists
         $existing = Certificate::where('user_id', $user->id)
             ->where('course_id', $course->id)
+            ->where('status', 'active')
             ->first();
 
         if ($existing) {
@@ -140,20 +208,78 @@ class CertificateController extends Controller
         }
 
         // Check eligibility
-        if (!$this->certificateService->isEligibleForCertificate($user, $course)) {
-            return redirect()->route('student.courses.show', $course->id)
-                ->with('error', 'You are not eligible for a certificate yet. Please complete all requirements.');
+        if (!$course->isCompleted()) {
+            return redirect()->back()
+                ->with('error', 'Course is not completed yet.');
+        }
+
+        if ($course->progress_percentage < 70) {
+            return redirect()->back()
+                ->with('error', 'Minimum 70% score required for certificate.');
+        }
+
+        if ($course->capstoneProject && !$course->capstoneProject->is_approved) {
+            return redirect()->back()
+                ->with('error', 'Capstone project must be approved.');
         }
 
         // Generate certificate
         try {
-            $certificate = $this->certificateService->generateCertificate($user, $course);
-            
+            $certificate = Certificate::create([
+                'user_id' => $user->id,
+                'course_id' => $course->id,
+                'title' => "Certificate of Completion - {$course->title}",
+                'description' => "This certifies that {$user->name} has successfully completed the course '{$course->title}'.",
+                'issue_date' => now(),
+                'expiry_date' => now()->addYears(2),
+                'status' => 'active',
+                'is_public' => true,
+            ]);
+
+            // Generate certificate number
+            $prefix = 'OLCERT';
+            $year = date('Y');
+            $sequence = str_pad(Certificate::whereYear('issue_date', $year)->count() + 1, 6, '0', STR_PAD_LEFT);
+            $certificate->certificate_number = "{$prefix}-{$year}-{$sequence}";
+
+            // Generate verification URL
+            $hash = hash('sha256', $certificate->certificate_number . $user->id . $course->id . config('app.key'));
+            $certificate->verification_url = route('certificates.verify', $hash);
+
+            $certificate->save();
+
             return redirect()->route('student.certificates.show', $certificate->id)
                 ->with('success', 'Certificate generated successfully!');
+
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Failed to generate certificate: ' . $e->getMessage());
         }
+    }
+
+    public function exportAll()
+    {
+        $user = auth()->user();
+        $certificates = $user->certificates()->with('course')->get();
+
+        // Create ZIP file
+        $zip = new \ZipArchive();
+        $zipFileName = storage_path("app/certificates-{$user->id}-" . now()->timestamp . ".zip");
+
+        if ($zip->open($zipFileName, \ZipArchive::CREATE) === TRUE) {
+            foreach ($certificates as $certificate) {
+                // Generate PDF for each certificate
+                $pdf = Pdf::loadView('certificates.pdf', [
+                    'certificate' => $certificate->getCertificateData(),
+                    'user' => $user,
+                ]);
+
+                $pdfContent = $pdf->output();
+                $zip->addFromString("{$certificate->certificate_number}.pdf", $pdfContent);
+            }
+            $zip->close();
+        }
+
+        return response()->download($zipFileName)->deleteFileAfterSend(true);
     }
 }

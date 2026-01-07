@@ -27,8 +27,8 @@ class FlashcardController extends Controller
         $student = auth()->user();
 
         // FIXED: Specify the table for id column
-        $courses = $student->courses()
-            ->where('status', 'active')
+        $courses = $student->enrolledCourses()
+            ->where('courses.status', 'active')
             ->with(['modules.topics'])
             ->get(['courses.id', 'courses.title', 'courses.subject']); // Explicitly select columns
 
@@ -67,7 +67,7 @@ class FlashcardController extends Controller
 
         if ($courseId) {
             // FIXED: Specify table for id column
-            $course = $student->courses()
+            $course = $student->enrolledCourses()
                 ->where('courses.id', $courseId)
                 ->where('status', 'active')
                 ->firstOrFail();
@@ -92,8 +92,8 @@ class FlashcardController extends Controller
         }
 
         // FIXED: Specify table for id column
-        $courses = $student->courses()
-            ->where('status', 'active')
+        $courses = $student->enrolledCourses()
+            ->where('courses.status', 'active')
             ->get(['courses.id', 'courses.title']);
 
         return Inertia::render('Student/Flashcards/Create', [
@@ -122,7 +122,7 @@ class FlashcardController extends Controller
             DB::beginTransaction();
 
             // Verify course access - FIXED: Specify table for id column
-            $course = $student->courses()
+            $course = $student->enrolledCourses()
                 ->where('courses.id', $request->course_id)
                 ->firstOrFail();
 
@@ -283,7 +283,7 @@ class FlashcardController extends Controller
         $student = auth()->user();
 
         // Verify course access - FIXED: Specify table for id column
-        $course = $student->courses()
+        $course = $student->enrolledCourses()
             ->where('courses.id', $course->id)
             ->firstOrFail();
 

@@ -28,7 +28,7 @@ class CourseTutorController extends Controller
             $student = auth()->user();
 
             // Verify the course belongs to the student
-            if (!$student->courses()->where('courses.id', $course->id)->exists()) {
+            if (!$student->enrolledCourses()->where('courses.id', $course->id)->exists()) {
                 return response()->json([
                     'error' => 'Course not found or access denied.',
                 ], 404);
@@ -80,7 +80,7 @@ class CourseTutorController extends Controller
             $student = auth()->user();
 
             // Verify course access
-            if (!$student->courses()->where('courses.id', $course->id)->exists()) {
+            if (!$student->enrolledCourses()->where('courses.id', $course->id)->exists()) {
                 return response()->json([
                     'error' => 'Course not found or access denied.',
                 ], 404);
@@ -209,7 +209,7 @@ class CourseTutorController extends Controller
             $student = auth()->user();
 
             // Verify course access
-            if (!$student->courses()->where('courses.id', $course->id)->exists()) {
+            if (!$student->enrolledCourses()->where('courses.id', $course->id)->exists()) {
                 return response()->json([
                     'error' => 'Course not found or access denied.',
                 ], 404);

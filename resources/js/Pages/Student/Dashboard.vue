@@ -8,11 +8,81 @@
             <!-- Header -->
             <div class="mb-8">
               <h1 class="text-3xl font-bold text-gray-900">
-                Welcome back, {{ $page.props.auth.user.name }}!
+                Welcome, {{ $page.props.auth.user.name }}!
               </h1>
               <p class="mt-2 text-gray-600">
                 Continue your learning journey and track your progress.
               </p>
+            </div>
+
+            <!-- Recently Dropped Courses Banner -->
+            <div v-if="recently_dropped_courses && recently_dropped_courses.length > 0" class="mb-8">
+              <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl shadow-sm border border-amber-200 p-6">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <div class="p-3 bg-amber-100 rounded-xl mr-4">
+                      <ExclamationTriangleIcon class="h-6 w-6 text-amber-600" />
+                    </div>
+                    <div>
+                      <h3 class="text-lg font-bold text-gray-900 mb-1">
+                        Recently Dropped Courses
+                      </h3>
+                      <p class="text-amber-700 text-sm">
+                        You can re-enroll in these courses anytime
+                      </p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-sm text-gray-600">
+                      {{ recently_dropped_courses.length }} course{{ recently_dropped_courses.length > 1 ? 's' : '' }} dropped
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Dropped Courses List -->
+                <div class="mt-4 space-y-3">
+                  <div
+                    v-for="course in recently_dropped_courses"
+                    :key="course.id"
+                    class="flex items-center justify-between p-3 bg-white rounded-lg border border-amber-100 hover:border-amber-300 transition-colors"
+                  >
+                    <div class="flex items-center">
+                      <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center mr-3">
+                        <BookOpenIcon class="h-5 w-5 text-amber-600" />
+                      </div>
+                      <div>
+                        <p class="text-sm font-semibold text-gray-900">
+                          {{ course.title }}
+                        </p>
+                        <p class="text-xs text-gray-500">
+                          Dropped {{ course.dropped_at }}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      v-if="course.can_reenroll"
+                      @click="reenrollCourse(course)"
+                      :disabled="reenrollLoading[course.id]"
+                      class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+                    >
+                      <template v-if="reenrollLoading[course.id]">
+                        <svg class="animate-spin h-3 w-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processing...
+                      </template>
+                      <template v-else>
+                        <ArrowPathIcon class="h-3 w-3 mr-1" />
+                        Re-enroll
+                      </template>
+                    </button>
+                    <span v-else class="text-xs text-gray-400">
+                      Not available
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Current Subscription Banner -->
@@ -302,57 +372,7 @@
                   </div>
                 </div>
 
-                <!-- Quick Actions -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-                  <div class="px-6 py-4 border-b border-gray-200/70">
-                    <h2 class="text-lg font-bold text-gray-900">
-                      Quick Actions
-                    </h2>
-                  </div>
-                  <div class="p-6">
-                    <div class="grid grid-cols-2 gap-4">
-                      <Link
-                        :href="route('student.courses.create')"
-                        class="flex flex-col items-center p-4 border border-gray-200 rounded-xl hover:bg-emerald-50 transition-colors group"
-                      >
-                        <div class="p-2 bg-emerald-100 rounded-lg group-hover:bg-emerald-200 transition-colors">
-                          <PlusCircleIcon class="h-8 w-8 text-emerald-600" />
-                        </div>
-                        <span class="mt-2 text-sm font-semibold text-gray-900">
-                          New Course
-                        </span>
-                      </Link>
 
-
-
-                      <Link
-                        :href="route('student.quizzes.index')"
-                        class="flex flex-col items-center p-4 border border-gray-200 rounded-xl hover:bg-emerald-50 transition-colors group"
-                      >
-                        <div class="p-2 bg-emerald-100 rounded-lg group-hover:bg-emerald-200 transition-colors">
-                          <ClipboardDocumentListIcon
-                            class="h-8 w-8 text-emerald-600"
-                          />
-                        </div>
-                        <span class="mt-2 text-sm font-semibold text-gray-900">
-                          Practice Quizzes
-                        </span>
-                      </Link>
-
-                      <Link
-                        :href="route('student.profile.show')"
-                        class="flex flex-col items-center p-4 border border-gray-200 rounded-xl hover:bg-emerald-50 transition-colors group"
-                      >
-                        <div class="p-2 bg-emerald-100 rounded-lg group-hover:bg-emerald-200 transition-colors">
-                          <UserCircleIcon class="h-8 w-8 text-emerald-600" />
-                        </div>
-                        <span class="mt-2 text-sm font-semibold text-gray-900">
-                          My Profile
-                        </span>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -362,6 +382,8 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
+import { router } from '@inertiajs/vue3'
 import { Head, Link } from '@inertiajs/vue3'
 import StudentLayout from '@/Layouts/StudentLayout.vue'
 import {
@@ -373,6 +395,8 @@ import {
   ChatBubbleLeftRightIcon,
   ClipboardDocumentListIcon,
   UserCircleIcon,
+  ExclamationTriangleIcon,
+  ArrowPathIcon,
 } from '@heroicons/vue/24/outline'
 import ProgressRing from '@/Components/Student/ProgressRing.vue'
 import LearningStats from '@/Components/Student/LearningStats.vue'
@@ -384,7 +408,13 @@ const props = defineProps({
   upcoming_deadlines: Object,
   learning_analytics: Object,
   current_subscription: Object,
+  recently_dropped_courses: {
+    type: Array,
+    default: () => []
+  }
 })
+
+const reenrollLoading = ref({})
 
 const getBillingPeriod = (plan) => {
   if (!plan) return 'month'
@@ -402,5 +432,37 @@ const formatDate = (dateString) => {
     month: 'long',
     day: 'numeric',
   })
+}
+
+const reenrollCourse = async (course) => {
+  if (reenrollLoading.value[course.id]) return
+
+  reenrollLoading.value[course.id] = true
+
+  try {
+    await router.post(route('student.courses.enroll', course.id), {}, {
+      preserveScroll: true,
+      onSuccess: () => {
+        // Course re-enrolled successfully
+        // Remove this course from the recently dropped list locally
+        const index = props.recently_dropped_courses.findIndex(c => c.id === course.id)
+        if (index !== -1) {
+          props.recently_dropped_courses.splice(index, 1)
+        }
+      },
+      onFinish: () => {
+        reenrollLoading.value[course.id] = false
+      }
+    })
+  } catch (error) {
+    console.error('Error re-enrolling in course:', error)
+    reenrollLoading.value[course.id] = false
+  }
+}
+
+const showAllDroppedCourses = () => {
+  // Navigate to a page showing all dropped courses
+  // You could create a new route for this or use existing route with filter
+  router.visit(route('student.courses.index', { status: 'dropped' }))
 }
 </script>

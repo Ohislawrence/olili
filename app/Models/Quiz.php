@@ -158,5 +158,13 @@ class Quiz extends Model
         }
     }
 
+    public function getQuestionCountAttribute()
+    {
+        if (isset($this->attributes['questions'])) {
+            $questions = json_decode($this->attributes['questions'], true);
+            return is_array($questions) ? count($questions) : 0;
+        }
 
+        return 0;
+    }
 }

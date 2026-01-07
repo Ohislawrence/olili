@@ -1,57 +1,47 @@
-<script setup>
-import Modal from './Modal.vue';
-
-const emit = defineEmits(['close']);
-
-defineProps({
-    show: {
-        type: Boolean,
-        default: false,
-    },
-    maxWidth: {
-        type: String,
-        default: '2xl',
-    },
-    closeable: {
-        type: Boolean,
-        default: true,
-    },
-});
-
-const close = () => {
-    emit('close');
-};
-</script>
-
 <template>
-    <Modal
-        :show="show"
-        :max-width="maxWidth"
-        :closeable="closeable"
-        @close="close"
-    >
-        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div class="sm:flex sm:items-start">
-                <div class="mx-auto shrink-0 flex items-center justify-center size-12 rounded-full bg-red-100 sm:mx-0 sm:size-10">
-                    <svg class="size-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                    </svg>
-                </div>
+  <Modal :show="show" @close="close">
+    <div class="p-6">
+      <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-red-100">
+        <ExclamationTriangleIcon class="w-6 h-6 text-red-600" />
+      </div>
 
-                <div class="mt-3 text-center sm:mt-0 sm:ms-4 sm:text-start">
-                    <h3 class="text-lg font-medium text-gray-900">
-                        <slot name="title" />
-                    </h3>
+      <h2 class="text-lg font-semibold text-gray-900 text-center mb-2">
+        <slot name="title"></slot>
+      </h2>
 
-                    <div class="mt-4 text-sm text-gray-600">
-                        <slot name="content" />
-                    </div>
-                </div>
-            </div>
-        </div>
+      <p class="text-sm text-gray-600 text-center mb-6">
+        <slot name="content"></slot>
+      </p>
 
-        <div class="flex flex-row justify-end px-6 py-4 bg-gray-100 text-end">
-            <slot name="footer" />
-        </div>
-    </Modal>
+      <div class="flex justify-center space-x-3">
+        <button
+          @click="close"
+          class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+        >
+          Cancel
+        </button>
+        <button
+          @click="confirm"
+          class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+        >
+          Confirm
+        </button>
+      </div>
+    </div>
+  </Modal>
 </template>
+
+<script setup>
+import { defineProps, defineEmits } from 'vue'
+import Modal from '@/Components/Modal.vue'
+import { ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
+
+const props = defineProps({
+  show: Boolean,
+})
+
+const emit = defineEmits(['close', 'confirm'])
+
+const close = () => emit('close')
+const confirm = () => emit('confirm')
+</script>

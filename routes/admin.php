@@ -12,11 +12,15 @@ use App\Http\Controllers\Admin\SubscriptionPlanController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\BlogPostController;
 use App\Http\Controllers\Admin\CommunityController as AdminCommunityController;
+use App\Http\Controllers\Admin\CourseOutlineController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\EmailController;
 use App\Http\Controllers\Admin\NotificationController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Admin\CoursesController;
+use App\Http\Controllers\Admin\EnrollmentController;
+use Inertia\Inertia;
+
 
 Route::middleware([
     'auth:sanctum',
@@ -41,19 +45,105 @@ Route::middleware([
     Route::post('/impersonate/leave', [UserController::class, 'leaveImpersonate'])->name('impersonate.leave');
     Route::get('/users/{user}/login-history', [UserController::class, 'loginHistory'])->name('users.login-history');
     Route::get('/users/{user}/payment-history', [UserController::class, 'paymentHistory'])->name('users.payment-history');
+    Route::get('/users/{user}/certificates', [UserController::class, 'certificates'])->name('users.certificates');
+    Route::get('/all/users/stats', [UserController::class, 'usersStats'])->name('users.stats');
+
+    // Export statistics
+    Route::get('/users/stats/export', [UserController::class, 'exportStats'])->name('users.stats.export');
+
+
+    // Certificate Management Routes
+    Route::prefix('certificates')->name('certificates.')->group(function () {
+        Route::get('/create', [UserController::class, 'showCertificate'])->name('create');
+        Route::get('/{certificate}', [UserController::class, 'showCertificate'])->name('show');
+        Route::post('/generate', [UserController::class, 'generateCertificate'])->name('generate');
+        Route::post('/batch-generate', [UserController::class, 'batchGenerateCertificates'])->name('batch-generate');
+        Route::patch('/{certificate}/status', [UserController::class, 'updateCertificateStatus'])->name('update-status');
+        Route::delete('/{certificate}', [UserController::class, 'deleteCertificate'])->name('delete');
+        Route::post('/{certificate}/send', [UserController::class, 'sendCertificate'])->name('send');
+        Route::post('/users/{user}/export', [UserController::class, 'exportCertificates'])->name('export');
+        Route::get('/{certificate}/preview', [UserController::class, 'previewCertificate'])->name('preview');
+    });
 
     // Course Management
     Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
     Route::get('/courses/create', [CourseController::class, 'create'])->name('courses.create');
     Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
-    Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
+    Route::get('courses/show/{course}/show', [CourseController::class, 'show'])->name('courses.show');
     Route::get('/courses/{course}/edit', [CourseController::class, 'edit'])->name('courses.edit');
-    Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
+    Route::post('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
     Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->name('courses.destroy');
     Route::post('/courses/{course}/update-progress', [CourseController::class, 'updateProgress'])->name('courses.update-progress');
     Route::post('/courses/{course}/regenerate-outline', [CourseController::class, 'regenerateOutline'])->name('courses.regenerate-outline');
     Route::get('/courses/{course}/analytics', [CourseController::class, 'getCourseAnalytics'])->name('courses.analytics');
     Route::get('/courses/{course}/flashcards', [CourseController::class, 'flashcards'])->name('courses.flashcards');
+    Route::post('courses/{course}/publish', [CourseController::class, 'publish'])->name('courses.publish');
+    Route::post('courses/{course}/unpublish', [CourseController::class, 'unpublish'])->name('courses.unpublish');
+    Route::get('/courses/outline/{course}/outline', [CourseController::class, 'outline'])->name('courses.outline');
+        //modules
+    Route::get('/courses/modules/{course}/outline/mod', [CourseController::class, 'outline'])->name('quizzes.create');
+    Route::get('/courses/modules/{course}/outline/mo', [CourseController::class, 'outline'])->name('courses.modules.edit');
+    Route::get('/courses/modules/{course}/outline', [CourseController::class, 'outline'])->name('courses.modules.topics.create');
+    Route::get('/courses/modules/edit/{course}/outline', [CourseController::class, 'outline'])->name('courses.modules.topics.edit');
+
+
+    Route::get('/courses/modules/{course}/edit', [CourseController::class, 'edit'])->name('courses.modules.create');
+
+    //generate content this
+    Route::prefix('courses/{course}/modules/{module}/topics/{topic}')->group(function () {
+        // Generate topic content
+        Route::post('/content/generate', [CourseOutlineController::class, 'generateContent'])
+            ->name('courses.modules.topics.content.generate');
+
+        Route::post('general/quiz/content/generate', [CourseOutlineController::class, 'generateContentForGeneralQuiz'])
+            ->name('courses.modules.topics.content.general.quiz');
+
+        // Generate quiz for topic
+        Route::post('/quiz/generate', [CourseOutlineController::class, 'generateQuiz'])
+            ->name('courses.modules.topics.quiz.generate');
+
+        // Preview generated content
+        Route::get('/content/preview', [CourseOutlineController::class, 'previewContent'])
+            ->name('courses.modules.topics.content.preview');
+    });
+    // Course-wide generation routes
+    Route::prefix('courses/{course}')->group(function () {
+        // Generate all pending content
+        Route::post('/content/generate-all', [CourseController::class, 'generateAllContent'])
+            ->name('courses.content.generate-all');
+
+        // Generate capstone project
+        Route::post('/capstone/generate', [CourseController::class, 'generateCapstoneProject'])
+            ->name('courses.capstone.generate');
+
+        // Regenerate entire course outline
+        Route::post('/outline/regenerate', [CourseController::class, 'regenerateOutline'])
+            ->name('courses.outline.regenerate');
+    });
+
+    Route::get('/courses/{course}/batch/{batch}/progress', [CourseController::class, 'batchProgress'])
+    ->name('courses.batch.progress');
+
+    // Enrollment management for courses
+    Route::prefix('courses/{course}/enrollments')->name('courses.enrollments.')->group(function () {
+        Route::get('/', [EnrollmentController::class, 'index'])->name('index');
+        Route::get('/create', [EnrollmentController::class, 'create'])->name('create');
+        Route::post('/', [EnrollmentController::class, 'store'])->name('store');
+        Route::get('/{enrollment}', [EnrollmentController::class, 'show'])->name('show');
+        Route::get('/{enrollment}/edit', [EnrollmentController::class, 'edit'])->name('edit');
+        Route::patch('/{enrollment}', [EnrollmentController::class, 'update'])->name('update');
+        Route::delete('/{enrollment}', [EnrollmentController::class, 'destroy'])->name('destroy');
+
+        // Bulk actions
+        Route::post('/bulk-update', [EnrollmentController::class, 'bulkUpdate'])->name('bulk-update');
+        Route::post('/bulk-destroy', [EnrollmentController::class, 'bulkDestroy'])->name('bulk-destroy');
+
+        // Import/Export
+        Route::post('/import', [EnrollmentController::class, 'import'])->name('import');
+        Route::get('/export', [EnrollmentController::class, 'export'])->name('export');
+        Route::get('/export-template', [EnrollmentController::class, 'exportTemplate'])->name('export-template');
+    });
+
 
     // AI Providers Management
     Route::get('/ai-providers', [AiProviderController::class, 'index'])->name('ai-providers.index');
@@ -149,7 +239,7 @@ Route::middleware([
                                         'index' => 'catalog.courses.index',
                                         'create' => 'catalog.courses.create',
                                         'store' => 'catalog.courses.store',
-                                        'show' => 'catalog.courses.show',
+                                        'show' => 'catalog.courses.show2',
                                         'edit' => 'catalog.courses.edit',
                                         'update' => 'catalog.courses.update',
                                         'destroy' => 'catalog.courses.destroy',

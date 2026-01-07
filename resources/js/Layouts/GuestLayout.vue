@@ -1,329 +1,583 @@
 <template>
-    <div class="font-poppins bg-gray-50 min-h-screen">
-        <!-- Header -->
-        <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200/50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
-                    <div class="flex items-center space-x-2">
-                        <Link :href="route('welcome')" class="flex items-center space-x-2">
-                            <img
-                            src="/logo-olilearn.PNG"
-                            alt="OliLearn"
-                            class="h-9 w-auto object-contain"
-                            />
-                        </Link>
-                    </div>
+  <div class="font-sans bg-white min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <!-- Logo -->
+          <div class="flex items-center">
+            <Link :href="route('welcome')" class="flex items-center space-x-3 group">
+              <div class="relative">
+                <img
+                  src="/logo-olilearn.PNG"
+                  alt="OliLearn - AI-Powered Learning Platform"
+                  class="h-9 w-auto object-contain transition-transform group-hover:scale-105"
+                />
+              </div>
+            </Link>
+          </div>
 
-                    <nav class="hidden md:flex space-x-8">
-                        <Link :href="route('welcome')" class="text-gray-700 hover:text-emerald-600 font-medium transition-colors" :class="{ 'text-emerald-600': $page.component === 'frontpages/Welcome' }">Home</Link>
-                        <Link :href="route('features')" class="text-gray-700 hover:text-emerald-600 font-medium transition-colors" :class="{ 'text-emerald-600': $page.component === 'frontpages/Features' }">Features</Link>
-                        <Link :href="route('courses.index')" class="text-gray-700 hover:text-emerald-600 font-medium transition-colors">Courses</Link>
-                        <Link :href="route('blog.index')" class="text-gray-700 hover:text-emerald-600 font-medium transition-colors" :class="{ 'text-emerald-600': $page.component.startsWith('Blog') }">Blog</Link>
-                        <Link :href="route('community.index')" class="text-gray-700 hover:text-emerald-600 font-medium transition-colors" :class="{ 'text-emerald-600': $page.component === 'frontpages/Community' }">Community</Link>
-                        <Link :href="route('about')" class="text-gray-700 hover:text-emerald-600 font-medium transition-colors" :class="{ 'text-emerald-600': $page.component === 'frontpages/About' }">About</Link>
-                    </nav>
 
-                    <div class="flex items-center space-x-4">
-                        <Link :href="route('login')" class="px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition">Sign In</Link>
-                        <Link :href="route('register')" class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-2 rounded-lg font-medium hover:from-emerald-500 hover:to-teal-500 transition">Get Started</Link>
-                    </div>
+
+          <!-- Centered Search Bar (Desktop) -->
+          <div class="hidden lg:flex flex-1 max-w-xl mx-8">
+            <div class="relative w-full group">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-4 w-4 text-gray-400 group-hover:text-emerald-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                v-model="globalSearch"
+                placeholder="Search courses, topics, skills..."
+                class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 hover:bg-white hover:border-gray-300"
+                @keyup.enter="handleGlobalSearch"
+                @focus="showSearchSuggestions = true"
+                @blur="setTimeout(() => showSearchSuggestions = false, 200)"
+              />
+              <button
+                @click="handleGlobalSearch"
+                class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-emerald-600 transition-colors p-1.5 rounded-lg hover:bg-emerald-50"
+                aria-label="Search"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+
+              <!-- Search Suggestions -->
+              <div
+                v-if="showSearchSuggestions && globalSearch.trim() && popularSearches.length > 0"
+                class="absolute top-full mt-1 w-full bg-white rounded-xl border border-gray-200 shadow-lg py-2 z-50"
+              >
+                <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Popular Searches
                 </div>
+                <div
+                  v-for="search in popularSearches"
+                  :key="search"
+                  @click="selectSearchSuggestion(search)"
+                  @mousedown.prevent
+                  class="px-3 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer flex items-center group"
+                >
+                  <svg class="w-4 h-4 mr-3 text-gray-400 group-hover:text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  {{ search }}
+                </div>
+              </div>
             </div>
-        </header>
+          </div>
 
-        <!-- Main Content -->
-        <main>
-            <slot />
-        </main>
+          <!-- Auth Buttons + Mobile Menu -->
+          <div class="flex items-center space-x-4">
+            <!-- Mobile Search Button -->
+            <button
+              @click="toggleMobileSearch"
+              class="lg:hidden text-gray-600 hover:text-emerald-600 transition-colors p-2 rounded-lg hover:bg-gray-100"
+              aria-label="Search"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
 
-        <!-- Footer -->
-        <footer class="bg-gray-900 text-white py-16 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-7xl mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    <div>
-                        <div class="flex items-center space-x-2 mb-4">
-                            <Link :href="route('welcome')" class="flex items-center space-x-2">
-                                <img
-                                src="/logo-olilearn.PNG"
-                                alt="OliLearn"
-                                class="h-9 w-auto object-contain"
-                                />
-                            </Link>
-                        </div>
-                        <p class="text-gray-400 mb-4">
-                            Your intelligent learning companion. Learn smarter, not harder.
-                        </p>
-                        <div class="flex space-x-4">
-                            <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-emerald-600 transition">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"></path>
-                                </svg>
-                            </a>
-                            <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-emerald-600 transition">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path>
-                                </svg>
-                            </a>
-                            <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-emerald-600 transition">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"></path>
-                                </svg>
-                            </a>
-                        </div>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
-                        <ul class="space-y-2">
-                            <li><Link :href="route('welcome')" class="text-gray-400 hover:text-emerald-400 transition">Home</Link></li>
-                            <li><Link :href="route('courses.index')" class="text-gray-400 hover:text-emerald-400 transition">Courses</Link></li>
-                            <li><Link :href="route('features')" class="text-gray-400 hover:text-emerald-400 transition">Features</Link></li>
-                            <li><Link :href="route('pricing')" class="text-gray-400 hover:text-emerald-400 transition">Pricing</Link></li>
-                            <li><Link :href="route('blog.index')" class="text-gray-400 hover:text-emerald-400 transition">Blog</Link></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold mb-4">Support</h3>
-                        <ul class="space-y-2">
-                            <li><Link :href="route('help')" class="text-gray-400 hover:text-emerald-400 transition">Help Center</Link></li>
-                            <li><Link :href="route('community.index')" class="text-gray-400 hover:text-emerald-400 transition">Community</Link></li>
-                            <li><Link :href="route('contact')" class="text-gray-400 hover:text-emerald-400 transition">Contact Us</Link></li>
-                            <li><Link :href="route('faq')" class="text-gray-400 hover:text-emerald-400 transition">FAQ</Link></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold mb-4">Subscribe</h3>
-                        <p class="text-gray-400 mb-4">Get the latest news and updates</p>
-                        <form @submit.prevent="subscribeNewsletter" class="flex">
-                            <input
-                                type="email"
-                                placeholder="Your email"
-                                v-model="newsletterEmail"
-                                class="px-4 py-2 rounded-l-lg w-full text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                required
-                            >
-                            <button
-                                type="submit"
-                                class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-r-lg transition"
-                                :disabled="newsletterLoading"
-                            >
-                                <span v-if="newsletterLoading">...</span>
-                                <span v-else>→</span>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-                <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500">
-                    <p>© 2025 AITutor. All rights reserved.</p>
-                </div>
+            <!-- Desktop Auth Buttons -->
+            <div class="hidden lg:flex items-center space-x-4">
+              <Link
+                :href="route('login')"
+                class="text-gray-700 hover:text-emerald-600 text-sm font-medium transition-colors px-4 py-2 rounded-lg hover:bg-gray-50"
+              >
+                Sign In
+              </Link>
+              <Link
+                :href="route('register')"
+                class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5"
+              >
+                Start Learning Free
+              </Link>
             </div>
-        </footer>
-    </div>
+
+            <!-- Mobile Menu Button -->
+            <button
+              @click="toggleMobileMenu"
+              class="lg:hidden text-gray-600 hover:text-emerald-600 transition-colors p-2 rounded-lg hover:bg-gray-100"
+              aria-label="Menu"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path v-if="showMobileMenu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile Search Bar -->
+        <div
+          v-if="showMobileSearch"
+          class="lg:hidden py-4 border-t border-gray-100 animate-slide-down"
+        >
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              v-model="globalSearch"
+              placeholder="Search courses..."
+              class="w-full pl-10 pr-12 py-3 text-sm rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+              @keyup.enter="handleGlobalSearch"
+            />
+            <button
+              @click="handleGlobalSearch"
+              class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-emerald-600 transition-colors"
+              aria-label="Search"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div
+          v-if="showMobileMenu"
+          class="lg:hidden py-4 border-t border-gray-100 animate-slide-down bg-white/95 backdrop-blur-sm"
+        >
+          <div class="space-y-1">
+            <Link
+              v-for="item in navItems"
+              :key="item.name"
+              :href="item.route"
+              @click="showMobileMenu = false"
+              :class="[
+                'block px-3 py-3 rounded-lg text-base font-medium transition-colors',
+                isActive(item.component)
+                  ? 'bg-emerald-50 text-emerald-700'
+                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+              ]"
+            >
+              {{ item.name }}
+            </Link>
+          </div>
+          <div class="mt-6 pt-6 border-t border-gray-100 space-y-4">
+            <Link
+              :href="route('login')"
+              @click="showMobileMenu = false"
+              class="block w-full text-center text-gray-700 hover:text-emerald-600 text-base font-medium py-2.5 rounded-lg border border-gray-200 hover:border-emerald-200 transition-colors"
+            >
+              Sign In
+            </Link>
+            <Link
+              :href="route('register')"
+              @click="showMobileMenu = false"
+              class="block w-full text-center bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-base font-medium py-3 rounded-xl shadow-sm hover:shadow-md transition-all"
+            >
+              Start Learning Free
+            </Link>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+      <slot />
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gradient-to-b from-white to-gray-50 border-t border-gray-100">
+      <!-- Newsletter Section -->
+      <div class="bg-gradient-to-r from-emerald-50 to-teal-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto text-center">
+          <div class="inline-flex items-center px-4 py-2 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-700 text-sm font-medium mb-6">
+            <span class="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
+            Stay Updated
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-3">Join Our Learning Community</h3>
+          <p class="text-gray-600 mb-8 max-w-2xl mx-auto">
+            Get weekly updates on new courses, learning tips, and exclusive offers. No spam, just valuable insights.
+          </p>
+          <form @submit.prevent="subscribeNewsletter" class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+            <input
+              type="email"
+              placeholder="Your email address"
+              v-model="newsletterEmail"
+              class="flex-grow px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm bg-white"
+              required
+            />
+            <button
+              type="submit"
+              class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+              :disabled="newsletterLoading"
+            >
+              <span v-if="newsletterLoading">
+                <svg class="animate-spin h-5 w-5 mx-auto text-white" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                </svg>
+              </span>
+              <span v-else>Subscribe Now</span>
+            </button>
+          </form>
+          <p class="text-xs text-gray-500 mt-4">
+            By subscribing, you agree to our Privacy Policy and consent to receive updates.
+          </p>
+        </div>
+      </div>
+
+      <!-- Main Footer Content -->
+      <div class="py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+            <!-- Brand -->
+            <div class="lg:col-span-2">
+              <Link :href="route('welcome')" class="flex items-center space-x-3 mb-6 group">
+                <div class="relative">
+                  <img
+                    src="/logo-olilearn.PNG"
+                    alt="OliLearn"
+                    class="h-10 w-auto object-contain transition-transform group-hover:scale-105"
+                  />
+                </div>
+                <div>
+                  <span class="text-xl font-bold text-gray-900">OliLearn</span>
+                  <div class="text-sm text-emerald-600 font-medium mt-1">Intelligent Learning Platform</div>
+                </div>
+              </Link>
+              <p class="text-gray-600 text-sm leading-relaxed max-w-md mb-6">
+                Transforming education through AI-powered personalized learning. We help learners worldwide achieve their goals with smart, adaptive courses and expert guidance.
+              </p>
+              <div class="flex space-x-4">
+                <a
+                  v-for="(social, index) in socialLinks"
+                  :key="index"
+                  :href="social.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:text-emerald-600 hover:border-emerald-200 hover:shadow-sm transition-all duration-300 hover:-translate-y-1"
+                  :aria-label="social.name"
+                >
+                  <component :is="social.icon" class="w-5 h-5" />
+                </a>
+              </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div>
+              <h3 class="text-gray-900 font-bold text-sm uppercase tracking-wider mb-6">Platform</h3>
+              <ul class="space-y-3">
+                <li v-for="link in quickLinks" :key="link.name">
+                  <Link
+                    :href="link.route"
+                    class="text-gray-600 hover:text-emerald-600 text-sm transition-colors duration-200 flex items-center group"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover:bg-emerald-500 mr-3 transition-colors"></span>
+                    {{ link.name }}
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Support -->
+            <div>
+              <h3 class="text-gray-900 font-bold text-sm uppercase tracking-wider mb-6">Support</h3>
+              <ul class="space-y-3">
+                <li v-for="link in supportLinks" :key="link.name">
+                  <Link
+                    :href="link.route"
+                    class="text-gray-600 hover:text-emerald-600 text-sm transition-colors duration-200 flex items-center group"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover:bg-emerald-500 mr-3 transition-colors"></span>
+                    {{ link.name }}
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Legal -->
+            <div>
+              <h3 class="text-gray-900 font-bold text-sm uppercase tracking-wider mb-6">Legal</h3>
+              <ul class="space-y-3">
+                <li v-for="link in legalLinks" :key="link.name">
+                  <Link
+                    :href="link.route"
+                    class="text-gray-600 hover:text-emerald-600 text-sm transition-colors duration-200 flex items-center group"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover:bg-emerald-500 mr-3 transition-colors"></span>
+                    {{ link.name }}
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Bottom Bar -->
+          <div class="border-t border-gray-200 mt-10 pt-8 flex flex-col md:flex-row justify-between items-center">
+            <div class="text-gray-500 text-sm mb-4 md:mb-0">
+              <p>© {{ currentYear }} OliLearn. All rights reserved.</p>
+            </div>
+            <div class="flex items-center space-x-6">
+              <div class="flex items-center space-x-2 text-sm text-gray-500">
+                <svg class="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <span>Trusted by 10,000+ learners in Nigeria</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <img src="/images/secure-payment.svg" alt="Secure Payment" class="h-6" />
+                <span class="text-xs text-gray-500">Secure Payment</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button
+      v-if="showBackToTop"
+      @click="scrollToTop"
+      class="fixed bottom-6 right-6 w-12 h-12 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 z-40 flex items-center justify-center group"
+      aria-label="Back to top"
+    >
+      <svg class="w-5 h-5 transform group-hover:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+      </svg>
+    </button>
+  </div>
 </template>
 
 <script setup>
-import { Link, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { ref, computed, onMounted, onUnmounted, h } from 'vue';
 
+// Current year for copyright
+const currentYear = new Date().getFullYear();
+
+// Navigation items
+const navItems = [
+    { name: 'Home', route: route('welcome'), component: 'frontpages/Welcome' },
+  { name: 'Features', route: route('features'), component: 'frontpages/Features' },
+  { name: 'Pricing', route: route('pricing'), component: 'frontpages/Pricing' },
+
+
+];
+
+// Footer links
+const quickLinks = [
+  { name: 'Browse Courses', route: route('courses.index') },
+  { name: 'Learning Paths', route: route('learning-paths') },
+  { name: 'AI Tutor', route: route('ai-tutor') },
+  { name: 'For Teams', route: route('teams') },
+  { name: 'Home', route: route('welcome'), component: 'frontpages/Welcome' },
+  { name: 'About', route: route('about'), component: 'frontpages/About' },
+];
+
+const supportLinks = [
+  { name: 'Help Center', route: route('help') },
+  { name: 'Community', route: route('community.index') },
+  { name: 'Contact Support', route: route('contact') },
+  { name: 'FAQ', route: route('faq') },
+  { name: 'Blog', route: route('blog.index'), component: 'Blog' },
+  { name: 'Pricing', route: route('pricing'), component: 'frontpages/Pricing' },
+];
+
+const legalLinks = [
+  { name: 'Privacy Policy', route: route('privacy') },
+  { name: 'Terms of Service', route: route('terms') },
+  { name: 'Cookie Policy', route: route('cookies') },
+  { name: 'Accessibility', route: route('accessibility') },
+  { name: 'GDPR Compliance', route: route('gdpr') },
+];
+
+// Social media links with icons
+const socialLinks = [
+  {
+    name: 'Twitter',
+    url: 'https://twitter.com/olilearn',
+    icon: {
+      render: () => h('svg', { class: 'w-5 h-5', fill: 'currentColor', viewBox: '0 0 24 24' }, [
+        h('path', { d: 'M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84' })
+      ])
+    }
+  },
+  {
+    name: 'YouTube',
+    url: 'https://youtube.com/olilearn',
+    icon: {
+      render: () => h('svg', { class: 'w-5 h-5', fill: 'currentColor', viewBox: '0 0 24 24' }, [
+        h('path', { d: 'M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z' })
+      ])
+    }
+  },
+  {
+    name: 'LinkedIn',
+    url: 'https://linkedin.com/company/olilearn',
+    icon: {
+      render: () => h('svg', { class: 'w-5 h-5', fill: 'currentColor', viewBox: '0 0 24 24' }, [
+        h('path', { d: 'M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z' })
+      ])
+    }
+  },
+];
+
+// Newsletter
 const newsletterEmail = ref('');
 const newsletterLoading = ref(false);
 
 const subscribeNewsletter = async () => {
-    newsletterLoading.value = true;
+  if (!newsletterEmail.value.trim()) return;
 
-    // Simulate API call
-    setTimeout(() => {
-        alert('Thank you for subscribing to our newsletter!');
-        newsletterEmail.value = '';
-        newsletterLoading.value = false;
-    }, 1000);
+  newsletterLoading.value = true;
+  try {
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    // In a real app, you would make an API call here
+    console.log('Subscribed:', newsletterEmail.value);
+    alert('Thank you for subscribing to our newsletter!');
+    newsletterEmail.value = '';
+  } catch (error) {
+    alert('Something went wrong. Please try again.');
+  } finally {
+    newsletterLoading.value = false;
+  }
 };
+
+// Global search
+const globalSearch = ref('');
+const showMobileSearch = ref(false);
+const showSearchSuggestions = ref(false);
+
+// Popular search suggestions
+const popularSearches = computed(() => {
+  const searches = [
+    'Python Programming',
+    'Data Science',
+    'Web Development',
+    'Machine Learning',
+    'Digital Marketing',
+    'Business Analytics',
+    'Artificial Intelligence',
+    'Graphic Design'
+  ];
+
+  if (!globalSearch.value.trim()) return searches.slice(0, 4);
+
+  return searches.filter(search =>
+    search.toLowerCase().includes(globalSearch.value.toLowerCase())
+  ).slice(0, 4);
+});
+
+const handleGlobalSearch = () => {
+  if (globalSearch.value.trim()) {
+    router.visit(route('courses.index', { search: globalSearch.value.trim() }), {
+      preserveScroll: false,
+      preserveState: false
+    });
+  } else {
+    router.visit(route('courses.index'));
+  }
+  showMobileSearch.value = false;
+  showSearchSuggestions.value = false;
+};
+
+const selectSearchSuggestion = (suggestion) => {
+  globalSearch.value = suggestion;
+  handleGlobalSearch();
+};
+
+// Mobile menu
+const showMobileMenu = ref(false);
+
+const toggleMobileSearch = () => {
+  showMobileSearch.value = !showMobileSearch.value;
+  showMobileMenu.value = false;
+};
+
+const toggleMobileMenu = () => {
+  showMobileMenu.value = !showMobileMenu.value;
+  showMobileSearch.value = false;
+};
+
+// Back to top button
+const showBackToTop = ref(false);
+
+const checkScrollPosition = () => {
+  showBackToTop.value = window.scrollY > 300;
+};
+
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// Active route check
+const $page = usePage();
+
+const isActive = (componentPrefix) => {
+  if (!componentPrefix) return false;
+  if (componentPrefix === $page.component) return true;
+  if (typeof componentPrefix === 'string' && $page.component?.startsWith(componentPrefix)) return true;
+  return false;
+};
+
+// Lifecycle hooks
+onMounted(() => {
+  window.addEventListener('scroll', checkScrollPosition);
+  checkScrollPosition();
+});
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', checkScrollPosition);
+});
 </script>
 
 <style scoped>
-/* Gradient Definitions */
-.bg-gradient-radial-emerald {
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.3) 0%, transparent 70%);
-}
-
-.bg-gradient-radial-teal {
-    background: radial-gradient(circle, rgba(20, 183, 167, 0.3) 0%, transparent 70%);
-}
-
-.bg-gradient-radial-cyan {
-    background: radial-gradient(circle, rgba(14, 165, 233, 0.3) 0%, transparent 70%);
-}
-
-/* Floating Elements */
-.floating-circle {
-    position: absolute;
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    filter: blur(20px);
-    opacity: 0.6;
-    animation: float 8s ease-in-out infinite;
-}
-
-.floating-triangle {
-    position: absolute;
-    width: 100px;
-    height: 100px;
-    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-    top: 20%;
-    right: 10%;
-    animation: float 12s ease-in-out infinite;
-}
-
-.floating-diamond {
-    position: absolute;
-    width: 70px;
-    height: 70px;
-    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-    bottom: 15%;
-    left: 15%;
-    animation: float 10s ease-in-out infinite;
-}
-
-/* Animation Keyframes */
-@keyframes float {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-30px) rotate(5deg); }
-}
-
-@keyframes pulse-slow {
-    0%, 100% { opacity: 0.3; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(1.05); }
-}
-
-@keyframes fade-in-up {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slide-in-right {
-    from { opacity: 0; transform: translateX(50px); }
-    to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes float-in {
-    from { opacity: 0; transform: translateY(40px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes bounce-slow {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-}
-
-@keyframes step-pop {
-    0% { transform: scale(0.8); opacity: 0; }
-    70% { transform: scale(1.1); }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-@keyframes float-slow {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-15px) rotate(3deg); }
-}
-
-@keyframes count-up {
-    from { transform: scale(0.5); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-}
-
-/* Apply Animations */
-.animate-fade-in-up {
-    animation: fade-in-up 0.8s ease-out forwards;
-}
-
-.animate-slide-in-right {
-    animation: slide-in-right 0.8s ease-out forwards;
-}
-
-.animate-float-in {
-    animation: float-in 0.8s ease-out forwards;
-}
-
-.animate-pulse-slow {
-    animation: pulse-slow 4s ease-in-out infinite;
-}
-
-.animate-bounce-slow {
-    animation: bounce-slow 2.5s infinite;
-}
-
-.animate-step-pop {
-    animation: step-pop 0.6s ease-out forwards;
-}
-
-.animate-float-slow {
-    animation: float-slow 5s ease-in-out infinite;
-}
-
-.animate-count-up {
-    animation: count-up 1s ease-out forwards;
-}
-
-/* Card Effects */
-.card-glow {
-    position: relative;
-    overflow: hidden;
-}
-
-.card-glow::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0, transparent 70%);
-    transform: scale(0);
+/* Custom animations */
+@keyframes slide-down {
+  from {
     opacity: 0;
-    transition: transform 0.5s, opacity 0.5s;
-    pointer-events: none;
-}
-
-.card-glow:hover::before {
-    transform: scale(1);
+    transform: translateY(-10px);
+  }
+  to {
     opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.course-card .course-glow {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, rgba(16, 185, 129, 0.2), rgba(20, 183, 167, 0.2));
-    opacity: 0;
-    transition: opacity 0.3s;
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out;
 }
 
-.course-card:hover .course-glow {
-    opacity: 1;
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-.testimonial-card {
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
 }
 
-.testimonial-card:hover {
-    transform: translateY(-8px) scale(1.02);
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
 }
 
-/* Stat Items */
-.stat-item {
-    transition: transform 0.3s ease;
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
-.stat-item:hover {
-    transform: translateY(-5px);
+/* Smooth transitions */
+* {
+  scroll-behavior: smooth;
 }
 
-/* Ensure proper stacking context */
-.relative {
-    position: relative;
-    z-index: 1;
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
 }
 </style>

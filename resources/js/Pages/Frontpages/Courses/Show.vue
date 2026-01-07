@@ -8,200 +8,236 @@
     />
     <AppLayout>
         <Head :title="`${course.title}`" />
-        <!-- Course Header -->
-        <section class="relative py-20 bg-gradient-to-br from-emerald-600 to-teal-600 text-white">
-            <div class="absolute inset-0 bg-black/20"></div>
+
+        <!-- Course Header - Lighter Green -->
+        <section class="relative py-16 bg-gradient-to-br from-emerald-50 via-teal-50 to-white">
+            <!-- Decorative elements -->
+            <div class="absolute inset-0 overflow-hidden">
+                <div class="absolute -top-40 -right-40 w-80 h-80 bg-emerald-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+                <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-teal-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+            </div>
+
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <!-- Breadcrumb -->
+                <nav class="mb-6">
+                    <ol class="flex items-center space-x-2 text-sm">
+                        <li>
+                            <Link :href="route('courses.index')" class="text-emerald-600 hover:text-emerald-700 transition-colors">
+                                Courses
+                            </Link>
+                        </li>
+                        <li class="text-gray-400">/</li>
+                        <li class="text-gray-400">{{ course.subject }}</li>
+                        <li class="text-gray-400">/</li>
+                        <li class="font-medium text-gray-700 truncate">{{ course.title }}</li>
+                    </ol>
+                </nav>
+
                 <div class="flex flex-col lg:flex-row items-start gap-8">
                     <!-- Course Info -->
                     <div class="flex-1">
-                        <div class="inline-flex items-center px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white text-sm font-medium mb-6">
-                            {{ course.subject }} • {{ course.level }}
-                        </div>
-                        <h1 class="text-4xl md:text-5xl font-bold mb-6 leading-tight">{{ course.title }}</h1>
-                        <p class="text-xl text-emerald-100 mb-8 leading-relaxed">{{ course.description }}</p>
-
-                        <!-- Course Meta -->
-                        <div class="flex flex-wrap gap-6 mb-8">
-                            <div class="flex items-center">
-                                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <div>
-                                    <div class="font-semibold">{{ course.estimated_duration_hours }} Hours</div>
-                                    <div class="text-sm text-emerald-200">Estimated Duration</div>
-                                </div>
-                            </div>
-                            <div class="flex items-center">
-                                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                                </svg>
-                                <div>
-                                    <div class="font-semibold">{{ course.modules?.length || 0 }} Modules</div>
-                                    <div class="text-sm text-emerald-200">Learning Path</div>
-                                </div>
-                            </div>
-                            <div class="flex items-center">
-                                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <div>
-                                    <div class="font-semibold">{{ course.status }}</div>
-                                    <div class="text-sm text-emerald-200">Course Status</div>
-                                </div>
-                            </div>
+                        <!-- Badges -->
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                {{ course.subject }}
+                            </span>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                                {{ course.level }}
+                            </span>
+                            <span v-if="course.status === 'published'" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
+                                Published
+                            </span>
+                            <span v-if="course.is_featured" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                                Featured
+                            </span>
                         </div>
 
-                        <!-- Action Buttons -->
-                        <div class="flex flex-col sm:flex-row gap-4">
+                        <h1 class="text-4xl md:text-5xl font-bold mb-6 text-gray-900 leading-tight">{{ course.title }}</h1>
+                        <p class="text-xl text-gray-600 mb-8 leading-relaxed max-w-3xl">{{ course.description }}</p>
+
+                        <!-- Course Meta - Compact -->
+                        <div class="flex flex-wrap items-center gap-6 mb-8 p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-sm">
+                            <div class="flex items-center">
+                                <div class="p-2 bg-emerald-100 rounded-lg mr-3">
+                                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">{{ course.estimated_duration_hours }} Hours</div>
+                                    <div class="text-sm text-gray-500">Duration</div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center">
+                                <div class="p-2 bg-blue-100 rounded-lg mr-3">
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">{{ course.modules?.length || 0 }} Modules</div>
+                                    <div class="text-sm text-gray-500">Content</div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center">
+                                <div class="p-2 bg-purple-100 rounded-lg mr-3">
+                                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">{{ course.status }}</div>
+                                    <div class="text-sm text-gray-500">Status</div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center ml-auto">
+                                <div class="flex items-center">
+                                    <div class="flex mr-1">
+                                        <svg v-for="n in 5" :key="n" class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                        </svg>
+                                    </div>
+                                    <span class="text-gray-900 font-semibold ml-1">4.8</span>
+                                    <span class="text-gray-500 text-sm ml-1">(24 reviews)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons - More Visible -->
+                        <div class="flex flex-col sm:flex-row gap-4 mb-8">
+                            <!-- Main Action Button -->
                             <button
                                 v-if="course.progress_percentage > 0"
-                                class="bg-white text-emerald-600 px-8 py-4 rounded-xl font-semibold hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 flex items-center justify-center"
+                                @click="enrollInCourse"
+                                class="group relative bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl"
                             >
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="absolute inset-0 bg-gradient-to-r from-emerald-700 to-teal-700 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                <svg class="w-5 h-5 mr-2 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                Continue Learning
+                                <span class="relative z-10">Continue Learning ({{ course.progress_percentage }}%)</span>
                             </button>
                             <button
-                                v-else
-                                class="bg-white text-emerald-600 px-8 py-4 rounded-xl font-semibold hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 flex items-center justify-center"
+                                v-else-if="$page.props.auth.user && isEnrolled"
+                                @click="enrollInCourse"
+                                class="group relative bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl"
                             >
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="absolute inset-0 bg-gradient-to-r from-emerald-700 to-teal-700 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                <svg class="w-5 h-5 mr-2 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
                                 </svg>
-                                Start Course
+                                <span class="relative z-10">Go to Course Dashboard</span>
                             </button>
+                            <button
+                                v-else-if="$page.props.auth.user"
+                                @click="enrollInCourse"
+                                class="group relative bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl"
+                            >
+                                <div class="absolute inset-0 bg-gradient-to-r from-emerald-700 to-teal-700 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                <svg class="w-5 h-5 mr-2 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                                </svg>
+                                <span class="relative z-10">Enroll Now - Start Learning</span>
+                            </button>
+                            <Link
+                                v-else
+                                :href="route('login')"
+                                class="group relative bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl"
+                            >
+                                <div class="absolute inset-0 bg-gradient-to-r from-emerald-700 to-teal-700 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                <svg class="w-5 h-5 mr-2 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                                </svg>
+                                <span class="relative z-10">Sign In to Enroll</span>
+                            </Link>
 
-                            <!-- Share Button with dropdown -->
-                            <div class="relative" ref="shareContainer">
+                            <!-- Secondary Actions -->
+                            <div class="flex gap-3">
                                 <button
-                                    @click="toggleShareDropdown"
-                                    class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-xl font-semibold hover:bg-white/10 transform hover:scale-105 transition-all duration-300 flex items-center justify-center"
+                                    @click="toggleWishlist"
+                                    class="group p-4 bg-white border border-gray-200 rounded-xl hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-300 shadow-sm hover:shadow-md"
+                                    :title="isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'"
                                 >
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                                    <svg
+                                        class="w-5 h-5 transition-colors"
+                                        :class="isWishlisted ? 'text-red-500 fill-red-500' : 'text-gray-400 group-hover:text-red-500'"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                                     </svg>
-                                    Share Course
                                 </button>
 
-                                <!-- Share Dropdown -->
-                                <div
-                                    v-show="showShareDropdown"
-                                    class="absolute z-50 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden"
-                                    style="left: 50%; transform: translateX(-50%);"
-                                >
-                                    <div class="p-2">
-                                        <!-- Copy URL -->
-                                        <button
-                                            @click.stop="copyUrl"
-                                            class="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-                                        >
-                                            <svg class="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                                            </svg>
-                                            <span class="font-medium">Copy Link</span>
-                                        </button>
-
-                                        <!-- Social Media Sharing -->
-                                        <div class="flex items-center justify-around py-3 border-t border-gray-100">
-                                            <!-- WhatsApp -->
-                                            <button
-                                                @click.stop="shareOnWhatsApp"
-                                                class="p-2 rounded-full hover:bg-green-50 transition-colors group"
-                                                title="Share on WhatsApp"
-                                            >
-                                                <svg class="w-6 h-6 text-green-600 group-hover:text-green-700" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M20.1 3.9C17.9 1.7 15 .5 12 .5 5.8.5.7 5.6.7 11.9c0 2 .5 3.9 1.5 5.6L.6 23.4l6-1.6c1.6.9 3.5 1.3 5.4 1.3 6.3 0 11.4-5.1 11.4-11.4-.1-2.8-1.2-5.7-3.3-7.8zM12 21.4c-1.7 0-3.3-.5-4.8-1.3l-.4-.2-3.5 1 1-3.4L4 17c-1-1.5-1.4-3.2-1.4-5.1 0-5.2 4.2-9.4 9.4-9.4 2.5 0 4.9 1 6.7 2.8 1.8 1.8 2.8 4.2 2.8 6.7-.1 5.2-4.3 9.4-9.5 9.4zm5.1-7.1c-.3-.1-1.7-.9-1.9-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.1-.2.2-.3.2-.6.1s-1.2-.5-2.3-1.4c-.9-.8-1.5-1.7-1.6-2-.2-.3 0-.5.1-.6s.3-.3.4-.5c.2-.1.3-.3.4-.5.1-.2 0-.4 0-.5C10 9 9.3 7.6 9 7c-.1-.4-.4-.3-.5-.3h-.6s-.4.1-.7.3c-.3.3-1 1-1 2.4s1 2.8 1.1 3c.1.2 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 1.9-1.3.2-.7.2-1.2.2-1.3-.1-.3-.3-.4-.6-.5z"/>
-                                                </svg>
-                                            </button>
-
-                                            <!-- Facebook -->
-                                            <button
-                                                @click.stop="shareOnFacebook"
-                                                class="p-2 rounded-full hover:bg-blue-50 transition-colors group"
-                                                title="Share on Facebook"
-                                            >
-                                                <svg class="w-6 h-6 text-blue-600 group-hover:text-blue-700" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                                                </svg>
-                                            </button>
-
-                                            <!-- Twitter/X -->
-                                            <button
-                                                @click.stop="shareOnTwitter"
-                                                class="p-2 rounded-full hover:bg-gray-50 transition-colors group"
-                                                title="Share on Twitter"
-                                            >
-                                                <svg class="w-6 h-6 text-gray-800 group-hover:text-black" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                                                </svg>
-                                            </button>
-
-                                            <!-- LinkedIn -->
-                                            <button
-                                                @click.stop="shareOnLinkedIn"
-                                                class="p-2 rounded-full hover:bg-blue-50 transition-colors group"
-                                                title="Share on LinkedIn"
-                                            >
-                                                <svg class="w-6 h-6 text-blue-700 group-hover:text-blue-800" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                                                </svg>
-                                            </button>
-
-                                            <!-- Telegram -->
-                                            <button
-                                                @click.stop="shareOnTelegram"
-                                                class="p-2 rounded-full hover:bg-blue-50 transition-colors group"
-                                                title="Share on Telegram"
-                                            >
-                                                <svg class="w-6 h-6 text-blue-500 group-hover:text-blue-600" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.697.064-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                                                </svg>
-                                            </button>
-                                        </div>
-
-                                        <!-- Copy Success Message -->
-                                        <div
-                                            v-if="copySuccess"
-                                            class="mt-2 p-2 bg-green-50 text-green-700 text-sm rounded-lg text-center animate-pulse"
-                                        >
-                                            ✓ Link copied to clipboard!
-                                        </div>
-                                    </div>
+                                <!-- Share Button -->
+                                <div class="relative" ref="shareContainer">
+                                    <button
+                                        @click.stop="toggleShareDropdown"
+                                        class="group p-4 bg-white border border-gray-200 rounded-xl hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-300 shadow-sm hover:shadow-md flex items-center"
+                                    >
+                                        <svg class="w-5 h-5 text-gray-500 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Course Visual -->
+                    <!-- Course Visual Card -->
                     <div class="lg:w-96 flex-shrink-0">
-                        <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
-                            <div class="text-center mb-6">
-                                <div class="w-20 h-20 mx-auto mb-4 bg-white/20 rounded-2xl flex items-center justify-center text-white text-2xl">
-                                    📚
+                        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg">
+                            <!-- Progress Indicator -->
+                            <div v-if="course.progress_percentage > 0" class="mb-6">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium text-gray-700">Your Progress</span>
+                                    <span class="text-sm font-semibold text-emerald-600">{{ course.progress_percentage }}%</span>
                                 </div>
-                                <h3 class="text-xl font-bold mb-2">Course Overview</h3>
-                                <p class="text-emerald-200">AI-Powered Learning Path</p>
+                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div
+                                        class="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
+                                        :style="{ width: `${course.progress_percentage}%` }"
+                                    ></div>
+                                </div>
                             </div>
 
-                            <div class="space-y-4">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-emerald-200">Difficulty</span>
-                                    <span class="font-semibold">{{ course.level }}</span>
+                            <div class="text-center mb-6">
+                                <div class="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl flex items-center justify-center text-emerald-600 text-2xl">
+                                    📚
                                 </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-emerald-200">Enrolled</span>
-                                    <span class="font-semibold">134 Students</span>
+                                <h3 class="text-lg font-bold text-gray-900 mb-1">Course Overview</h3>
+                                <p class="text-gray-500 text-sm">AI-Powered Learning Journey</p>
+                            </div>
+
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span class="text-gray-600 text-sm">Difficulty Level</span>
+                                    <span class="font-semibold text-gray-900">{{ course.level }}</span>
                                 </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-emerald-200">Rating</span>
-                                    <div class="flex items-center">
-                                        <svg v-for="n in 5" :key="n" class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                                        </svg>
-                                        <span class="ml-2 font-semibold">4.8</span>
+                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span class="text-gray-600 text-sm">Total Enrolled</span>
+                                    <span class="font-semibold text-gray-900">{{ course.enrollment_count || 134 }} Students</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span class="text-gray-600 text-sm">Last Updated</span>
+                                    <span class="font-semibold text-gray-900">{{ formatDate(course.updated_at) }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Quick Stats -->
+                            <div class="mt-6 pt-6 border-t border-gray-200">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="text-center p-3 bg-emerald-50 rounded-lg">
+                                        <div class="text-lg font-bold text-emerald-700">{{ course.modules?.length || 0 }}</div>
+                                        <div class="text-xs text-emerald-600">Modules</div>
+                                    </div>
+                                    <div class="text-center p-3 bg-blue-50 rounded-lg">
+                                        <div class="text-lg font-bold text-blue-700">{{ getTotalTopics() }}</div>
+                                        <div class="text-xs text-blue-600">Topics</div>
                                     </div>
                                 </div>
                             </div>
@@ -212,83 +248,163 @@
         </section>
 
         <!-- Course Content -->
-        <section class="py-16 bg-white">
+        <section class="py-16 bg-gray-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex flex-col lg:flex-row gap-12">
+                <!-- Navigation Tabs -->
+                <div class="mb-8">
+                    <div class="border-b border-gray-200">
+                        <nav class="-mb-px flex space-x-8">
+                            <button
+                                @click="activeTab = 'curriculum'"
+                                :class="[
+                                    'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
+                                    activeTab === 'curriculum'
+                                        ? 'border-emerald-500 text-emerald-600'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ]"
+                            >
+                                Curriculum
+                            </button>
+                            <button
+                                @click="activeTab = 'overview'"
+                                :class="[
+                                    'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
+                                    activeTab === 'overview'
+                                        ? 'border-emerald-500 text-emerald-600'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ]"
+                            >
+                                Overview
+                            </button>
+                            <button
+                                @click="activeTab = 'reviews'"
+                                :class="[
+                                    'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
+                                    activeTab === 'reviews'
+                                        ? 'border-emerald-500 text-emerald-600'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ]"
+                            >
+                                Reviews
+                            </button>
+                            <button
+                                @click="activeTab = 'faq'"
+                                :class="[
+                                    'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
+                                    activeTab === 'faq'
+                                        ? 'border-emerald-500 text-emerald-600'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ]"
+                            >
+                                FAQ
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+
+                <div class="flex flex-col lg:flex-row gap-8">
                     <!-- Main Content -->
                     <div class="lg:w-2/3">
-                        <!-- Learning Objectives -->
-                        <div class="mb-12">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-6">What You'll Learn</h2>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div
-                                    v-for="(objective, index) in course.learning_objectives || []"
-                                    :key="index"
-                                    class="flex items-start p-4 bg-gray-50 rounded-xl"
-                                >
-                                    <svg class="w-5 h-5 text-emerald-600 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    <span class="text-gray-700">{{ objective }}</span>
+                        <!-- Curriculum Tab -->
+                        <div v-if="activeTab === 'curriculum'" class="space-y-6">
+                            <!-- Course Progress Summary -->
+                            <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-xl font-bold text-gray-900">Course Content</h3>
+                                    <span class="text-sm text-gray-500">{{ getTotalTopics() }} topics • {{ course.estimated_duration_hours }} total hours</span>
                                 </div>
-                            </div>
-                        </div>
 
-                        <!-- Course Curriculum -->
-                        <div class="mb-12">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-6">Course Curriculum</h2>
-                            <div class="space-y-4">
-                                <div
-                                    v-for="module in course.modules || []"
-                                    :key="module.id"
-                                    class="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300"
-                                >
-                                    <button
-                                        @click="toggleModule(module.id)"
-                                        class="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition-colors"
+                                <!-- Module Accordions -->
+                                <div class="space-y-3">
+                                    <div
+                                        v-for="module in course.modules || []"
+                                        :key="module.id"
+                                        class="border border-gray-200 rounded-xl overflow-hidden hover:border-emerald-300 transition-colors"
                                     >
-                                        <div class="flex items-center">
-                                            <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 font-semibold mr-4">
-                                                {{ module.order }}
-                                            </div>
-                                            <div>
-                                                <h3 class="text-lg font-semibold text-gray-900">{{ module.title }}</h3>
-                                                <p class="text-gray-600 text-sm mt-1">
-                                                    {{ module.topics?.length || 0 }} topics • {{ module.estimated_duration_hours || 2 }} hours
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <svg
-                                            class="w-5 h-5 text-gray-400 transform transition-transform"
-                                            :class="{ 'rotate-180': expandedModule === module.id }"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
+                                        <button
+                                            @click="toggleModule(module.id)"
+                                            class="w-full flex items-center justify-between p-5 text-left bg-white hover:bg-gray-50 transition-colors"
                                         >
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                        </svg>
-                                    </button>
-
-                                    <!-- Module Topics -->
-                                    <div v-if="expandedModule === module.id" class="border-t border-gray-200">
-                                        <div class="p-6 space-y-3">
-                                            <div
-                                                v-for="topic in module.topics || []"
-                                                :key="topic.id"
-                                                class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                                            >
-                                                <div class="flex items-center">
-                                                    <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-gray-600 text-sm font-semibold mr-3">
-                                                        {{ topic.order }}
-                                                    </div>
-                                                    <div>
-                                                        <h4 class="font-medium text-gray-900">{{ topic.title }}</h4>
-                                                        <p class="text-gray-600 text-sm">{{ topic.estimated_duration_minutes }} minutes</p>
+                                            <div class="flex items-center flex-1">
+                                                <div class="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600 font-semibold mr-4 flex-shrink-0">
+                                                    {{ module.order }}
+                                                </div>
+                                                <div class="flex-1">
+                                                    <h4 class="font-semibold text-gray-900">{{ module.title }}</h4>
+                                                    <div class="flex items-center mt-1 text-sm text-gray-500">
+                                                        <span class="flex items-center mr-4">
+                                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                                            </svg>
+                                                            {{ module.topics?.length || 0 }} topics
+                                                        </span>
+                                                        <span class="flex items-center">
+                                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                            </svg>
+                                                            {{ module.estimated_duration_hours || 2 }}h
+                                                        </span>
                                                     </div>
                                                 </div>
-                                                <button class="text-emerald-600 hover:text-emerald-700 font-semibold text-sm">
-                                                    Start
-                                                </button>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <span v-if="getModuleProgress(module.id)" class="text-sm text-emerald-600 font-medium mr-3">
+                                                    {{ getModuleProgress(module.id) }}% complete
+                                                </span>
+                                                <svg
+                                                    class="w-5 h-5 text-gray-400 transition-transform duration-300"
+                                                    :class="{ 'rotate-180': expandedModule === module.id }"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                </svg>
+                                            </div>
+                                        </button>
+
+                                        <!-- Module Topics -->
+                                        <div
+                                            v-if="expandedModule === module.id"
+                                            class="border-t border-gray-200 bg-gray-50/50"
+                                            :class="isModuleExpanded(module.id) ? 'animate-slideDown' : 'animate-slideUp'"
+                                        >
+                                            <div class="p-4">
+                                                <div v-if="module.description" class="mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                                                    <p class="text-gray-600">{{ module.description }}</p>
+                                                </div>
+
+                                                <div class="space-y-2">
+                                                    <div
+                                                        v-for="topic in module.topics || []"
+                                                        :key="topic.id"
+                                                        class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-emerald-300 hover:shadow-sm transition-all"
+                                                    >
+                                                        <div class="flex items-center">
+                                                            <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-medium mr-3">
+                                                                {{ topic.order }}
+                                                            </div>
+                                                            <div>
+                                                                <h5 class="font-medium text-gray-900">{{ topic.title }}</h5>
+                                                                <div class="flex items-center text-sm text-gray-500 mt-1">
+                                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                                    </svg>
+                                                                    {{ topic.estimated_duration_minutes }} min
+                                                                    <span class="mx-2">•</span>
+                                                                    <span v-if="topic.is_completed" class="text-green-600 font-medium">Completed</span>
+                                                                    <span v-else class="text-gray-400">Not started</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            @click.stop="startTopic(topic)"
+                                                            class="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg font-medium hover:bg-emerald-100 transition-colors text-sm"
+                                                        >
+                                                            {{ topic.is_completed ? 'Review' : 'Start' }}
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -296,94 +412,200 @@
                             </div>
                         </div>
 
-                        <!-- Prerequisites -->
-                        <div v-if="course.prerequisites && course.prerequisites.length > 0" class="mb-12">
-                            <h2 class="text-3xl font-bold text-gray-900 mb-6">Prerequisites</h2>
-                            <div class="bg-blue-50 border border-blue-200 rounded-2xl p-6">
-                                <ul class="space-y-2">
-                                    <li
-                                        v-for="(prereq, index) in course.prerequisites"
+                        <!-- Overview Tab -->
+                        <div v-if="activeTab === 'overview'" class="space-y-8">
+                            <!-- Learning Objectives -->
+                            <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                                <h3 class="text-xl font-bold text-gray-900 mb-6">What You'll Learn</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div
+                                        v-for="(objective, index) in course.learning_objectives || []"
                                         :key="index"
-                                        class="flex items-center text-blue-800"
+                                        class="flex items-start p-4 bg-emerald-50/50 rounded-xl border border-emerald-100"
                                     >
-                                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-5 h-5 text-emerald-600 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span class="text-gray-700">{{ objective }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Prerequisites -->
+                            <div v-if="course.prerequisites && course.prerequisites.length > 0" class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                                <h3 class="text-xl font-bold text-gray-900 mb-6">Prerequisites</h3>
+                                <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-5">
+                                    <div class="flex items-start mb-4">
+                                        <svg class="w-6 h-6 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
-                                        {{ prereq }}
-                                    </li>
-                                </ul>
+                                        <p class="text-blue-800">Before starting this course, we recommend having basic knowledge in these areas:</p>
+                                    </div>
+                                    <ul class="space-y-2">
+                                        <li
+                                            v-for="(prereq, index) in course.prerequisites"
+                                            :key="index"
+                                            class="flex items-center text-blue-700 ml-9"
+                                        >
+                                            <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                            {{ prereq }}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Target Audience -->
+                            <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                                <h3 class="text-xl font-bold text-gray-900 mb-6">Who is this course for?</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div class="p-4 bg-gradient-to-br from-emerald-50 to-white rounded-xl border border-emerald-100">
+                                        <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 mb-3">
+                                            👩‍💻
+                                        </div>
+                                        <h4 class="font-semibold text-gray-900 mb-2">Beginners</h4>
+                                        <p class="text-gray-600 text-sm">Starting their journey in this subject</p>
+                                    </div>
+                                    <div class="p-4 bg-gradient-to-br from-blue-50 to-white rounded-xl border border-blue-100">
+                                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-3">
+                                            🎓
+                                        </div>
+                                        <h4 class="font-semibold text-gray-900 mb-2">Students</h4>
+                                        <p class="text-gray-600 text-sm">Looking to supplement their academic studies</p>
+                                    </div>
+                                    <div class="p-4 bg-gradient-to-br from-purple-50 to-white rounded-xl border border-purple-100">
+                                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 mb-3">
+                                            💼
+                                        </div>
+                                        <h4 class="font-semibold text-gray-900 mb-2">Professionals</h4>
+                                        <p class="text-gray-600 text-sm">Seeking to upgrade their skills for career growth</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Reviews Tab -->
+                        <div v-if="activeTab === 'reviews'" class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                            <h3 class="text-xl font-bold text-gray-900 mb-6">Student Reviews</h3>
+                            <!-- Add reviews content here -->
+                            <div class="text-center py-12 text-gray-500">
+                                <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                                </svg>
+                                <p>No reviews yet. Be the first to review this course!</p>
+                            </div>
+                        </div>
+
+                        <!-- FAQ Tab -->
+                        <div v-if="activeTab === 'faq'" class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                            <h3 class="text-xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h3>
+                            <!-- Add FAQ content here -->
+                            <div class="text-center py-12 text-gray-500">
+                                <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <p>Common questions will appear here</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Sidebar -->
                     <div class="lg:w-1/3">
-                        <!-- Course Actions -->
-                        <div class="bg-gray-50 rounded-2xl p-6 mb-8 sticky top-24">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Course Actions</h3>
+                        <!-- Instructor Card -->
+                        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm mb-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Course Instructor</h3>
+                            <div class="flex items-start space-x-4">
+                                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-600 text-xl font-bold">
+                                    AI
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-900">OliLearn AI</h4>
+                                    <p class="text-sm text-gray-600 mt-1">AI-Powered Learning Assistant</p>
+                                    <div class="flex items-center mt-3 text-sm text-gray-500">
+                                        <svg class="w-4 h-4 mr-1 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        <span>Expert in {{ course.subject }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Course Features -->
+                        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm mb-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Course Features</h3>
                             <div class="space-y-3">
-                                <!-- Enroll Button -->
-                                <button
-                                    v-if="$page.props.auth.user"
-                                    @click="enrollInCourse"
-                                    class="w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center"
-                                >
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
-                                    </svg>
-                                    {{ isEnrolled ? 'Go to Course' : 'Enroll in Course' }}
-                                </button>
-
-                                <!-- Sign In Button for guests -->
-                                <Link
-                                    v-else
-                                    :href="route('login')"
-                                    class="w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center"
-                                >
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
-                                    </svg>
-                                    Sign In to Enroll
-                                </Link>
-
-                                <!-- Share Button in Sidebar -->
-                                <button
-                                    @click="toggleShareDropdown"
-                                    class="w-full border border-gray-300 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-100 transition-colors flex items-center justify-center"
-                                >
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
-                                    </svg>
-                                    Share Course
-                                </button>
+                                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                                    <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 mr-3">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-gray-900">Certificate</h4>
+                                        <p class="text-sm text-gray-500">Upon completion</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mr-3">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-gray-900">Hands-on Projects</h4>
+                                        <p class="text-sm text-gray-500">Practical experience</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 mr-3">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-gray-900">Lifetime Access</h4>
+                                        <p class="text-sm text-gray-500">Learn at your pace</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Related Courses -->
-                        <div v-if="relatedCourses.length > 0" class="bg-white border border-gray-200 rounded-2xl p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Related Courses</h3>
+                        <div v-if="relatedCourses.length > 0" class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-gray-900">Related Courses</h3>
+                                <Link :href="route('courses.index')" class="text-sm text-emerald-600 hover:text-emerald-700 font-medium">
+                                    View all
+                                </Link>
+                            </div>
                             <div class="space-y-4">
-                                <div
-                                    v-for="relatedCourse in relatedCourses"
+                                <Link
+                                    v-for="relatedCourse in relatedCourses.slice(0, 3)"
                                     :key="relatedCourse.id"
-                                    class="flex items-start space-x-3 group cursor-pointer"
+                                    :href="route('courses.show', relatedCourse.id)"
+                                    class="group flex items-start space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200"
                                 >
-                                    <div class="w-16 h-16 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white text-lg font-semibold">
+                                    <div class="w-12 h-12 flex-shrink-0 rounded-lg bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-600 font-semibold">
                                         {{ relatedCourse.subject?.charAt(0) || 'C' }}
                                     </div>
-                                    <div>
-                                        <h4 class="font-medium text-gray-900 group-hover:text-emerald-600 transition-colors line-clamp-2">
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="font-medium text-gray-900 group-hover:text-emerald-600 transition-colors truncate">
                                             {{ relatedCourse.title }}
                                         </h4>
-                                        <p class="text-gray-500 text-sm mt-1">{{ relatedCourse.level }}</p>
-                                        <div class="flex items-center mt-2 text-sm text-gray-600">
-                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                            </svg>
-                                            {{ relatedCourse.estimated_duration_hours }}h
+                                        <div class="flex items-center text-sm text-gray-500 mt-1">
+                                            <span class="truncate">{{ relatedCourse.level }}</span>
+                                            <span class="mx-2">•</span>
+                                            <span class="flex items-center">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                {{ relatedCourse.estimated_duration_hours }}h
+                                            </span>
                                         </div>
                                     </div>
-                                </div>
+                                </Link>
                             </div>
                         </div>
                     </div>
@@ -410,6 +632,8 @@ const expandedModule = ref(null);
 const showShareDropdown = ref(false);
 const copySuccess = ref(false);
 const shareContainer = ref(null);
+const activeTab = ref('curriculum');
+const isWishlisted = ref(false);
 
 const isEnrolled = computed(() => props.course.user_enrollment_count > 0);
 
@@ -484,16 +708,13 @@ const shareOnTelegram = () => {
     showShareDropdown.value = false;
 };
 
-// Enroll functionality
+// Course functionality
 const enrollInCourse = () => {
     if (isEnrolled.value) {
-        // Redirect to course dashboard if already enrolled
-        router.visit(route('student.courses.show', props.course.id));
+        router.visit(route('student.courses.show', { id: props.course.id, slug: props.course.slug}));
     } else {
-        // Enroll in course
         router.post(route('student.catalog.enroll', props.course.id), {}, {
             onSuccess: () => {
-                // Course enrolled successfully
                 router.visit(route('student.courses.show', props.course.id));
             },
             onError: (errors) => {
@@ -505,8 +726,35 @@ const enrollInCourse = () => {
     }
 };
 
+const toggleWishlist = () => {
+    isWishlisted.value = !isWishlisted.value;
+    // Add API call here to update wishlist
+};
+
 const toggleModule = (moduleId) => {
     expandedModule.value = expandedModule.value === moduleId ? null : moduleId;
+};
+
+const isModuleExpanded = (moduleId) => {
+    return expandedModule.value === moduleId;
+};
+
+const getTotalTopics = () => {
+    return props.course.modules?.reduce((total, module) => {
+        return total + (module.topics?.length || 0);
+    }, 0) || 0;
+};
+
+const getModuleProgress = (moduleId) => {
+    // This would come from your backend
+    // For now, return a dummy value or 0
+    return 0;
+};
+
+const startTopic = (topic) => {
+    // Navigate to topic content
+    console.log('Starting topic:', topic.id);
+    // router.visit(route('student.topics.show', topic.id));
 };
 
 const formatDate = (dateString) => {
@@ -514,7 +762,7 @@ const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
         year: 'numeric',
-        month: 'long',
+        month: 'short',
         day: 'numeric'
     });
 };
@@ -522,6 +770,9 @@ const formatDate = (dateString) => {
 // Close dropdown when clicking outside
 onMounted(() => {
     document.addEventListener('click', closeShareDropdown);
+    // Check wishlist status from local storage or API
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    isWishlisted.value = wishlist.includes(props.course.id);
 });
 
 onUnmounted(() => {
@@ -537,22 +788,61 @@ onUnmounted(() => {
     overflow: hidden;
 }
 
-/* Smooth transitions for module expansion */
-.module-content {
-    transition: all 0.3s ease-in-out;
+/* Animations */
+@keyframes blob {
+    0% {
+        transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+        transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+        transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+        transform: translate(0px, 0px) scale(1);
+    }
 }
 
-/* Animation for copy success */
-@keyframes pulse {
-    0%, 100% {
+.animate-blob {
+    animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+    animation-delay: 2s;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+    }
+    to {
         opacity: 1;
-    }
-    50% {
-        opacity: 0.7;
+        transform: translateY(0);
+        max-height: 500px;
     }
 }
 
-.animate-pulse {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+@keyframes slideUp {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 500px;
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+    }
+}
+
+.animate-slideDown {
+    animation: slideDown 0.3s ease-out forwards;
+}
+
+.animate-slideUp {
+    animation: slideUp 0.3s ease-in forwards;
 }
 </style>

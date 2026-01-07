@@ -16,10 +16,9 @@ class WelcomeController extends Controller
     public function index()
     {
         // Get featured courses with progress information
-        $courses = Course::where('created_by', 'admin')->where('visibility', 'public')->with(['modules', 'examBoard'])
-            ->active()
-            ->withProgress()
+        $courses = Course::where('visibility', 'public')->with(['modules', 'examBoard'])
             ->limit(6)
+            ->latest()
             ->get()
             ->map(function ($course) {
                 return [
@@ -28,13 +27,10 @@ class WelcomeController extends Controller
                     'subject' => $course->subject,
                     'description' => $course->description,
                     'level' => $course->level,
-                    'progress_percentage' => $course->progress_percentage,
                     'estimated_duration_hours' => $course->estimated_duration_hours,
-                    'modules_count' => $course->modules_count,
-                    'completed_modules_count' => $course->completed_modules_count,
+                    'modules_count' => $course->modules->count(),
                     'status' => $course->status,
-                    'start_date' => $course->start_date?->format('M d, Y'),
-                    'target_completion_date' => $course->target_completion_date?->format('M d, Y'),
+                    'slug' => $course->slug,
                 ];
             });
 

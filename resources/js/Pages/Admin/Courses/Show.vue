@@ -7,12 +7,22 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Header -->
         <div class="mb-8">
-          <div class="flex justify-between items-center">
-            <div>
-              <h1 class="text-3xl font-bold text-gray-900">{{ course.title }}</h1>
-              <p class="mt-2 text-gray-600">
-                {{ course.description }}
-              </p>
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <div class="flex items-center space-x-3">
+                <Link
+                  :href="route('admin.courses.index')"
+                  class="text-gray-400 hover:text-gray-600"
+                >
+                  <ArrowLeftIcon class="h-5 w-5" />
+                </Link>
+                <div>
+                  <h1 class="text-3xl font-bold text-gray-900">{{ course.title }}</h1>
+                  <p class="mt-2 text-gray-600">
+                    {{ course.description }}
+                  </p>
+                </div>
+              </div>
               <div class="mt-2 flex items-center space-x-4">
                 <span
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
@@ -21,20 +31,18 @@
                   {{ course.status }}
                 </span>
                 <span class="text-sm text-gray-500 capitalize">{{ course.subject }} • {{ course.level }}</span>
+                <span v-if="course.exam_board" class="text-sm text-gray-500">
+                  Exam Board: {{ course.exam_board.name }}
+                </span>
               </div>
             </div>
             <div class="flex space-x-3">
               <Link
                 :href="route('admin.courses.edit', course.id)"
-                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
+                <PencilIcon class="h-4 w-4 mr-2" />
                 Edit Course
-              </Link>
-              <Link
-                :href="route('admin.courses.index')"
-                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Back to Courses
               </Link>
             </div>
           </div>
@@ -43,216 +51,176 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <!-- Main Content -->
           <div class="lg:col-span-2 space-y-6">
-            <!-- Progress Overview -->
+            <!-- Course Stats -->
             <div class="bg-white shadow rounded-lg">
               <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">Progress Overview</h3>
+                <h3 class="text-lg font-semibold text-gray-900">Course Statistics</h3>
               </div>
               <div class="p-6">
-                <!-- Update all stat references to use optional chaining -->
-<div class="flex items-center justify-between mb-4">
-  <div>
-    <h4 class="text-sm font-medium text-gray-500">Overall Progress</h4>
-    <p class="text-2xl font-bold text-gray-900">
-      {{ Math.round(course.progress_percentage) }}%
-    </p>
-  </div>
-  <div class="text-right">
-    <h4 class="text-sm font-medium text-gray-500">Completed</h4>
-    <p class="text-2xl font-bold text-gray-900">
-      {{ course.completed_outlines_count || 0 }}/{{ course.outlines_count || 0 }}
-    </p>
-  </div>
-</div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div class="text-center p-4 bg-blue-50 rounded-lg">
+                    <div class="text-2xl font-bold text-blue-600">{{ course.current_enrollment || 0 }}</div>
+                    <div class="text-sm text-blue-800">Enrolled Students</div>
+                  </div>
+                  <div class="text-center p-4 bg-green-50 rounded-lg">
+                    <div class="text-2xl font-bold text-green-600">{{ completedEnrollmentsCount }}</div>
+                    <div class="text-sm text-green-800">Completed</div>
+                  </div>
+                  <div class="text-center p-4 bg-amber-50 rounded-lg">
+                    <div class="text-2xl font-bold text-amber-600">{{ activeEnrollmentsCount }}</div>
+                    <div class="text-sm text-amber-800">Active</div>
+                  </div>
+                  <div class="text-center p-4 bg-purple-50 rounded-lg">
+                    <div class="text-2xl font-bold text-purple-600">{{ course.modules?.length || 0 }}</div>
+                    <div class="text-sm text-purple-800">Modules</div>
+                  </div>
+                </div>
 
-<!-- Update the flashcards section to be safer -->
-<div class="bg-white shadow rounded-lg">
-  <div class="px-6 py-4 border-b border-gray-200">
-    <div class="flex justify-between items-center">
-      <h3 class="text-lg font-semibold text-gray-900">Flashcards</h3>
-      <span class="text-sm text-gray-500">
-        {{ course.flashcards?.length || 0 }} cards • 
-        {{ stats?.due_flashcards || 0 }} due for review
-      </span>
-    </div>
-  </div>
-  
-  <div class="p-6">
-    <!-- Flashcard Sets -->
-    <div v-if="course.flashcard_sets?.length" class="mb-6">
-      <h4 class="text-md font-medium text-gray-900 mb-3">Flashcard Sets</h4>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div
-          v-for="set in course.flashcard_sets"
-          :key="set.id"
-          class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50"
-        >
-          <div class="flex justify-between items-start">
-            <div>
-              <h5 class="font-medium text-gray-900">{{ set.title }}</h5>
-              <p class="text-sm text-gray-500 mt-1">{{ set.description }}</p>
-            </div>
-            <span
-              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-              :class="set.is_public ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
-            >
-              {{ set.is_public ? 'Public' : 'Private' }}
-            </span>
-          </div>
-          <div class="mt-3 flex items-center text-sm text-gray-500">
-            <AcademicCapIcon class="h-4 w-4 mr-1" />
-            <span>{{ set.flashcards_count || 0 }} cards</span>
-          </div>
-        </div>
-      </div>
-    </div>
+                <!-- Enrollment Progress Chart -->
+                <div v-if="enrollments.length > 0" class="mt-6">
+                  <h4 class="text-sm font-medium text-gray-900 mb-4">Enrollment Progress Distribution</h4>
+                  <div class="space-y-3">
+                    <div
+                      v-for="enrollment in enrollments.slice(0, 5)"
+                      :key="enrollment.id"
+                      class="flex items-center"
+                    >
+                      <div class="w-32 flex-shrink-0">
+                        <div class="text-sm font-medium text-gray-900 truncate">
+                          {{ enrollment.user?.name || 'Unknown Student' }}
+                        </div>
+                      </div>
+                      <div class="flex-1 ml-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            class="h-2 rounded-full transition-all duration-300"
+                            :class="getProgressColor(enrollment.progress_percentage)"
+                            :style="{ width: `${enrollment.progress_percentage}%` }"
+                          ></div>
+                        </div>
+                      </div>
+                      <div class="w-16 text-right">
+                        <span class="text-sm font-medium text-gray-900">
+                          {{ Math.round(enrollment.progress_percentage) }}%
+                        </span>
+                      </div>
+                    </div>
 
-    <!-- Individual Flashcards -->
-    <div v-if="course.flashcards?.length" class="mb-6">
-      <h4 class="text-md font-medium text-gray-900 mb-3">Recent Flashcards</h4>
-      <div class="space-y-3">
-        <div
-          v-for="flashcard in course.flashcards.slice(0, 5)"
-          :key="flashcard.id"
-          class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50"
-        >
-          <div class="flex justify-between items-start">
-            <div class="flex-1">
-              <div class="flex items-center space-x-2 mb-2">
-                <span
-                  class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium capitalize"
-                  :class="getDifficultyClass(flashcard.difficulty_level)"
-                >
-                  {{ flashcard.difficulty_level || 'medium' }}
-                </span>
-                <span v-if="flashcard.course_outline" class="text-xs text-gray-500">
-                  {{ flashcard.course_outline.title }}
-                </span>
-              </div>
-              
-              <div class="mb-3">
-                <p class="text-sm font-medium text-gray-900 mb-1">
-                  <span class="text-gray-500">Q:</span> {{ flashcard.question || 'No question' }}
-                </p>
-                <p class="text-sm text-gray-600">
-                  <span class="text-gray-500">A:</span> {{ flashcard.answer || 'No answer' }}
-                </p>
-                <p v-if="flashcard.explanation" class="text-sm text-gray-500 mt-2">
-                  {{ flashcard.explanation }}
-                </p>
-              </div>
-            </div>
-            
-            <div class="ml-4 text-right">
-              <div v-if="flashcard.next_review_date" class="text-xs text-gray-500">
-                Next review:
-                <span
-                  :class="isFlashcardDue(flashcard) ? 'text-red-600 font-medium' : 'text-gray-700'"
-                >
-                  {{ formatDate(flashcard.next_review_date) }}
-                </span>
-              </div>
-              <div v-else class="text-xs text-gray-500">Not studied yet</div>
-              
-              <div class="mt-2 text-xs text-gray-500">
-                <span>Repetitions: {{ flashcard.repetitions || 0 }}</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
-            <div class="text-xs text-gray-500">
-              Created by: {{ flashcard.user?.name || 'Unknown' }}
-            </div>
-            <div class="flex space-x-2">
-              <span class="text-xs text-gray-400">
-                Ease: {{ flashcard.ease_factor || 2.5 }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div v-if="course.flashcards.length > 5" class="mt-4 text-center">
-        <button
-          @click="viewAllFlashcards"
-          class="text-sm text-blue-600 hover:text-blue-800"
-        >
-          View all {{ course.flashcards.length }} flashcards →
-        </button>
-      </div>
-    </div>
-
-    <!-- No Flashcards Message -->
-    <div v-else class="text-center py-8">
-      <AcademicCapIcon class="h-12 w-12 mx-auto text-gray-400" />
-      <h4 class="mt-2 text-sm font-medium text-gray-900">No Flashcards Yet</h4>
-      <p class="mt-1 text-sm text-gray-500">
-        Flashcards will appear here once created by students or tutors.
-      </p>
-    </div>
-  </div>
-</div>
-                <div class="w-full bg-gray-200 rounded-full h-4">
-                  <div
-                    class="bg-blue-600 h-4 rounded-full transition-all duration-300"
-                    :style="{ width: `${course.progress_percentage}%` }"
-                  ></div>
+                    <div v-if="enrollments.length > 5" class="text-center">
+                      <button
+                        @click="viewAllEnrollments"
+                        class="text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        View all {{ enrollments.length }} enrollments →
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Course Outline -->
-            <div
-              v-for="module in course.modules"
-              :key="module.id"
-              class="mb-6"
-            >
-              <div class="bg-gray-50 p-4 rounded-lg mb-2">
-                <h4 class="font-semibold text-gray-900">{{ module.title }}</h4>
-                <p class="text-sm text-gray-600">{{ module.description }}</p>
+            <!-- Course Structure -->
+            <div class="bg-white shadow rounded-lg">
+              <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                  <h3 class="text-lg font-semibold text-gray-900">Course Structure</h3>
+                  <span class="text-sm text-gray-500">
+                    {{ totalTopics }} topics • {{ totalEstimatedHours }} hours estimated
+                  </span>
+                </div>
               </div>
-              
-              <div class="space-y-4 ml-4">
+              <div class="p-6">
                 <div
-                  v-for="topic in module.topics"
-                  :key="topic.id"
-                  class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+                  v-for="module in course.modules"
+                  :key="module.id"
+                  class="mb-6 last:mb-0"
                 >
-                  <div class="flex items-center space-x-4">
-                    <div
-                      class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
-                      :class="getOutlineIconClass(topic.type)"
-                    >
-                      <component
-                        :is="getOutlineIcon(topic.type)"
-                        class="h-4 w-4 text-white"
-                      />
-                    </div>
+                  <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-3">
                     <div>
-                      <h4 class="text-sm font-medium text-gray-900">{{ topic.title }}</h4>
-                      <p class="text-sm text-gray-500">{{ topic.description }}</p>
-                      <div class="flex items-center space-x-4 mt-1">
-                        <span class="text-xs text-gray-400 capitalize">{{ topic.type }}</span>
-                        <span class="text-xs text-gray-400">
-                          {{ topic.estimated_duration_minutes }} minutes
+                      <h4 class="font-semibold text-gray-900 flex items-center">
+                        <span class="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 rounded-full mr-3">
+                          {{ module.order }}
+                        </span>
+                        {{ module.title }}
+                      </h4>
+                      <p class="text-sm text-gray-600 mt-1">{{ module.description }}</p>
+                    </div>
+                    <div class="text-right">
+                      <div class="text-sm font-medium text-gray-900">
+                        {{ module.topics?.length || 0 }} topics
+                      </div>
+                      <div class="text-xs text-gray-500">
+                        {{ module.estimated_duration_minutes || 0 }} min
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="space-y-3 ml-12">
+                    <div
+                      v-for="topic in module.topics"
+                      :key="topic.id"
+                      class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
+                    >
+                      <div class="flex items-center space-x-3">
+                        <div
+                          class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center"
+                          :class="getOutlineIconClass(topic.type)"
+                        >
+                          <component
+                            :is="getOutlineIcon(topic.type)"
+                            class="h-3 w-3 text-white"
+                          />
+                        </div>
+                        <div>
+                          <h4 class="text-sm font-medium text-gray-900">{{ topic.title }}</h4>
+                          <p class="text-xs text-gray-500">{{ topic.description }}</p>
+                          <div class="flex items-center space-x-3 mt-1">
+                            <span class="text-xs text-gray-400 capitalize">{{ topic.type }}</span>
+                            <span class="text-xs text-gray-400">
+                              {{ topic.estimated_duration_minutes }} minutes
+                            </span>
+                            <span v-if="topic.has_quiz" class="text-xs text-amber-600">
+                              <QuestionMarkCircleIcon class="h-3 w-3 inline" /> Quiz
+                            </span>
+                            <span v-if="topic.has_project" class="text-xs text-purple-600">
+                              <BriefcaseIcon class="h-3 w-3 inline" /> Project
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="flex items-center space-x-2">
+                        <span
+                          v-if="topic.is_completed"
+                          class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                        >
+                          Completed
+                        </span>
+                        <span
+                          v-else
+                          class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                        >
+                          Pending
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div class="flex items-center space-x-3">
-                    <span
-                      v-if="topic.is_completed"
-                      class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                </div>
+
+                <!-- Empty state if no modules -->
+                <div v-if="!course.modules || course.modules.length === 0" class="text-center py-8">
+                  <AcademicCapIcon class="h-12 w-12 mx-auto text-gray-400" />
+                  <h4 class="mt-2 text-sm font-medium text-gray-900">No Modules Created</h4>
+                  <p class="mt-1 text-sm text-gray-500">
+                    This course doesn't have any modules yet.
+                  </p>
+                  <div class="mt-4">
+                    <Link
+                      :href="route('admin.courses.modules.create', course.id)"
+                      class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-white hover:bg-blue-700"
                     >
-                      Completed
-                    </span>
-                    <span
-                      v-else
-                      class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                    >
-                      Pending
-                    </span>
+                      <PlusIcon class="h-4 w-4 mr-2" />
+                      Add First Module
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -276,54 +244,55 @@
                 </ul>
               </div>
             </div>
+
+            <!-- Recent Student Activity -->
+            <div v-if="recentActivity.length > 0" class="bg-white shadow rounded-lg">
+              <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Recent Student Activity</h3>
+              </div>
+              <div class="p-6">
+                <div class="space-y-4">
+                  <div
+                    v-for="activity in recentActivity"
+                    :key="activity.id"
+                    class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
+                  >
+                    <div class="flex items-center space-x-3">
+                      <div class="flex-shrink-0">
+                        <div class="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <span class="text-xs font-medium text-blue-800">
+                            {{ activity.user?.name?.charAt(0).toUpperCase() || 'U' }}
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="text-sm font-medium text-gray-900">
+                          {{ activity.user?.name || 'Unknown Student' }}
+                        </div>
+                        <div class="text-xs text-gray-500">
+                          {{ activity.activity_type || 'activity' }}
+                          <span v-if="activity.course_outline">
+                            • {{ activity.course_outline.title }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="text-right">
+                      <div class="text-xs text-gray-500">
+                        {{ formatTimeAgo(activity.created_at) }}
+                      </div>
+                      <div class="text-xs text-gray-700">
+                        {{ activity.time_spent_minutes || 0 }} min
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Sidebar -->
           <div class="space-y-6">
-            <!-- Student Information -->
-            <div class="bg-white shadow rounded-lg">
-              <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">Student Information</h3>
-              </div>
-              <div class="p-6">
-                <div class="flex items-center space-x-3 mb-4">
-                  <div class="flex-shrink-0">
-                    <div class="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
-                      {{ course.student_profile.user.name.charAt(0).toUpperCase() }}
-                    </div>
-                  </div>
-                  <div>
-                    <h4 class="text-sm font-medium text-gray-900">
-                      {{ course.student_profile.user.name }}
-                    </h4>
-                    <p class="text-sm text-gray-500">
-                      {{ course.student_profile.user.email }}
-                    </p>
-                  </div>
-                </div>
-                <dl class="space-y-2">
-                  <div>
-                    <dt class="text-xs text-gray-500">Current Level</dt>
-                    <dd class="text-sm text-gray-900 capitalize">
-                      {{ course.student_profile.current_level }}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-xs text-gray-500">Target Level</dt>
-                    <dd class="text-sm text-gray-900 capitalize">
-                      {{ course.student_profile.target_level }}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-xs text-gray-500">Weekly Study Hours</dt>
-                    <dd class="text-sm text-gray-900">
-                      {{ course.student_profile.weekly_study_hours }} hours
-                    </dd>
-                  </div>
-                </dl>
-              </div>
-            </div>
-
             <!-- Course Details -->
             <div class="bg-white shadow rounded-lg">
               <div class="px-6 py-4 border-b border-gray-200">
@@ -331,6 +300,18 @@
               </div>
               <div class="p-6">
                 <dl class="space-y-3">
+                  <div>
+                    <dt class="text-xs text-gray-500">Created By</dt>
+                    <dd class="text-sm text-gray-900">
+                      {{ course.creator?.name || 'Unknown' }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs text-gray-500">Created On</dt>
+                    <dd class="text-sm text-gray-900">
+                      {{ formatDate(course.created_at) }}
+                    </dd>
+                  </div>
                   <div>
                     <dt class="text-xs text-gray-500">Start Date</dt>
                     <dd class="text-sm text-gray-900">
@@ -349,133 +330,351 @@
                       {{ course.estimated_duration_hours }} hours
                     </dd>
                   </div>
-                  <div>
+                  <div v-if="course.ai_model_used">
                     <dt class="text-xs text-gray-500">AI Model Used</dt>
                     <dd class="text-sm text-gray-900">
                       {{ course.ai_model_used }}
                     </dd>
                   </div>
-                  <div v-if="course.exam_board">
-                    <dt class="text-xs text-gray-500">Exam Board</dt>
+                  <div>
+                    <dt class="text-xs text-gray-500">Visibility</dt>
                     <dd class="text-sm text-gray-900">
-                      {{ course.exam_board.name }}
+                      <span :class="course.is_public ? 'text-green-600' : 'text-amber-600'">
+                        {{ course.is_public ? 'Public' : 'Private' }}
+                      </span>
+                    </dd>
+                  </div>
+                  <div v-if="course.enrollment_limit">
+                    <dt class="text-xs text-gray-500">Enrollment Limit</dt>
+                    <dd class="text-sm text-gray-900">
+                      {{ course.current_enrollment }}/{{ course.enrollment_limit }}
                     </dd>
                   </div>
                 </dl>
               </div>
             </div>
-  
-            <!-- Quick Actions -->
+
+            <!-- Enrollment Status -->
             <div class="bg-white shadow rounded-lg">
               <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">Quick Actions</h3>
+                <h3 class="text-lg font-semibold text-gray-900">Enrollment Status</h3>
               </div>
-              <div class="p-6 space-y-3">
-                <button
-                  @click="regenerateOutline"
-                  class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  <ArrowPathIcon class="h-4 w-4 mr-2" />
-                  Regenerate Outline
-                </button>
-                <button
-                  v-if="course.status !== 'completed'"
-                  @click="markAsCompleted"
-                  class="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
-                >
-                  <CheckCircleIcon class="h-4 w-4 mr-2" />
-                  Mark as Completed
-                </button>
+              <div class="p-6">
+                <div class="space-y-4">
+                  <div v-for="status in enrollmentStatus" :key="status.name" class="flex items-center justify-between">
+                    <div class="flex items-center">
+                      <div class="w-3 h-3 rounded-full mr-3" :class="status.color"></div>
+                      <span class="text-sm text-gray-700">{{ status.name }}</span>
+                    </div>
+                    <span class="text-sm font-medium text-gray-900">{{ status.count }}</span>
+                  </div>
+                </div>
+
+                <div class="mt-6">
+                  <Link
+                    :href="route('admin.courses.enrollments.index', course.id)"
+                    class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    <UserGroupIcon class="h-4 w-4 mr-2" />
+                    Manage Enrollments
+                  </Link>
+                </div>
               </div>
+            </div>
+
+            <!-- Quick Actions -->
+<div class="bg-white shadow rounded-lg">
+  <div class="px-6 py-4 border-b border-gray-200">
+    <h3 class="text-lg font-semibold text-gray-900">Quick Actions</h3>
+  </div>
+  <div class="p-6 space-y-3">
+    <Link
+      :href="route('admin.courses.modules.create', course.id)"
+      class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+    >
+      <PlusIcon class="h-4 w-4 mr-2" />
+      Add Module
+    </Link>
+    <Link
+  :href="route('admin.courses.outline', course.id)"
+  class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+>
+  <DocumentTextIcon class="h-4 w-4 mr-2" />
+  View Outline
+</Link>
+
+    <!-- Publish/Unpublish Button -->
+    <template v-if="course.is_public && course.visibility === 'public'">
+      <Link
+        :href="route('admin.courses.unpublish', course.id)"
+        method="post"
+        as="button"
+        class="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-amber-600 hover:bg-amber-700"
+        onclick="return confirm('Are you sure you want to unpublish this course? Students will no longer be able to enroll.')"
+      >
+        <EyeSlashIcon class="h-4 w-4 mr-2" />
+        Unpublish Course
+      </Link>
+    </template>
+    <template v-else>
+      <Link
+        :href="route('admin.courses.publish', course.id)"
+        method="post"
+        as="button"
+        class="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+        onclick="return confirm('Are you sure you want to publish this course? It will be available for student enrollment.')"
+      >
+        <EyeIcon class="h-4 w-4 mr-2" />
+        Publish Course
+      </Link>
+    </template>
+
+    <button
+      @click="toggleCourseStatus"
+      class="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white"
+      :class="course.status === 'active' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-green-600 hover:bg-green-700'"
+    >
+      <ArrowPathIcon class="h-4 w-4 mr-2" />
+      {{ course.status === 'active' ? 'Deactivate Course' : 'Activate Course' }}
+    </button>
+
+    <button
+      v-if="course.status !== 'completed'"
+      @click="markAsCompleted"
+      class="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+    >
+      <CheckCircleIcon class="h-4 w-4 mr-2" />
+      Mark as Completed
+    </button>
+
+    <button
+      @click="regenerateOutline"
+      class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+    >
+      <SparklesIcon class="h-4 w-4 mr-2" />
+      Regenerate with AI
+    </button>
+  </div>
+</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Add this section to show generation status -->
+  <div v-if="course.content_generation_status || course.quiz_generation_status" class="mb-6">
+    <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <ClockIcon class="h-5 w-5 text-blue-400" />
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-blue-800">Background Generation in Progress</h3>
+          <div class="mt-2 text-sm text-blue-700">
+            <div v-if="course.content_generation_status === 'processing'">
+              ⏳ Generating course content...
+              <span v-if="course.content_generation_summary">
+                ({{ course.content_generation_summary.generated || 0 }} of {{ course.content_generation_summary.total || 0 }} topics)
+              </span>
+            </div>
+            <div v-else-if="course.content_generation_status === 'completed'" class="text-green-700">
+              ✅ Content generation completed
+            </div>
+            <div v-else-if="course.content_generation_status === 'failed'" class="text-red-700">
+              ❌ Content generation failed
+            </div>
+
+            <div v-if="course.quiz_generation_status === 'processing'" class="mt-1">
+              ⏳ Generating quizzes...
+              <span v-if="course.quiz_generation_summary">
+                ({{ course.quiz_generation_summary.generated || 0 }} of {{ course.quiz_generation_summary.total || 0 }} quizzes)
+              </span>
+            </div>
+            <div v-else-if="course.quiz_generation_status === 'completed'" class="text-green-700">
+              ✅ Quiz generation completed
+            </div>
+            <div v-else-if="course.quiz_generation_status === 'failed'" class="text-red-700">
+              ❌ Quiz generation failed
             </div>
           </div>
         </div>
       </div>
     </div>
+  </div>
   </AdminLayout>
 </template>
 
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3'
+import { ref, watch, computed } from 'vue'
 import {
   AcademicCapIcon,
   DocumentTextIcon,
   QuestionMarkCircleIcon,
   CheckCircleIcon,
   ArrowPathIcon,
+  ArrowLeftIcon,
+  PencilIcon,
+  PlusIcon,
+  UserGroupIcon,
+  BriefcaseIcon,
+  SparklesIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  ClockIcon
 } from '@heroicons/vue/24/outline'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 
 const props = defineProps({
   course: Object,
+  enrollments: {
+    type: Array,
+    default: () => []
+  },
+  recentActivity: {
+    type: Array,
+    default: () => []
+  }
 })
 
+// Computed properties
+const completedEnrollmentsCount = computed(() => {
+  return props.enrollments.filter(e => e.status === 'completed').length
+})
+
+const activeEnrollmentsCount = computed(() => {
+  return props.enrollments.filter(e => e.status === 'active').length
+})
+
+const totalTopics = computed(() => {
+  if (!props.course.modules) return 0
+  return props.course.modules.reduce((total, module) => {
+    return total + (module.topics?.length || 0)
+  }, 0)
+})
+
+const totalEstimatedHours = computed(() => {
+  if (!props.course.modules) return 0
+  const totalMinutes = props.course.modules.reduce((total, module) => {
+    return total + (module.estimated_duration_minutes || 0)
+  }, 0)
+  return Math.round(totalMinutes / 60 * 10) / 10 // Round to 1 decimal
+})
+
+const enrollmentStatus = computed(() => {
+  const statusCounts = {
+    enrolled: props.course.current_enrollment,
+    active: 0,
+    paused: 0,
+    completed: 0,
+    dropped: 0
+  }
+
+  props.enrollments.forEach(enrollment => {
+    if (statusCounts.hasOwnProperty(enrollment.status)) {
+      statusCounts[enrollment.status]++
+    }
+  })
+
+  return [
+    { name: 'Enrolled', count: statusCounts.enrolled, color: 'bg-blue-500' },
+    { name: 'Active', count: statusCounts.active, color: 'bg-green-500' },
+    { name: 'Paused', count: statusCounts.paused, color: 'bg-amber-500' },
+    { name: 'Completed', count: statusCounts.completed, color: 'bg-teal-500' },
+    { name: 'Dropped', count: statusCounts.dropped, color: 'bg-red-500' },
+  ]
+})
+
+// Helper functions
 const getStatusClass = (status) => {
   const classes = {
     active: 'bg-green-100 text-green-800',
     completed: 'bg-blue-100 text-blue-800',
     draft: 'bg-gray-100 text-gray-800',
+    archived: 'bg-red-100 text-red-800',
   }
   return classes[status] || 'bg-gray-100 text-gray-800'
 }
 
 const getOutlineIcon = (type) => {
   const icons = {
-    module: AcademicCapIcon,
     topic: DocumentTextIcon,
     quiz: QuestionMarkCircleIcon,
+    project: BriefcaseIcon,
   }
   return icons[type] || DocumentTextIcon
 }
 
 const getOutlineIconClass = (type) => {
   const classes = {
-    module: 'bg-blue-500',
     topic: 'bg-green-500',
     quiz: 'bg-purple-500',
+    project: 'bg-amber-500',
   }
   return classes[type] || 'bg-gray-500'
 }
 
+const getProgressColor = (percentage) => {
+  if (percentage >= 80) return 'bg-green-500'
+  if (percentage >= 50) return 'bg-teal-500'
+  if (percentage >= 25) return 'bg-amber-500'
+  return 'bg-red-500'
+}
+
 const formatDate = (dateString) => {
+  if (!dateString) return 'Not set'
   return new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
-    month: 'long',
+    month: 'short',
     day: 'numeric',
   })
 }
 
-const regenerateOutline = () => {
-  if (confirm('Are you sure you want to regenerate the course outline? This will replace the current outline.')) {
-    router.post(route('admin.courses.regenerate-outline', props.course.id))
+const formatTimeAgo = (dateString) => {
+  if (!dateString) return 'Unknown time'
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffInSeconds = Math.floor((now - date) / 1000)
+
+  if (diffInSeconds < 60) return 'just now'
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`
+  return formatDate(dateString)
+}
+
+// Actions
+const toggleCourseStatus = () => {
+  const newStatus = props.course.status === 'active' ? 'draft' : 'active'
+  const message = newStatus === 'active'
+    ? 'Are you sure you want to activate this course? It will become available for enrollment.'
+    : 'Are you sure you want to deactivate this course? It will no longer be available for enrollment.'
+
+  if (confirm(message)) {
+    router.patch(route('admin.courses.update-status', props.course.id), {
+      status: newStatus
+    }, {
+      preserveScroll: true
+    })
   }
 }
 
 const markAsCompleted = () => {
-  if (confirm('Mark this course as completed?')) {
-    router.patch(route('admin.courses.mark-completed', props.course.id))
+  if (confirm('Mark this course as completed? This will mark all active enrollments as completed.')) {
+    router.patch(route('admin.courses.mark-completed', props.course.id), {}, {
+      preserveScroll: true
+    })
   }
 }
 
-const getDifficultyClass = (level) => {
-  const classes = {
-    easy: 'bg-green-100 text-green-800',
-    medium: 'bg-yellow-100 text-yellow-800',
-    hard: 'bg-red-100 text-red-800',
+const regenerateOutline = () => {
+  if (confirm('Are you sure you want to regenerate the course outline with AI? This will replace the current structure.')) {
+    router.post(route('admin.courses.regenerate-outline', props.course.id), {}, {
+      preserveScroll: true
+    })
   }
-  return classes[level] || 'bg-gray-100 text-gray-800'
 }
 
-const isFlashcardDue = (flashcard) => {
-  if (!flashcard.next_review_date) return true
-  const nextReview = new Date(flashcard.next_review_date)
-  return nextReview <= new Date()
-}
-
-const viewAllFlashcards = () => {
-  // You might want to navigate to a flashcards page or show a modal
-  alert(`Showing all flashcards for ${props.course.title}`)
-  // Or use router to navigate to flashcards page:
-  // router.visit(route('admin.courses.flashcards', props.course.id))
+const viewAllEnrollments = () => {
+  router.visit(route('admin.courses.enrollments.index', props.course.id))
 }
 </script>

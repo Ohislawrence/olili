@@ -4,14 +4,15 @@
 namespace App\Services;
 
 use App\Models\Course;
-use App\Models\StudentProfile;
-use App\Models\CourseOutline;
 use App\Models\Module;
+use App\Models\CourseOutline;
 use App\Services\Ai\BaseAiService;
 use Illuminate\Support\Facades\DB;
-use App\Services\Ai\AiServiceManager;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use App\Jobs\GenerateCourseContentJob;
+use App\Jobs\GenerateCourseQuizzesJob;
+use App\Models\User;
 
 class CourseGenerationService
 {
@@ -22,42 +23,154 @@ class CourseGenerationService
         $this->aiService = $aiService;
     }
 
-    public function generateCourse(StudentProfile $studentProfile, array $courseData): Course
+    /**
+     * Generate a course for admin/public use only
+     */
+    public function generateCourse(array $courseData): Course
     {
-        return DB::transaction(function () use ($studentProfile, $courseData) {
+        DB::beginTransaction();
+
+        try {
             // Validate required data
             $this->validateCourseData($courseData);
 
-            // Create the course
+            // Get the admin user
+            $adminUser = User::where('email', 'lawrenceohis@gmail.com')->first();
+            $createdByUserId = $courseData['created_by_user_id'] ?? ($adminUser->id ?? auth()->id());
+
+            // Create the base course
             $course = Course::create([
                 'exam_board_id' => $courseData['exam_board_id'] ?? null,
                 'title' => $courseData['title'],
                 'slug' => Str::slug($courseData['title']),
                 'subject' => $courseData['subject'],
                 'description' => $courseData['description'] ?? '',
-                'level' => $studentProfile->target_level,
-                'target_completion_date' => $studentProfile->target_completion_date,
+                'level' => $courseData['level'] ?? 'intermediate',
                 'learning_objectives' => $courseData['learning_objectives'] ?? [],
+                'prerequisites' => $courseData['prerequisites'] ?? [],
                 'ai_model_used' => $this->aiService->getProviderCode(),
                 'generation_parameters' => [
-                    'student_level' => $studentProfile->current_level,
-                    'target_level' => $studentProfile->target_level,
-                    'learning_goals' => $studentProfile->learning_goals,
-                    'weekly_hours' => $studentProfile->weekly_study_hours,
+                    'target_level' => $courseData['level'] ?? 'intermediate',
+                    'estimated_duration' => $courseData['estimated_duration_hours'] ?? 40,
                 ],
                 'status' => 'draft',
+                'is_public' => $courseData['is_public'] ?? false,
+                'visibility' => $courseData['visibility'] ?? 'private',
+                'created_by_user_id' => $createdByUserId,
+                'created_by' => $courseData['created_by'] ?? 'admin',
+                'needs_content_generation' => true, // Flag to indicate content needs to be generated
             ]);
 
             // Generate course outline using AI
-            $outline = $this->generateCourseOutline($course, $studentProfile);
+            $prompt = $this->buildCoursePrompt($courseData);
 
-            // Update course with estimated duration
-            $course->update([
-                'estimated_duration_hours' => $this->calculateTotalDuration($outline),
+            $messages = [
+                [
+                    'role' => 'system',
+                    'content' => "You are an expert educational course designer creating public courses for diverse students. Return ONLY valid JSON, no other text."
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $prompt
+                ]
+            ];
+
+            Log::info('Generating admin course outline with AI', [
+                'course_title' => $courseData['title'],
+                'subject' => $courseData['subject']
             ]);
 
+            // Use the existing AI service
+            $response = $this->aiService->chat($messages, [
+                'temperature' => 0.7,
+                'max_tokens' => 4000,
+            ], 'admin_course_generation');
+
+            Log::debug('Admin AI Response received', [
+                'response_length' => strlen($response),
+                'response_preview' => substr($response, 0, 200)
+            ]);
+
+            // Clean and parse response - using the simple method that worked before
+            $cleanResponse = $this->cleanJsonResponse($response);
+            $structure = json_decode($cleanResponse, true);
+
+            if (!$structure || !isset($structure['modules'])) {
+                Log::error('Failed to parse AI response or missing modules', [
+                    'json_error' => json_last_error_msg(),
+                    'has_course' => isset($structure['course']),
+                    'has_modules' => isset($structure['modules'])
+                ]);
+                throw new \Exception('Failed to generate valid course structure from AI');
+            }
+
+            Log::debug('Parsed structure successfully', [
+                'module_count' => count($structure['modules']),
+                'has_course' => isset($structure['course']),
+                'structure_keys' => array_keys($structure)
+            ]);
+
+            // Update course with improved title/description
+            if (isset($structure['course'])) {
+                $course->update([
+                    'title' => $structure['course']['title'] ?? $course->title,
+                    'slug' => Str::slug($structure['course']['title']),
+                    'description' => $structure['course']['description'] ?? $course->description
+                ]);
+            }
+
+            // Save the course outline
+            $savedItems = $this->saveCourseOutline($course, $structure);
+
+            // Calculate and update total duration
+            $totalMinutes = $this->calculateTotalDuration($savedItems);
+            $course->update([
+                'estimated_duration_hours' => $totalMinutes,
+            ]);
+
+            DB::commit();
+
+            // Dispatch background jobs for content and quiz generation
+            //$this->dispatchContentGenerationJobs($course);
+
+            // Log the AI usage if needed
+            /**
+            if (class_exists('App\Models\AiUsageLog')) {
+                \App\Models\AiUsageLog::create([
+                    'user_id' => $createdByUserId,
+                    'action' => 'generate_admin_course',
+                    'model_used' => $this->aiService->getProviderCode(),
+                    'tokens_used' => 1000,
+                    'cost' => 0.02,
+                    'ai_provider_id' => 2,
+                ]);
+            }
+            */
             return $course->load('modules', 'modules.topics');
-        });
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Admin course generation failed: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    protected function dispatchContentGenerationJobs(Course $course): void
+    {
+        // Dispatch content generation job
+        GenerateCourseContentJob::dispatch($course)
+            ->onQueue('course_generation')
+            ->delay(now()->addSeconds(5)); // Small delay to ensure course is fully saved
+
+        // Dispatch quiz generation job for topics with has_quiz = true
+        GenerateCourseQuizzesJob::dispatch($course)
+            ->onQueue('course_generation')
+            ->delay(now()->addMinutes(3)); // Start after content generation
+
+        Log::info('Background jobs dispatched for course content generation', [
+            'course_id' => $course->id,
+            'course_title' => $course->title
+        ]);
     }
 
     protected function validateCourseData(array $courseData): void
@@ -67,147 +180,98 @@ class CourseGenerationService
         }
     }
 
-    protected function generateCourseOutline(Course $course, StudentProfile $studentProfile): array
+    private function buildCoursePrompt(array $courseData): string
     {
-        $prompt = $this->buildCourseOutlinePrompt($course, $studentProfile);
+        $learningObjectives = isset($courseData['learning_objectives']) && is_array($courseData['learning_objectives'])
+            ? implode(', ', $courseData['learning_objectives'])
+            : ($courseData['learning_objectives'] ?? 'No specific objectives provided');
 
-        $messages = [
-            [
-                'role' => 'system',
-                'content' => "You are an expert educational course designer. Create a comprehensive course outline based on the student's needs, level, and goals. Return ONLY valid JSON, no other text."
-            ],
-            [
-                'role' => 'user',
-                'content' => $prompt
-            ]
-        ];
+        $prerequisites = isset($courseData['prerequisites']) && is_array($courseData['prerequisites'])
+            ? implode(', ', $courseData['prerequisites'])
+            : ($courseData['prerequisites'] ?? 'No prerequisites required');
 
-        try {
-            // Set a specific model for course generation
-            $availableModels = $this->aiService->getAvailableModels();
-            if (!empty($availableModels)) {
-                $this->aiService->setModel($availableModels[0]);
-            }
-
-            Log::info('Generating course outline with AI', [
-                'course_id' => $course->id,
-                'model' => $this->aiService->getCurrentModel()
-            ]);
-
-            $response = $this->aiService->chat($messages, [
-                'temperature' => 0.7,
-                'max_tokens' => 4000,
-            ], 'course_generation');
-
-            Log::debug('AI Response received', ['response' => $response]);
-
-            $outlineData = json_decode($response, true);
-
-            // Validate the structure
-           // if (json_last_error() !== JSON_ERROR_NONE || !$this->validateOutlineStructure($outlineData)) {
-           //     Log::warning('AI returned invalid JSON, attempting text parsing');
-           //     $outlineData = $this->parseOutlineFromText($response);
-           // }
-
-            return $this->saveCourseOutline($course, $outlineData);
-
-        } catch (\Exception $e) {
-            Log::error('Course outline generation failed', [
-                'course_id' => $course->id,
-                'error' => $e->getMessage()
-            ]);
-            throw new \Exception("Course outline generation failed: " . $e->getMessage());
-        }
-    }
-
-    protected function validateOutlineStructure(array $outlineData): bool
-    {
-        // Basic validation for required structure
-        if (!isset($outlineData['modules']) || !is_array($outlineData['modules'])) {
-            return false;
-        }
-
-        foreach ($outlineData['modules'] as $module) {
-            if (empty($module['title']) || !isset($module['topics']) || !is_array($module['topics'])) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    protected function buildCourseOutlinePrompt(Course $course, StudentProfile $studentProfile): string
-    {
-        $learningGoals = is_array($studentProfile->learning_goals)
-            ? implode(', ', $studentProfile->learning_goals)
-            : $studentProfile->learning_goals;
+        $estimatedDuration = $courseData['estimated_duration_hours'] ?? 20;
+        $description = $courseData['description'] ?? 'No description provided';
+        $level = $courseData['level'] ?? 'intermediate';
 
         return <<<PROMPT
-        Create a detailed course outline in JSON format for the following course:
+Create a course outline in JSON format for a PUBLIC course that will be available to multiple students:
 
-        COURSE INFORMATION:
-        - Title: {$course->title}
-        - Subject: {$course->subject}
-        - Student Current Level: {$studentProfile->current_level}
-        - Student Target Level: {$studentProfile->target_level}
-        - Target Completion: {$studentProfile->target_completion_date->format('Y-m-d')}
-        - Weekly Study Hours: {$studentProfile->weekly_study_hours}
-        - Learning Goals: {$learningGoals}
+COURSE INFORMATION:
+- Title: {$courseData['title']}
+- Subject: {$courseData['subject']}
+- Target Level: {$level}
+- Estimated Duration: {$estimatedDuration} hours
+- Description: {$description}
+- Learning Objectives: {$learningObjectives}
+- Prerequisites: {$prerequisites}
+- Course Type: public (for multiple students with diverse backgrounds)
 
-        REQUIRED JSON STRUCTURE:
+REQUIRED JSON STRUCTURE:
+{
+    "course": {
+        "title": "improve the title to be engaging for public enrollment",
+        "description": "improve the description to attract diverse students and clearly state course benefits"
+    },
+    "modules": [
         {
-            "course": {
-                "title": "improve the title provided",
-                "description": "improve the description if provided, add a good one if none was provided"
-            },
-            "modules": [
+            "title": "Module Title",
+            "description": "Module description suitable for public course",
+            "order": 1,
+            "learning_objectives": ["objective1", "objective2"],
+            "topics": [
                 {
-                    "title": "Module Title",
-                    "description": "Module description",
+                    "title": "Topic Title",
+                    "description": "Topic description",
                     "order": 1,
+                    "estimated_duration_minutes": 60,
                     "learning_objectives": ["objective1", "objective2"],
-                    "topics": [
-                        {
-                            "title": "Topic Title",
-                            "description": "Topic description",
-                            "order": 1,
-                            "estimated_duration_minutes": 60,
-                            "learning_objectives": ["objective1", "objective2"],
-                            "key_concepts": ["concept1", "concept2"],
-                            "resources": ["resource1", "resource2"],
-                            "has_quiz": true,
-                        }
-                    ]
+                    "key_concepts": ["concept1", "concept2"],
+                    "resources": ["resource1", "resource2"],
+                    "has_quiz": true
                 }
-            ],
-            "quizzes": [
-                {
-                    "title": "Quiz Title",
-                    "description": "Quiz description",
-                    "order": 2,
-                    "estimated_duration_minutes": 30
-                }
-            ],
-            "capstone_project": {
-                "title": "Final Project Title",
-                "description": "Project description",
-                "requirements": ["requirement1", "requirement2"]
-            }
+            ]
         }
+    ],
+    "quizzes": [
+        {
+            "title": "Quiz Title",
+            "description": "Quiz description this should be one quiz that covers everything in this course",
+            "order": 2,
+            "estimated_duration_minutes": 30
+        }
+    ],
+    "capstone_project": {
+        "title": "Final Project Title",
+        "description": "Project description suitable for public course evaluation",
+        "requirements": ["requirement1", "requirement2"]
+    }
+}
 
-        CRITICAL INSTRUCTIONS:
-        1. Return ONLY valid, complete JSON - no additional text, no markdown code blocks
-        2. Ensure all JSON brackets and braces are properly closed
-        3. Create 3 modules that progress from basic to advanced concepts
-        4. Each module should have 3 topics
-        5. Ensure total duration matches the available study time
-        6. Include practical exercises and assessments
-        7. Align with the student's learning goals
-        8. Double-check that your JSON is complete before returning
+CRITICAL INSTRUCTIONS FOR PUBLIC COURSE:
+1. Return ONLY valid, complete JSON - no additional text, no markdown code blocks
+2. Ensure all JSON brackets and braces are properly closed
+3. Create between 2 to 5 modules that progress from basic to advanced concepts
+4. Each module should have 2 to 6 topics (inclusive).
+5. Total duration should be approximately {$estimatedDuration} hours
+6. Make content suitable for diverse student backgrounds
+7. Include practical exercises and assessments that work for all learners
+8. Align with the provided learning objectives
+9. Create content that is scalable and maintainable
+10. Do NOT create module-level or topic-level quiz objects. Only set has_quiz flags and create ONE course-level quiz in the quizzes array.
+11. Avoid assuming prior professional experience unless stated in prerequisites.
+12. Capstone project must be achievable by a student who completes all modules.
 
-        IMPORTANT: Your response must be valid JSON that can be parsed by json_decode(). Do not truncate the response.
+SPECIFIC REQUIREMENTS:
+- Topics should use "has_quiz": true/false (not "type" field)
+- Include clear prerequisites and expectations
+- Make assessment criteria transparent and fair
+- Ensure topics build logically from basic to advanced
+- "quizzes" should cover everything that has been learnt, so it can be 1 general quiz
 
-        PROMPT;
+IMPORTANT: Your response must be valid JSON that can be parsed by json_decode(). Do not truncate the response.
+
+PROMPT;
     }
 
     protected function saveCourseOutline(Course $course, array $outlineData): array
@@ -216,13 +280,6 @@ class CourseGenerationService
         $moduleOrder = 1;
 
         try {
-            // Update course with improved title and description
-            $course->update([
-                'title' => $outlineData['course']['title'] ?? $course->title,
-                'slug' => Str::slug($outlineData['course']['title']),
-                'description' => $outlineData['course']['description'] ?? $course->description
-            ]);
-
             // Save modules and their topics
             foreach ($outlineData['modules'] ?? [] as $moduleData) {
                 $module = Module::create([
@@ -230,8 +287,9 @@ class CourseGenerationService
                     'title' => $moduleData['title'],
                     'description' => $moduleData['description'] ?? '',
                     'order' => $moduleOrder++,
-                    'estimated_duration_minutes' => 0, // Will be calculated from topics
+                    'estimated_duration_minutes' => 0,
                     'learning_objectives' => $moduleData['learning_objectives'] ?? [],
+                    'needs_content_generation' => true, // Flag for content generation
                 ]);
 
                 $moduleDuration = 0;
@@ -252,7 +310,9 @@ class CourseGenerationService
                         'key_concepts' => $topicData['key_concepts'] ?? [],
                         'resources' => $topicData['resources'] ?? [],
                         'has_quiz' => $topicData['has_quiz'] ?? false,
-                        'has_project' =>  false,
+                        'has_project' => false,
+                        'needs_content_generation' => true, // Flag for content generation
+                        'needs_quiz_generation' => $topicData['has_quiz'] ?? false, // Flag for quiz generation
                     ]);
 
                     $savedItems[] = $topic;
@@ -263,11 +323,8 @@ class CourseGenerationService
                 $savedItems[] = $module;
             }
 
-            // Save standalone quizzes as topics
-
+            // Save standalone quizzes
             if (isset($outlineData['quizzes'])) {
-                // Find the last module to attach the quiz to, or create a dedicated module
-                $lastModule = $course->modules()->orderBy('order', 'desc')->first();
                 foreach ($outlineData['quizzes'] ?? [] as $quizData) {
                     // Create a dedicated module for the quiz
                     $quizModule = Module::create([
@@ -282,18 +339,15 @@ class CourseGenerationService
                     $quizTopic = CourseOutline::create([
                         'module_id' => $quizModule->id,
                         'title' => $quizData['title'],
-                        'description' =>  $quizData['description'] ?? '',
-                        'order' => $lastModule->topics()->count() + 1,
+                        'description' => $quizData['description'] ?? '',
+                        'order' => 1,
                         'type' => 'quiz',
                         'estimated_duration_minutes' => $quizData['estimated_duration_minutes'] ?? 30,
-                        'learning_objectives' => null,
-                        'key_concepts' => null,
                         'has_project' => false,
                     ]);
 
                     $savedItems[] = $quizModule;
                     $savedItems[] = $quizTopic;
-
                 }
             }
 
@@ -361,50 +415,25 @@ class CourseGenerationService
         return ceil($totalMinutes / 60); // Convert to hours
     }
 
-    protected function parseOutlineFromText(string $text): array
+    private function cleanJsonResponse(string $response): string
     {
-        // Fallback parsing if JSON parsing fails
-        $lines = explode("\n", $text);
-        $modules = [];
-        $currentModule = null;
-        $moduleOrder = 1;
+        // Remove markdown code blocks
+        $response = preg_replace('/```json\s*/', '', $response);
+        $response = preg_replace('/```\s*/', '', $response);
 
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (empty($line)) continue;
-
-            if (preg_match('/^#+\s*(Module|Chapter)\s*\d+:\s*(.+)$/i', $line, $matches)) {
-                if ($currentModule) {
-                    $modules[] = $currentModule;
-                }
-                $currentModule = [
-                    'title' => $matches[2],
-                    'description' => '',
-                    'order' => $moduleOrder++,
-                    'topics' => []
-                ];
-            } elseif (preg_match('/^[-*]\s*(.+)$/', $line, $matches) && $currentModule) {
-                $currentModule['topics'][] = [
-                    'title' => $matches[1],
-                    'description' => '',
-                    'estimated_duration_minutes' => 45,
-                    'has_quiz' => false,
-                    'has_project' => false
-                ];
-            }
+        // Remove any text before the first {
+        $pos = strpos($response, '{');
+        if ($pos !== false) {
+            $response = substr($response, $pos);
         }
 
-        if ($currentModule) {
-            $modules[] = $currentModule;
+        // Remove any text after the last }
+        $pos = strrpos($response, '}');
+        if ($pos !== false) {
+            $response = substr($response, 0, $pos + 1);
         }
 
-        return [
-            'course' => [
-                'title' => 'Course Title',
-                'description' => 'Course Description'
-            ],
-            'modules' => $modules
-        ];
+        return trim($response);
     }
 
     protected function generateEvaluationCriteria(): array
@@ -417,251 +446,109 @@ class CourseGenerationService
         ];
     }
 
-    public function generateAdminCourse(array $courseData): Course
+    /**
+     * Update an existing course with AI-generated content
+     */
+    public function updateCourseContent(Course $course, array $updateData): Course
     {
-        \DB::beginTransaction();
+        DB::beginTransaction();
 
         try {
-            // Create the base course
-            $course = Course::create($courseData);
+            // If modules should be regenerated
+            if ($updateData['regenerate_outline'] ?? false) {
+                // Delete existing modules and topics
+                $course->modules()->delete();
 
-            // Generate AI-based course structure using same format as student courses
-            $prompt = $this->buildAdminCoursePrompt($courseData);
-
-            $messages = [
-                [
-                    'role' => 'system',
-                    'content' => "You are an expert educational course designer creating public courses for diverse students. Return ONLY valid JSON, no other text."
-                ],
-                [
-                    'role' => 'user',
-                    'content' => $prompt
-                ]
-            ];
-
-            Log::info('Generating admin course outline with AI', [
-                'course_title' => $courseData['title'],
-                'subject' => $courseData['subject']
-            ]);
-
-            // Use the existing AI service
-            $response = $this->aiService->chat($messages, [
-                'temperature' => 0.7,
-                'max_tokens' => 4000,
-            ], 'admin_course_generation');
-
-            Log::debug('Admin AI Response received', [
-                'response_length' => strlen($response),
-                'response_preview' => substr($response, 0, 200)
-            ]);
-
-            // Clean and parse response
-            $response = $this->cleanJsonResponse($response);
-            $structure = json_decode($response, true);
-
-            if (!$structure || !isset($structure['modules'])) {
-                Log::error('Failed to parse AI response or missing modules', [
-                    'json_error' => json_last_error_msg(),
-                    'has_course' => isset($structure['course']),
-                    'has_modules' => isset($structure['modules'])
+                // Regenerate the outline
+                $prompt = $this->buildCoursePrompt([
+                    'title' => $course->title,
+                    'subject' => $course->subject,
+                    'description' => $course->description,
+                    'level' => $course->level,
+                    'learning_objectives' => $course->learning_objectives,
+                    'prerequisites' => $course->prerequisites,
+                    'estimated_duration_hours' => $course->estimated_duration_hours,
                 ]);
-                throw new \Exception('Failed to generate valid course structure from AI');
+
+                $messages = [
+                    [
+                        'role' => 'system',
+                        'content' => "You are updating an existing course outline. Return ONLY valid JSON."
+                    ],
+                    [
+                        'role' => 'user',
+                        'content' => $prompt
+                    ]
+                ];
+
+                $response = $this->aiService->chat($messages, [
+                    'temperature' => 0.7,
+                    'max_tokens' => 2500,
+                ], 'course_update');
+
+                $cleanResponse = $this->cleanJsonResponse($response);
+                $structure = json_decode($cleanResponse, true);
+
+                if ($structure && isset($structure['modules'])) {
+                    $savedItems = $this->saveCourseOutline($course, $structure);
+
+                    // Update total duration
+                    $totalMinutes = $this->calculateTotalDuration($savedItems);
+                    $course->update(['estimated_duration_hours' => $totalMinutes]);
+                }
             }
 
-            // Update course with improved title/description
-            if (isset($structure['course'])) {
-                $course->update([
-                    'title' => $structure['course']['title'] ?? $course->title,
-                    'slug' => Str::slug($structure['course']['title']),
-                    'description' => $structure['course']['description'] ?? $course->description
-                ]);
-            }
-
-            // Use existing saveCourseOutline method for consistency
-            $this->saveCourseOutline($course, $structure);
-
-            // Calculate and update total duration
-            $totalMinutes = $course->modules()->sum('estimated_duration_minutes');
-            $course->update([
-                'estimated_duration_hours' => ceil($totalMinutes / 60),
-            ]);
-
-            \DB::commit();
-
-            // Log the AI usage if AiUsageLog model exists
-            /**
-            if (class_exists('App\Models\AiUsageLog')) {
-                \App\Models\AiUsageLog::create([
-                    'user_id' => $courseData['created_by_user_id'] ?? null,
-                    'action' => 'generate_admin_course',
-                    'model_used' => $this->aiService->getProviderCode(),
-                    'tokens_used' => 1000,
-                    'cost' => 0.02,
-
-
-                ]);
-            }
-                 */
-
-            return $course->load('modules', 'modules.topics');
+            DB::commit();
+            return $course->fresh()->load('modules', 'modules.topics');
 
         } catch (\Exception $e) {
-            \DB::rollBack();
-            \Log::error('Admin course generation failed: ' . $e->getMessage());
+            DB::rollBack();
+            Log::error('Course update failed: ' . $e->getMessage());
             throw $e;
         }
     }
 
-private function cleanJsonResponse(string $response): string
-{
-    // Remove markdown code blocks
-    $response = preg_replace('/```json\s*/', '', $response);
-    $response = preg_replace('/```\s*/', '', $response);
-
-    // Remove any text before the first {
-    $pos = strpos($response, '{');
-    if ($pos !== false) {
-        $response = substr($response, $pos);
-    }
-
-    // Remove any text after the last }
-    $pos = strrpos($response, '}');
-    if ($pos !== false) {
-        $response = substr($response, 0, $pos + 1);
-    }
-
-    return trim($response);
-}
-
-    private function buildAdminCoursePrompt(array $courseData): string
-{
-    $learningObjectives = isset($courseData['learning_objectives']) && is_array($courseData['learning_objectives'])
-        ? implode(', ', $courseData['learning_objectives'])
-        : ($courseData['learning_objectives'] ?? 'No specific objectives provided');
-
-    $prerequisites = isset($courseData['prerequisites']) && is_array($courseData['prerequisites'])
-        ? implode(', ', $courseData['prerequisites'])
-        : ($courseData['prerequisites'] ?? 'No prerequisites required');
-
-    $estimatedDuration = $courseData['estimated_duration_hours'] ?? 40;
-    $description = $courseData['description'] ?? 'No description provided';
-    $level = $courseData['level'] ?? 'intermediate';
-
-    return <<<PROMPT
-Create a detailed course outline in JSON format for a PUBLIC course that will be available to multiple students:
-
-COURSE INFORMATION:
-- Title: {$courseData['title']}
-- Subject: {$courseData['subject']}
-- Target Level: {$level}
-- Estimated Duration: {$estimatedDuration} hours
-- Description: {$description}
-- Learning Objectives: {$learningObjectives}
-- Prerequisites: {$prerequisites}
-- Course Type: Public (for multiple students with diverse backgrounds)
-
-REQUIRED JSON STRUCTURE:
-{
-    "course": {
-        "title": "improve the title to be engaging for public enrollment",
-        "description": "improve the description to attract diverse students and clearly state course benefits"
-    },
-    "modules": [
-        {
-            "title": "Module Title",
-            "description": "Module description suitable for public course",
-            "order": 1,
-            "learning_objectives": ["objective1", "objective2"],
-            "topics": [
-                {
-                    "title": "Topic Title",
-                    "description": "Topic description",
-                    "order": 1,
-                    "estimated_duration_minutes": 60,
-                    "learning_objectives": ["objective1", "objective2"],
-                    "key_concepts": ["concept1", "concept2"],
-                    "resources": ["resource1", "resource2"],
-                    "has_quiz": true,
-                }
-            ]
-        }
-    ],
-    "quizzes": [
-        {
-            "title": "Quiz Title",
-            "description": "Quiz description",
-            "order": 2,
-            "estimated_duration_minutes": 30
-        }
-    ],
-    "capstone_project": {
-        "title": "Final Project Title",
-        "description": "Project description suitable for public course evaluation",
-        "requirements": ["requirement1", "requirement2"]
-    }
-}
-
-CRITICAL INSTRUCTIONS FOR PUBLIC COURSE:
-1. Return ONLY valid, complete JSON - no additional text, no markdown code blocks
-2. Ensure all JSON brackets and braces are properly closed
-3. Create 4-5 modules (not 3) that progress from basic to advanced concepts
-4. Each module should have 3-4 topics (not exactly 3)
-5. Total duration should be approximately {$estimatedDuration} hours
-6. Make content suitable for diverse student backgrounds (not personalized)
-7. Include practical exercises and assessments that work for all learners
-8. Align with the provided learning objectives
-9. Create content that is scalable and maintainable
-10. Double-check that your JSON is complete before returning
-
-SPECIFIC REQUIREMENTS:
-- Topics should use "has_quiz": true/false (not "type" field)
-- Focus on general applicability rather than personalized learning
-- Include clear prerequisites and expectations
-- Make assessment criteria transparent and fair
-- Ensure topics build logically from basic to advanced
-
-IMPORTANT: Your response must be valid JSON that can be parsed by json_decode(). Do not truncate the response.
-
-PROMPT;
-}
-
-    private function mapToAllowedType(string $aiType): string
-{
-    $typeMap = [
-        'text' => 'lesson',       // Map 'text' to 'lesson'
-        'video' => 'lesson',      // Map 'video' to 'lesson'
-        'lesson' => 'lesson',     // Keep 'lesson' as is
-        'quiz' => 'quiz',         // Keep 'quiz' as is
-        'project' => 'project',   // Keep 'project' as is
-        'module' => 'module',     // Keep 'module' as is
-        'topic' => 'topic',       // Keep 'topic' as is
-        'reading' => 'lesson',    // Map 'reading' to 'lesson'
-        'practice' => 'lesson',   // Map 'practice' to 'lesson'
-        'exercise' => 'lesson',   // Map 'exercise' to 'lesson'
-        'assignment' => 'project', // Map 'assignment' to 'project'
-        'tutorial' => 'lesson',   // Map 'tutorial' to 'lesson'
-        'guide' => 'lesson',      // Map 'guide' to 'lesson'
-        'workshop' => 'lesson',   // Map 'workshop' to 'lesson'
-        'lab' => 'lesson',        // Map 'lab' to 'lesson'
-    ];
-
-    $lowerType = strtolower(trim($aiType));
-
-    return $typeMap[$lowerType] ?? 'lesson'; // Default to 'lesson' if not mapped
-}
-
-    // Add this helper method if you need to generate initial content
-    private function generateTopicContent(CourseOutline $topic): void
+    /**
+     * Generate additional content for a specific topic
+     */
+    public function generateTopicContent(CourseOutline $topic, string $contentType = 'lesson'): void
     {
-        // You can implement this method based on your existing content generation logic
-        // For now, it's a placeholder that doesn't break existing functionality
-        Log::info('Content generation requested for topic', [
-            'topic_id' => $topic->id,
-            'title' => $topic->title
-        ]);
+        // Generate content based on topic information
+        $prompt = "Generate {$contentType} content for the topic: {$topic->title}\nDescription: {$topic->description}\nKey Concepts: " .
+                 implode(', ', $topic->key_concepts ?? []) .
+                 "\nLearning Objectives: " . implode(', ', $topic->learning_objectives ?? []);
 
-        // If you have a ContentGenerationService, you could use it here:
-        // $contentService = app(ContentGenerationService::class);
-        // $contentService->generateContentForOutline($topic, 'text');
+        $messages = [
+            [
+                'role' => 'system',
+                'content' => "You are an educational content creator. Generate engaging and informative content."
+            ],
+            [
+                'role' => 'user',
+                'content' => $prompt
+            ]
+        ];
+
+        try {
+            $content = $this->aiService->chat($messages, [
+                'temperature' => 0.8,
+                'max_tokens' => 2000,
+            ], 'topic_content_generation');
+
+            // Save the generated content (you'll need to add a content field to CourseOutline or create a separate model)
+            // For now, we'll log it
+            Log::info('Generated content for topic', [
+                'topic_id' => $topic->id,
+                'content_length' => strlen($content),
+                'content_preview' => substr($content, 0, 200)
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Topic content generation failed', [
+                'topic_id' => $topic->id,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 }

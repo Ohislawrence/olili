@@ -188,13 +188,7 @@
 
             <!-- Quick Actions -->
             <div class="hidden sm:flex space-x-3">
-              <Link
-                :href="route('student.courses.create')"
-                class="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.03] active:scale-[0.98] group"
-              >
-                <PlusIcon class="h-4 w-4 mr-2 transform group-hover:scale-110 transition-transform duration-300" />
-                New Course
-              </Link>
+
 
             </div>
 
@@ -402,7 +396,7 @@ const toggleSidebar = () => {
 const navigation = [
   { name: 'Dashboard', href: route('student.dashboard'), active: 'student.dashboard', icon: HomeIcon },
   { name: 'My Courses', href: route('student.courses.index'), active: 'student.courses.*', icon: BookOpenIcon },
-  { name: 'Catalog', href: route('student.catalog.index'), active: 'student.catalog.*', icon: ClipboardDocumentListIcon },
+  { name: 'Catalogs', href: route('student.catalog.browse'), active: 'student.catalog.*', icon: ClipboardDocumentListIcon },
   { name: 'Flash Card', href: route('student.flashcards.index'), active: 'student.flashcards.*', icon: RectangleStackIcon },
   { name: 'Profile', href: route('student.profile.show'), active: 'student.profile.*', icon: UserCircleIcon },
 ]

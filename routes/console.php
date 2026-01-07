@@ -31,11 +31,7 @@ Schedule::command('notifications:immediate')
     ->withoutOverlapping()
     ->description('Checking for courses needing immediate notifications...');
 
-// Course creation reminders (more frequent)
-Schedule::command('notifications:send-course-creation')
-    ->everySixHours()
-    ->withoutOverlapping()
-    ->description('Send course creation reminders to users without courses');
+
 
 // ================= SYSTEM MAINTENANCE =================
 

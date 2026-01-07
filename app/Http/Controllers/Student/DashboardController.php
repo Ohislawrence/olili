@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\CourseEnrollment;
 use App\Models\Module;
 use App\Models\ProgressTracking;
 use App\Models\QuizAttempt;
@@ -24,52 +25,64 @@ class DashboardController extends Controller
     }
 
     public function index()
-    {
-        try {
-            $student = auth()->user();
-            $studentProfile = $student->studentProfile;
+{
+    try {
+        $student = auth()->user();
+        $studentProfile = $student->studentProfile;
 
-            $stats = $this->getStudentStats($student);
-            $activeCourse = $this->getActiveCourse($student);
-            $recentActivity = $this->getRecentActivity($student);
-            $upcomingDeadlines = $this->getUpcomingDeadlines($student);
-            $learningAnalytics = $this->progressService->getLearningAnalytics($student);
+        $stats = $this->getStudentStats($student);
+        $activeCourse = $this->getActiveCourse($student);
+        $recentActivity = $this->getRecentActivity($student);
+        $upcomingDeadlines = $this->getUpcomingDeadlines($student);
+        $learningAnalytics = $this->progressService->getLearningAnalytics($student);
 
-            // Get current subscription
-            $currentSubscription = $student->current_subscription;
+        // Get recently dropped courses
+        $recentlyDroppedCourses = $this->getRecentlyDroppedCourses($student);
 
-            return Inertia::render('Student/Dashboard', [
-                'stats' => $stats,
-                'active_course' => $activeCourse,
-                'recent_activity' => $recentActivity,
-                'upcoming_deadlines' => $upcomingDeadlines,
-                'learning_analytics' => $learningAnalytics,
-                'student_profile' => $studentProfile,
-                'current_subscription' => $currentSubscription, 
-            ]);
-        } catch (\Exception $e) {
-            // Log the error and return safe defaults
-            \Log::error('DashboardController error: ' . $e->getMessage());
+        // Get current subscription
+        $currentSubscription = $student->current_subscription;
 
-            return Inertia::render('Student/Dashboard', [
-                'stats' => $this->getDefaultStats(),
-                'active_course' => null,
-                'recent_activity' => [],
-                'upcoming_deadlines' => ['courses' => [], 'quizzes' => []],
-                'learning_analytics' => [],
-                'student_profile' => null,
-                'current_subscription' => null,
-                'showOnboarding' => $user->shouldSeeOnboarding(),
-            ]);
-        }
+        return Inertia::render('Student/Dashboard', [
+            'stats' => $stats,
+            'active_course' => $activeCourse,
+            'recent_activity' => $recentActivity,
+            'upcoming_deadlines' => $upcomingDeadlines,
+            'learning_analytics' => $learningAnalytics,
+            'recently_dropped_courses' => $recentlyDroppedCourses, // Add this
+            'student_profile' => $studentProfile,
+            'current_subscription' => $currentSubscription,
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('DashboardController error: ' . $e->getMessage());
+
+        return Inertia::render('Student/Dashboard', [
+            'stats' => $this->getDefaultStats(),
+            'active_course' => null,
+            'recent_activity' => [],
+            'upcoming_deadlines' => ['courses' => [], 'quizzes' => []],
+            'learning_analytics' => [],
+            'recently_dropped_courses' => [], // Add this
+            'student_profile' => null,
+            'current_subscription' => null,
+        ]);
     }
+}
 
     private function getStudentStats($student)
     {
         try {
-            $totalCourses = $student->courses()->count();
-            $completedCourses = $student->courses()->where('status', 'completed')->count();
-            $activeCourses = $student->courses()->where('status', 'active')->count();
+            // Get through enrollments - EXCLUDE DROPPED courses
+            $totalCourses = $student->courseEnrollments()
+                ->where('status', '!=', 'dropped')
+                ->count();
+
+            $completedCourses = $student->courseEnrollments()
+                ->where('status', 'completed')
+                ->count();
+
+            $activeCourses = $student->courseEnrollments()
+                ->whereIn('status', ['enrolled', 'active'])
+                ->count();
 
             $totalStudyTime = ProgressTracking::where('user_id', $student->id)
                 ->sum('time_spent_minutes') ?? 0;
@@ -82,10 +95,16 @@ class DashboardController extends Controller
             $completionRate = 0;
             if ($totalCourses > 0) {
                 $totalProgress = 0;
-                $student->courses->each(function ($course) use (&$totalProgress) {
-                    $progress = $this->progressService->calculateCourseProgress($course);
+                // Get courses through enrollments (excluding dropped)
+                $enrollments = $student->courseEnrollments()
+                    ->where('status', '!=', 'dropped')
+                    ->with('course')
+                    ->get();
+
+                foreach ($enrollments as $enrollment) {
+                    $progress = $this->progressService->calculateCourseProgress($enrollment->course, $student->id);
                     $totalProgress += $progress['overall_completion_percentage'];
-                });
+                }
                 $completionRate = round($totalProgress / $totalCourses, 1);
             }
 
@@ -118,59 +137,73 @@ class DashboardController extends Controller
     private function getActiveCourse($student)
     {
         try {
-            $activeCourse = $student->courses()
-                ->with(['modules' => function ($query) {
-                    $query->with(['topics' => function ($query) {
-                        $query->where('is_completed', false)
-                            ->orderBy('order')
-                            ->limit(3);
-                    }])
-                    ->orderBy('order');
-                }])
-                ->where('status', 'active')
+            // Get active enrollment with course data - EXCLUDE DROPPED courses
+            $activeEnrollment = $student->courseEnrollments()
+                ->whereIn('status', ['enrolled', 'active'])
+                ->with([
+                    'course.examBoard',
+                    'course.modules' => function ($query) {
+                        $query->with(['topics' => function ($query) {
+                            $query->orderBy('order');
+                        }])
+                        ->orderBy('order');
+                    }
+                ])
+                ->orderBy('updated_at', 'desc') // Most recently active first
                 ->first();
 
-            if (!$activeCourse) {
+            if (!$activeEnrollment || !$activeEnrollment->course) {
                 return null;
             }
 
-            // Calculate progress using the service
-            $courseProgress = $this->progressService->calculateCourseProgress($activeCourse);
+            $course = $activeEnrollment->course;
 
-            // Get next topic to study - FIXED: Now properly traverses course→modules→topics
+            // Calculate progress using the service
+            $courseProgress = $this->progressService->calculateCourseProgress($course, $student->id);
+
+            // Get next topic to study using ProgressTrackingService
             $nextTopic = null;
-            foreach ($activeCourse->modules as $module) {
-                $pendingTopics = $module->topics->where('is_completed', false);
-                if ($pendingTopics->count() > 0) {
-                    $nextTopic = $pendingTopics->first();
-                    break;
+            $modules = $course->modules()->with(['topics'])->orderBy('order')->get();
+
+            foreach ($modules as $module) {
+                foreach ($module->topics as $topic) {
+                    // Check if topic is completed for this user using ProgressTrackingService
+                    $isCompleted = $this->progressService->isTopicCompletedForEnrollment($activeEnrollment, $topic->id);
+                    if (!$isCompleted) {
+                        $nextTopic = $topic;
+                        break 2; // Break out of both loops
+                    }
                 }
             }
 
-            // Get upcoming topics - FIXED: Properly gets pending topics across all modules
+            // Get upcoming topics
             $upcomingTopics = collect();
-            foreach ($activeCourse->modules as $module) {
-                $moduleTopics = $module->topics()
-                    ->where('is_completed', false)
-                    ->orderBy('order')
-                    ->get()
-                    ->map(function ($topic) use ($module) {
-                        return [
+            foreach ($modules as $module) {
+                foreach ($module->topics as $topic) {
+                    // Check if topic is completed using ProgressTrackingService
+                    $isCompleted = $this->progressService->isTopicCompletedForEnrollment($activeEnrollment, $topic->id);
+                    if (!$isCompleted) {
+                        $upcomingTopics->push([
                             'id' => $topic->id,
                             'title' => $topic->title,
                             'module_title' => $module->title,
                             'order' => $topic->order,
                             'estimated_duration_minutes' => $topic->estimated_duration_minutes,
-                        ];
-                    });
-                $upcomingTopics = $upcomingTopics->merge($moduleTopics);
+                        ]);
+
+                        if ($upcomingTopics->count() >= 5) {
+                            break 2; // Break out of both loops when we have 5 topics
+                        }
+                    }
+                }
             }
 
             return [
-                'id' => $activeCourse->id,
-                'title' => $activeCourse->title,
-                'subject' => $activeCourse->subject,
-                'description' => $activeCourse->description,
+                'id' => $course->id,
+                'enrollment_id' => $activeEnrollment->id,
+                'title' => $course->title,
+                'subject' => $course->subject,
+                'description' => $course->description,
                 'progress' => $courseProgress,
                 'next_topic' => $nextTopic ? [
                     'id' => $nextTopic->id,
@@ -178,7 +211,7 @@ class DashboardController extends Controller
                     'module_title' => $nextTopic->module->title,
                     'estimated_duration_minutes' => $nextTopic->estimated_duration_minutes,
                 ] : null,
-                'upcoming_topics' => $upcomingTopics->take(5),
+                'upcoming_topics' => $upcomingTopics,
             ];
         } catch (\Exception $e) {
             \Log::error('Error in getActiveCourse: ' . $e->getMessage());
@@ -189,7 +222,7 @@ class DashboardController extends Controller
     private function getRecentActivity($student)
     {
         try {
-            $activities = ProgressTracking::with(['course', 'courseOutline.module.course'])
+            $activities = ProgressTracking::with(['course', 'courseOutline.module'])
                 ->where('user_id', $student->id)
                 ->latest()
                 ->limit(10)
@@ -197,17 +230,11 @@ class DashboardController extends Controller
 
             return $activities->map(function ($activity) {
                 $moduleTitle = 'Unknown Module';
-                $courseTitle = 'Unknown Course';
+                $courseTitle = $activity->course->title ?? 'Unknown Course';
 
-                // FIXED: Properly traverse the relationship chain
+                // Get module title from course outline
                 if ($activity->courseOutline && $activity->courseOutline->module) {
                     $moduleTitle = $activity->courseOutline->module->title;
-                    if ($activity->courseOutline->module->course) {
-                        $courseTitle = $activity->courseOutline->module->course->title;
-                    }
-                } elseif ($activity->course) {
-                    // Fallback to direct course relationship
-                    $courseTitle = $activity->course->title;
                 }
 
                 return [
@@ -234,39 +261,49 @@ class DashboardController extends Controller
         $quizzes = [];
 
         try {
-            // FIXED: Added table prefix to avoid ambiguous column error
-            $courses = $student->courses()
-                ->where('courses.status', 'active') // Specify table
-                ->where('courses.target_completion_date', '>=', now()) // Specify table
-                ->orderBy('courses.target_completion_date') // Specify table
+            // Get courses with upcoming deadlines through enrollments - EXCLUDE DROPPED
+            $enrollments = $student->courseEnrollments()
+                ->where('status', '!=', 'dropped')
+                ->with(['course' => function($query) {
+                    $query->where('target_completion_date', '>=', now())
+                        ->orderBy('target_completion_date');
+                }])
+                ->whereHas('course', function($query) {
+                    $query->where('target_completion_date', '>=', now());
+                })
                 ->limit(5)
-                ->get()
-                ->map(function ($course) {
-                    $daysRemaining = $course->target_completion_date ?
-                        now()->diffInDays($course->target_completion_date, false) : 0;
+                ->get();
 
-                    // Calculate progress using the service
-                    $progress = $this->progressService->calculateCourseProgress($course);
+            foreach ($enrollments as $enrollment) {
+                $course = $enrollment->course;
+                if (!$course) continue;
 
-                    return [
-                        'id' => $course->id,
-                        'title' => $course->title ?? 'Unknown Course',
-                        'deadline' => $course->target_completion_date ?
-                            $course->target_completion_date->format('M j, Y') : 'No deadline',
-                        'days_remaining' => $daysRemaining,
-                        'progress_percentage' => $progress['overall_completion_percentage'],
-                        'is_urgent' => $daysRemaining <= 7,
-                        'modules_completed' => $progress['completed_modules'],
-                        'total_modules' => $progress['total_modules'],
-                    ];
-                });
+                $daysRemaining = $course->target_completion_date ?
+                    now()->diffInDays($course->target_completion_date, false) : 0;
+
+                // Calculate progress using the service
+                $progress = $this->progressService->calculateCourseProgress($course, $student->id);
+
+                $courses[] = [
+                    'id' => $course->id,
+                    'enrollment_id' => $enrollment->id,
+                    'title' => $course->title ?? 'Unknown Course',
+                    'deadline' => $course->target_completion_date ?
+                        $course->target_completion_date->format('M j, Y') : 'No deadline',
+                    'days_remaining' => $daysRemaining,
+                    'progress_percentage' => $progress['overall_completion_percentage'],
+                    'is_urgent' => $daysRemaining <= 7,
+                    'modules_completed' => $progress['completed_modules'],
+                    'total_modules' => $progress['total_modules'],
+                ];
+            }
         } catch (\Exception $e) {
             \Log::error('Error in getUpcomingDeadlines - courses: ' . $e->getMessage());
             $courses = [];
         }
 
         try {
-            // Get quiz deadlines - FIXED: Updated relationship chain
+            // Get quiz deadlines
             $quizzes = QuizAttempt::with(['quiz.courseOutline.module.course'])
                 ->where('user_id', $student->id)
                 ->whereNull('completed_at')
@@ -282,7 +319,7 @@ class DashboardController extends Controller
                     $moduleTitle = 'Unknown Module';
                     $topicTitle = 'Unknown Topic';
 
-                    // FIXED: Proper relationship traversal
+                    // Traverse relationships
                     if ($attempt->quiz && $attempt->quiz->courseOutline) {
                         $topicTitle = $attempt->quiz->courseOutline->title;
                         if ($attempt->quiz->courseOutline->module) {
@@ -339,19 +376,23 @@ class DashboardController extends Controller
                 ->orderBy('date')
                 ->get();
 
-            // Get course progress using the new service
-            $courseProgress = $student->courses()
-                ->where('status', 'active')
-                ->get()
-                ->map(function ($course) {
-                    $progress = $this->progressService->calculateCourseProgress($course);
-                    return [
-                        'title' => $course->title,
-                        'progress_percentage' => $progress['overall_completion_percentage'],
-                        'module_progress' => $progress['module_completion_percentage'],
-                        'topic_progress' => $progress['topic_completion_percentage'],
-                    ];
-                });
+            // Get course progress using the new service - EXCLUDE DROPPED courses
+            $courseProgress = collect();
+            $enrollments = $student->courseEnrollments()
+                ->where('status', '!=', 'dropped')
+                ->with('course')
+                ->whereIn('status', ['enrolled', 'active'])
+                ->get();
+
+            foreach ($enrollments as $enrollment) {
+                $progress = $this->progressService->calculateCourseProgress($enrollment->course, $student->id);
+                $courseProgress->push([
+                    'title' => $enrollment->course->title,
+                    'progress_percentage' => $progress['overall_completion_percentage'],
+                    'module_progress' => $progress['module_completion_percentage'],
+                    'topic_progress' => $progress['topic_completion_percentage'],
+                ]);
+            }
 
             return response()->json([
                 'study_time' => $progressData,
@@ -373,9 +414,19 @@ class DashboardController extends Controller
     public function getCourseModuleProgress(Course $course)
     {
         try {
-            //$this->authorize('view', $course);
+            $student = auth()->user();
 
-            $progress = $this->progressService->calculateCourseProgress($course);
+            // Check if student is enrolled in this course (not dropped)
+            $enrollment = $student->courseEnrollments()
+                ->where('course_id', $course->id)
+                ->where('status', '!=', 'dropped')
+                ->first();
+
+            if (!$enrollment) {
+                throw new \Exception('Student not enrolled in this course');
+            }
+
+            $progress = $this->progressService->calculateCourseProgress($course, $student->id);
 
             return response()->json([
                 'progress' => $progress,
@@ -395,5 +446,22 @@ class DashboardController extends Controller
                 ],
             ]);
         }
+    }
+
+    private function getRecentlyDroppedCourses($student)
+    {
+        return $student->courseEnrollments()
+            ->where('status', 'dropped')
+            ->where('dropped_at', '>=', now()->subDays(30))
+            ->with('course')
+            ->limit(3)
+            ->get()
+            ->map(function ($enrollment) {
+                return [
+                    'title' => $enrollment->course->title,
+                    'dropped_at' => $enrollment->dropped_at->diffForHumans(),
+                    'can_reenroll' => $enrollment->course->canEnroll($student),
+                ];
+            });
     }
 }

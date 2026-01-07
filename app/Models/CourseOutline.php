@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Services\ProgressTrackingService;
 
 class CourseOutline extends Model
 {
@@ -24,8 +25,12 @@ class CourseOutline extends Model
         'resources',
         'has_quiz',
         'has_project',
-        'is_completed',
+        //'is_completed',
         'completed_at',
+        'needs_content_generation',
+        'content_generated_at',
+        'needs_quiz_generation',
+        'quiz_generated_at',
     ];
 
     protected $casts = [
@@ -36,22 +41,45 @@ class CourseOutline extends Model
         'has_project' => 'boolean',
         'is_completed' => 'boolean',
         'completed_at' => 'datetime',
+        'needs_content_generation' => 'boolean',
+        'needs_quiz_generation' => 'boolean',
+        'content_generated_at' => 'datetime',
+        'quiz_generated_at' => 'datetime',
     ];
 
+    protected $appends = ['is_completed'];
+
     // Relationships
+    public function progressTrackings()
+    {
+        return $this->hasMany(ProgressTracking::class, 'course_outline_id');
+    }
+
+    public function getIsCompletedAttribute(): bool
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return false;
+        }
+
+        return $this->progressTrackings()
+            ->where('user_id', $user->id)
+            ->where('activity_type', 'outline_completed')
+            ->exists();
+    }
+
     public function module(): BelongsTo
     {
         return $this->belongsTo(Module::class);
     }
 
-    // Fix the course relationship
     public function course()
     {
         return $this->belongsTo(Course::class, 'course_id', 'id')
             ->through('module');
     }
 
-    // Or use an accessor (recommended):
     public function getCourseAttribute()
     {
         return $this->module->course;
@@ -146,5 +174,108 @@ class CourseOutline extends Model
             return $content->content_type === 'text' ?
                 ceil(str_word_count(strip_tags($content->content)) / 200) : 0; // 200 words per minute
         });
+    }
+
+    /**
+     * Check if this topic is completed for a specific user
+     */
+    public function markAsCompletedForUser(User $user, CourseEnrollment $enrollment = null, $activityType = 'topic_complete', $minutes = 0, $score = null)
+    {
+        // Get the course from the module
+        $course = $this->module->course;
+
+        // Get enrollment if not provided
+        if (!$enrollment && $user->studentProfile) {
+            $enrollment = $user->enrollments()
+                ->where('course_id', $course->id)
+                ->first();
+        }
+
+        // Use the ProgressTrackingService
+        $progressService = app(ProgressTrackingService::class);
+
+        // Record the completion activity
+        $progress = $progressService->recordActivity(
+            user: $user,
+            course: $course,
+            enrollmentId: $enrollment ? $enrollment->id : null,
+            outlineId: $this->id,
+            activityType: $activityType,
+            minutes: $minutes,
+            completed: true,
+            score: $score
+        );
+
+        // Also mark the outline as completed in the database
+        if (!$this->is_completed) {
+            $this->markAsCompleted();
+        }
+
+        return $progress;
+    }
+
+    /**
+     * Record user activity on this topic (viewing, studying, etc.)
+     */
+    public function recordUserActivity(User $user, $activityType, $minutes, $completed = false, $score = null)
+    {
+        $course = $this->module->course;
+
+        // Try to find user's enrollment
+        $enrollment = $user->enrollments()
+            ->where('course_id', $course->id)
+            ->first();
+
+        $progressService = app(ProgressTrackingService::class);
+
+        return $progressService->recordActivity(
+            user: $user,
+            course: $course,
+            enrollmentId: $enrollment ? $enrollment->id : null,
+            outlineId: $this->id,
+            activityType: $activityType,
+            minutes: $minutes,
+            completed: $completed,
+            score: $score
+        );
+    }
+
+    /**
+     * Check if this topic is completed for a specific user (updated)
+     */
+    public function isCompletedForUser($userId, $enrollmentId = null)
+    {
+        $progressService = app(ProgressTrackingService::class);
+
+        if ($enrollmentId) {
+            $enrollment = CourseEnrollment::find($enrollmentId);
+            if ($enrollment) {
+                return $progressService->isTopicCompletedForEnrollment($enrollment, $this->id);
+            }
+        }
+
+        // Fallback to checking progress tracking directly
+        return $this->progressTracking()
+            ->where('user_id', $userId)
+            ->where('is_completed', true)
+            ->exists();
+    }
+
+    /**
+     * Get user's progress details for this topic
+     */
+    public function getUserProgressDetails(User $user)
+    {
+        $progress = $this->progressTracking()
+            ->where('user_id', $user->id)
+            ->first();
+
+        return [
+            'is_completed' => $progress ? $progress->is_completed : false,
+            'time_spent_minutes' => $progress ? $progress->time_spent_minutes : 0,
+            'last_activity' => $progress ? $progress->updated_at : null,
+            'completion_score' => $progress ? $progress->completion_score : null,
+            'activity_count' => $this->progressTracking()->where('user_id', $user->id)->count(),
+        ];
     }
 }

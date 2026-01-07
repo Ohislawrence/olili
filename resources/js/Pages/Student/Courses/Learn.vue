@@ -1,5 +1,5 @@
 <template>
-  <StudentLayout :content-loading="contentLoading" >
+  <StudentLayout :content-loading="contentLoading">
     <Head :title="`Learning: ${course.title}`" />
     <div class="h-screen flex overflow-hidden bg-gradient-to-br from-slate-50 to-emerald-50">
       <!-- Sidebar - Enhanced with Module/Topic Hierarchy -->
@@ -157,8 +157,6 @@
           </div>
           <!-- Quick Actions - Enhanced -->
           <div class="p-4 border-t border-gray-200 bg-white space-y-3">
-
-
             <div class="grid grid-cols-2 gap-2">
               <button
                 v-if="hasPreviousTopic"
@@ -269,9 +267,7 @@
                   <button
                     v-for="tab in filteredTabs"
                     :key="tab.id"
-                    @click="() => {
-                        activeTab = tab.id;
-                    }"
+                    @click="switchTab(tab.id)"
                     :class="[
                       'py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
                       activeTab === tab.id
@@ -353,21 +349,13 @@
                       </div>
                     </div>
                   </div>
-                  <!-- Generate Content Button -->
+                  <!-- No Content Available Message -->
                   <div v-else class="text-center py-12">
                     <AcademicCapIcon class="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Ready to Learn?</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Learning Content</h3>
                     <p class="text-gray-500 mb-6 max-w-md mx-auto">
-                      Generate personalized learning content for this topic. Olilearn AI will create engaging materials tailored to your learning style.
+                      Content will be displayed here. If you don't see any content, please contact your instructor.
                     </p>
-                    <button
-                      @click="generateContent(current_topic)"
-                      :disabled="contentLoading"
-                      class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <AcademicCapIcon class="h-5 w-5 mr-2" />
-                      {{ contentLoading ? 'Generating Content...' : 'Start Learning' }}
-                    </button>
                   </div>
                 </div>
 
@@ -416,535 +404,474 @@
 
                 <!-- Quiz Tab -->
                 <div v-if="activeTab === 'quiz'" class="space-y-6">
-                  <!-- Quiz content remains the same as in your original code -->
-                  <!-- Quiz Overview State -->
-                  <div v-if="quizState === 'overview' && current_topic.quiz" class="space-y-6">
-                    <!-- Quiz Header -->
-                    <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-6">
-                      <div class="flex items-start justify-between mb-4">
-                        <div class="flex-1">
-                          <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ current_topic.quiz.title }}</h3>
-                          <p class="text-gray-600 mb-4">{{ current_topic.quiz.description }}</p>
-                          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div class="text-center p-3 bg-white rounded-lg border border-amber-100">
-                              <div class="font-bold text-amber-700">{{ current_topic.quiz.questions?.length || 0 }}</div>
-                              <div class="text-amber-600">Questions</div>
+                  <div v-if="current_topic.quiz">
+                    <!-- Quiz Overview State -->
+                    <div v-if="quizState === 'overview'" class="space-y-6">
+                      <!-- Quiz Header -->
+                      <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-6">
+                        <div class="flex items-start justify-between mb-4">
+                          <div class="flex-1">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ current_topic.quiz.title }}</h3>
+                            <p class="text-gray-600 mb-4">{{ current_topic.quiz.description }}</p>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div class="text-center p-3 bg-white rounded-lg border border-amber-100">
+                                <div class="font-bold text-amber-700">{{ current_topic.quiz.questions?.length || 0 }}</div>
+                                <div class="text-amber-600">Questions</div>
+                              </div>
+                              <div class="text-center p-3 bg-white rounded-lg border border-amber-100">
+                                <div class="font-bold text-amber-700">{{ current_topic.quiz.time_limit_minutes }}</div>
+                                <div class="text-amber-600">Minutes</div>
+                              </div>
+                              <div class="text-center p-3 bg-white rounded-lg border border-amber-100">
+                                <div class="font-bold text-amber-700">{{ current_topic.quiz.passing_score }}%</div>
+                                <div class="text-amber-600">Passing Score</div>
+                              </div>
+                              <div class="text-center p-3 bg-white rounded-lg border border-amber-100">
+                                <div class="font-bold text-amber-700">{{ currentAttemptsCount }}/{{ current_topic.quiz.max_attempts }}</div>
+                                <div class="text-amber-600">Attempts</div>
+                              </div>
                             </div>
-                            <div class="text-center p-3 bg-white rounded-lg border border-amber-100">
-                              <div class="font-bold text-amber-700">{{ current_topic.quiz.time_limit_minutes }}</div>
-                              <div class="text-amber-600">Minutes</div>
+                          </div>
+                          <QuestionMarkCircleIcon class="h-12 w-12 text-amber-400 ml-4 flex-shrink-0" />
+                        </div>
+                        <!-- Start Quiz Button -->
+                        <button
+                          @click="startQuiz"
+                          :disabled="!canAttemptQuiz || quizLoading"
+                          class="w-full flex items-center justify-center px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <PlayCircleIcon class="h-5 w-5 mr-2" />
+                          {{ getQuizButtonText }}
+                        </button>
+                      </div>
+                      <!-- Previous Attempts -->
+                      <div v-if="current_topic.quiz.attempts?.length" class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4">Previous Attempts</h4>
+                        <div class="space-y-3">
+                          <div
+                            v-for="attempt in current_topic.quiz.attempts"
+                            :key="attempt.id"
+                            class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                          >
+                            <div class="flex items-center space-x-4">
+                              <div
+                                :class="[
+                                  'w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm',
+                                  attempt.is_passed ? 'bg-emerald-500' : 'bg-red-500'
+                                ]"
+                              >
+                                {{ Math.round(attempt.percentage) }}%
+                              </div>
+                              <div>
+                                <div class="font-medium text-gray-900">
+                                  Attempt {{ attempt.attempt_number }}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                  {{ formatDate(attempt.completed_at) }}
+                                </div>
+                              </div>
                             </div>
-                            <div class="text-center p-3 bg-white rounded-lg border border-amber-100">
-                              <div class="font-bold text-amber-700">{{ current_topic.quiz.passing_score }}%</div>
-                              <div class="text-amber-600">Passing Score</div>
-                            </div>
-                            <div class="text-center p-3 bg-white rounded-lg border border-amber-100">
-                              <div class="font-bold text-amber-700">{{ currentAttemptsCount }}/{{ current_topic.quiz.max_attempts }}</div>
-                              <div class="text-amber-600">Attempts</div>
+                            <div class="flex items-center space-x-2">
+                              <span
+                                :class="[
+                                  'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold',
+                                  attempt.is_passed ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                                ]"
+                              >
+                                {{ attempt.is_passed ? 'Passed' : 'Failed' }}
+                              </span>
+                              <button
+                                @click="viewAttemptResults(attempt)"
+                                class="text-amber-600 hover:text-amber-700 font-medium text-sm"
+                              >
+                                View Results
+                              </button>
                             </div>
                           </div>
                         </div>
-                        <QuestionMarkCircleIcon class="h-12 w-12 text-amber-400 ml-4 flex-shrink-0" />
                       </div>
-                      <!-- Start Quiz Button -->
-                      <button
-                        @click="startQuiz"
-                        :disabled="!canAttemptQuiz || quizLoading"
-                        class="w-full flex items-center justify-center px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <PlayCircleIcon class="h-5 w-5 mr-2" />
-                        {{ getQuizButtonText }}
-                      </button>
                     </div>
-                    <!-- Previous Attempts -->
-                    <div v-if="current_topic.quiz.attempts?.length" class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                      <h4 class="text-lg font-semibold text-gray-900 mb-4">Previous Attempts</h4>
-                      <div class="space-y-3">
-                        <div
-                          v-for="attempt in current_topic.quiz.attempts"
-                          :key="attempt.id"
-                          class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                          <div class="flex items-center space-x-4">
-                            <div
-                              :class="[
-                                'w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm',
-                                attempt.is_passed ? 'bg-emerald-500' : 'bg-red-500'
-                              ]"
-                            >
-                              {{ Math.round(attempt.percentage) }}%
-                            </div>
-                            <div>
-                              <div class="font-medium text-gray-900">
-                                Attempt {{ attempt.attempt_number }}
-                              </div>
-                              <div class="text-sm text-gray-500">
-                                {{ formatDate(attempt.completed_at) }}
-                              </div>
-                            </div>
+                    <!-- Active Quiz State -->
+                    <div v-if="quizState === 'active' && currentQuizAttempt" class="space-y-6">
+                      <!-- Quiz Header with Timer -->
+                      <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                          <div>
+                            <h3 class="text-xl font-semibold text-gray-900">{{ current_topic.quiz.title }}</h3>
+                            <p class="text-gray-600">Question {{ currentQuestionIndex + 1 }} of {{ current_topic.quiz.questions.length }}</p>
                           </div>
-                          <div class="flex items-center space-x-2">
-                            <span
-                              :class="[
-                                'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold',
-                                attempt.is_passed ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-                              ]"
-                            >
-                              {{ attempt.is_passed ? 'Passed' : 'Failed' }}
-                            </span>
+                          <div class="text-right">
+                            <div class="text-2xl font-bold text-gray-900" :class="{'text-red-600': timeRemaining < 60}">
+                              {{ formatTime(timeRemaining) }}
+                            </div>
+                            <div class="text-sm text-gray-500">Time Remaining</div>
+                          </div>
+                        </div>
+                        <!-- Progress Bar -->
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                          <div
+                            class="bg-amber-500 h-2.5 rounded-full transition-all duration-300"
+                            :style="{ width: `${((currentQuestionIndex + 1) / current_topic.quiz.questions.length) * 100}%` }"
+                          ></div>
+                        </div>
+                      </div>
+                      <!-- Current Question -->
+                      <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4">
+                          {{ currentQuestion.question }}
+                        </h4>
+                        <!-- Multiple Choice Options -->
+                        <div v-if="currentQuestion.type === 'multiple_choice'" class="space-y-3">
+                          <button
+                            v-for="(option, index) in shuffledOptions"
+                            :key="index"
+                            @click="selectAnswer(option)"
+                            :class="[
+                              'w-full text-left p-4 border rounded-xl transition-all duration-200',
+                              selectedAnswer === option
+                                ? 'border-amber-500 bg-amber-50 ring-2 ring-amber-200'
+                                : 'border-gray-200 hover:border-amber-300 hover:bg-amber-25'
+                            ]"
+                          >
+                            <div class="flex items-center">
+                              <div
+                                :class="[
+                                  'w-6 h-6 rounded-full border-2 flex items-center justify-center mr-3 flex-shrink-0',
+                                  selectedAnswer === option
+                                    ? 'border-amber-500 bg-amber-500 text-white'
+                                    : 'border-gray-300'
+                                ]"
+                              >
+                                <CheckIcon v-if="selectedAnswer === option" class="h-3 w-3" />
+                              </div>
+                              <span class="text-gray-700">{{ option }}</span>
+                            </div>
+                          </button>
+                        </div>
+                        <!-- True/False Options -->
+                        <div v-if="currentQuestion.type === 'true_false'" class="grid grid-cols-2 gap-4">
+                          <button
+                            v-for="option in ['True', 'False']"
+                            :key="option"
+                            @click="selectAnswer(option)"
+                            :class="[
+                              'p-4 border rounded-xl transition-all duration-200 text-center',
+                              selectedAnswer === option
+                                ? 'border-amber-500 bg-amber-50 ring-2 ring-amber-200'
+                                : 'border-gray-200 hover:border-amber-300 hover:bg-amber-25'
+                            ]"
+                          >
+                            <span class="font-medium text-gray-700">{{ option }}</span>
+                          </button>
+                        </div>
+                        <!-- Navigation Buttons -->
+                        <div class="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
+                          <button
+                            @click="previousQuestion"
+                            :disabled="currentQuestionIndex === 0"
+                            class="flex items-center px-4 py-2.5 border border-emerald-300 text-emerald-700 font-medium rounded-lg hover:bg-emerald-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <ChevronLeftIcon class="h-4 w-4 mr-2" />
+                            Previous
+                          </button>
+                          <div class="flex items-center space-x-3">
                             <button
-                              @click="viewAttemptResults(attempt)"
-                              class="text-amber-600 hover:text-amber-700 font-medium text-sm"
+                              v-if="currentQuestionIndex < current_topic.quiz.questions.length - 1"
+                              @click="nextQuestion"
+                              :disabled="!selectedAnswer"
+                              class="flex items-center px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              View Results
+                              Next
+                              <ChevronRightIcon class="h-4 w-4 ml-2" />
+                            </button>
+                            <button
+                              v-else
+                              @click="submitQuiz"
+                              :disabled="!selectedAnswer"
+                              class="flex items-center px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <CheckIcon class="h-4 w-4 mr-2" />
+                              Submit Quiz
                             </button>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <!-- Active Quiz State -->
-                  <div v-if="quizState === 'active' && currentQuizAttempt" class="space-y-6">
-                    <!-- Quiz Header with Timer -->
-                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                      <div class="flex items-center justify-between mb-4">
-                        <div>
-                          <h3 class="text-xl font-semibold text-gray-900">{{ current_topic.quiz.title }}</h3>
-                          <p class="text-gray-600">Question {{ currentQuestionIndex + 1 }} of {{ current_topic.quiz.questions.length }}</p>
-                        </div>
-                        <div class="text-right">
-                          <div class="text-2xl font-bold text-gray-900" :class="{'text-red-600': timeRemaining < 60}">
-                            {{ formatTime(timeRemaining) }}
+                    <!-- Quiz Results State -->
+                    <div v-if="quizState === 'results' && quizResults" class="space-y-6">
+                      <!-- Results Header -->
+                      <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-6">
+                        <div class="text-center">
+                          <div
+                            :class="[
+                              'w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold',
+                              quizResults.is_passed ? 'bg-emerald-500' : 'bg-red-500'
+                            ]"
+                          >
+                            {{ Math.round(quizResults.percentage) }}%
                           </div>
-                          <div class="text-sm text-gray-500">Time Remaining</div>
+                          <h3 class="text-2xl font-bold text-gray-900 mb-2">
+                            {{ quizResults.is_passed ? 'Congratulations!' : 'Keep Practicing!' }}
+                          </h3>
+                          <p class="text-gray-600 mb-4">
+                            You scored {{ quizResults.score }} out of {{ quizResults.total_points }} points
+                            ({{ Math.round(quizResults.percentage) }}%)
+                          </p>
+                          <div class="flex justify-center space-x-4">
+                            <button
+                              @click="quizState = 'overview'"
+                              class="px-6 py-2.5 border border-emerald-300 text-emerald-700 font-medium rounded-lg hover:bg-emerald-50 transition-colors"
+                            >
+                              Back to Overview
+                            </button>
+                            <button
+                              v-if="canRetakeQuiz"
+                              @click="retakeQuiz"
+                              class="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-colors"
+                            >
+                              Retake Quiz
+                            </button>
+                          </div>
                         </div>
                       </div>
-                      <!-- Progress Bar -->
-                      <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-                        <div
-                          class="bg-amber-500 h-2.5 rounded-full transition-all duration-300"
-                          :style="{ width: `${((currentQuestionIndex + 1) / current_topic.quiz.questions.length) * 100}%` }"
-                        ></div>
-                      </div>
-                    </div>
-                    <!-- Current Question -->
-                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                      <h4 class="text-lg font-semibold text-gray-900 mb-4">
-                        {{ currentQuestion.question }}
-                      </h4>
-                      <!-- Multiple Choice Options -->
-                      <div v-if="currentQuestion.type === 'multiple_choice'" class="space-y-3">
-                        <button
-                          v-for="(option, index) in shuffledOptions"
-                          :key="index"
-                          @click="selectAnswer(option)"
-                          :class="[
-                            'w-full text-left p-4 border rounded-xl transition-all duration-200',
-                            selectedAnswer === option
-                              ? 'border-amber-500 bg-amber-50 ring-2 ring-amber-200'
-                              : 'border-gray-200 hover:border-amber-300 hover:bg-amber-25'
-                          ]"
-                        >
-                          <div class="flex items-center">
-                            <div
-                              :class="[
-                                'w-6 h-6 rounded-full border-2 flex items-center justify-center mr-3 flex-shrink-0',
-                                selectedAnswer === option
-                                  ? 'border-amber-500 bg-amber-500 text-white'
-                                  : 'border-gray-300'
-                              ]"
-                            >
-                              <CheckIcon v-if="selectedAnswer === option" class="h-3 w-3" />
+                      <!-- Detailed Results -->
+                      <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4">Question Review</h4>
+                        <div class="space-y-4">
+                          <div
+                            v-for="(result, index) in quizResults.detailed_results"
+                            :key="index"
+                            :class="[
+                              'p-4 border rounded-xl',
+                              result.is_correct ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50'
+                            ]"
+                          >
+                            <div class="flex items-start justify-between mb-2">
+                              <h5 class="font-medium text-gray-900">Question {{ index + 1 }}</h5>
+                              <span
+                                :class="[
+                                  'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold',
+                                  result.is_correct ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                                ]"
+                              >
+                                {{ result.is_correct ? 'Correct' : 'Incorrect' }}
+                              </span>
                             </div>
-                            <span class="text-gray-700">{{ option }}</span>
-                          </div>
-                        </button>
-                      </div>
-                      <!-- True/False Options -->
-                      <div v-if="currentQuestion.type === 'true_false'" class="grid grid-cols-2 gap-4">
-                        <button
-                          v-for="option in ['True', 'False']"
-                          :key="option"
-                          @click="selectAnswer(option)"
-                          :class="[
-                            'p-4 border rounded-xl transition-all duration-200 text-center',
-                            selectedAnswer === option
-                              ? 'border-amber-500 bg-amber-50 ring-2 ring-amber-200'
-                              : 'border-gray-200 hover:border-amber-300 hover:bg-amber-25'
-                          ]"
-                        >
-                          <span class="font-medium text-gray-700">{{ option }}</span>
-                        </button>
-                      </div>
-                      <!-- Navigation Buttons -->
-                      <div class="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
-                        <button
-                          @click="previousQuestion"
-                          :disabled="currentQuestionIndex === 0"
-                          class="flex items-center px-4 py-2.5 border border-emerald-300 text-emerald-700 font-medium rounded-lg hover:bg-emerald-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <ChevronLeftIcon class="h-4 w-4 mr-2" />
-                          Previous
-                        </button>
-                        <div class="flex items-center space-x-3">
-                          <button
-                            v-if="currentQuestionIndex < current_topic.quiz.questions.length - 1"
-                            @click="nextQuestion"
-                            :disabled="!selectedAnswer"
-                            class="flex items-center px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            Next
-                            <ChevronRightIcon class="h-4 w-4 ml-2" />
-                          </button>
-                          <button
-                            v-else
-                            @click="submitQuiz"
-                            :disabled="!selectedAnswer"
-                            class="flex items-center px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <CheckIcon class="h-4 w-4 mr-2" />
-                            Submit Quiz
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- Quiz Results State -->
-                  <div v-if="quizState === 'results' && quizResults" class="space-y-6">
-                    <!-- Results Header -->
-                    <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-6">
-                      <div class="text-center">
-                        <div
-                          :class="[
-                            'w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold',
-                            quizResults.is_passed ? 'bg-emerald-500' : 'bg-red-500'
-                          ]"
-                        >
-                          {{ Math.round(quizResults.percentage) }}%
-                        </div>
-                        <h3 class="text-2xl font-bold text-gray-900 mb-2">
-                          {{ quizResults.is_passed ? 'Congratulations!' : 'Keep Practicing!' }}
-                        </h3>
-                        <p class="text-gray-600 mb-4">
-                          You scored {{ quizResults.score }} out of {{ quizResults.total_points }} points
-                          ({{ Math.round(quizResults.percentage) }}%)
-                        </p>
-                        <div class="flex justify-center space-x-4">
-                          <button
-                            @click="quizState = 'overview'"
-                            class="px-6 py-2.5 border border-emerald-300 text-emerald-700 font-medium rounded-lg hover:bg-emerald-50 transition-colors"
-                          >
-                            Back to Overview
-                          </button>
-                          <button
-                            v-if="canRetakeQuiz"
-                            @click="retakeQuiz"
-                            class="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-colors"
-                          >
-                            Retake Quiz
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <!-- Detailed Results -->
-                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                      <h4 class="text-lg font-semibold text-gray-900 mb-4">Question Review</h4>
-                      <div class="space-y-4">
-                        <div
-                          v-for="(result, index) in quizResults.detailed_results"
-                          :key="index"
-                          :class="[
-                            'p-4 border rounded-xl',
-                            result.is_correct ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50'
-                          ]"
-                        >
-                          <div class="flex items-start justify-between mb-2">
-                            <h5 class="font-medium text-gray-900">Question {{ index + 1 }}</h5>
-                            <span
-                              :class="[
-                                'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold',
-                                result.is_correct ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-                              ]"
-                            >
-                              {{ result.is_correct ? 'Correct' : 'Incorrect' }}
-                            </span>
-                          </div>
-                          <p class="text-gray-700 mb-3">{{ result.question }}</p>
-                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <span class="font-medium text-gray-500">Your answer:</span>
-                              <p :class="['mt-1', result.is_correct ? 'text-emerald-700' : 'text-red-700']">
-                                {{ result.user_answer || 'No answer' }}
+                            <p class="text-gray-700 mb-3">{{ result.question }}</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span class="font-medium text-gray-500">Your answer:</span>
+                                <p :class="['mt-1', result.is_correct ? 'text-emerald-700' : 'text-red-700']">
+                                  {{ result.user_answer || 'No answer' }}
                               </p>
+                              </div>
+                              <div v-if="!result.is_correct">
+                                <span class="font-medium text-gray-500">Correct answer:</span>
+                                <p class="mt-1 text-emerald-700">{{ result.correct_answer }}</p>
+                              </div>
                             </div>
-                            <div v-if="!result.is_correct">
-                              <span class="font-medium text-gray-500">Correct answer:</span>
-                              <p class="mt-1 text-emerald-700">{{ result.correct_answer }}</p>
+                            <div v-if="result.explanation" class="mt-3 p-3 bg-blue-50 rounded-lg">
+                              <span class="font-medium text-blue-700">Explanation:</span>
+                              <p class="mt-1 text-blue-600">{{ result.explanation }}</p>
                             </div>
-                          </div>
-                          <div v-if="result.explanation" class="mt-3 p-3 bg-blue-50 rounded-lg">
-                            <span class="font-medium text-blue-700">Explanation:</span>
-                            <p class="mt-1 text-blue-600">{{ result.explanation }}</p>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <!-- Generate Quiz State -->
-                  <div v-else-if="!current_topic.quiz" class="text-center py-12">
+                  <!-- No Quiz Available Message -->
+                  <div v-else class="text-center py-12">
                     <QuestionMarkCircleIcon class="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Ready to start this quiz?</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">No Quiz Available</h3>
                     <p class="text-gray-500 mb-6 max-w-md mx-auto">
-                      Get the quiz for this topic to test your understanding.
+                      This topic doesn't have a quiz. Check other topics or contact your instructor if you think this is an error.
                     </p>
-                    <button
-                      @click="generateQuiz(current_topic)"
-                      :disabled="quizLoading"
-                      class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <QuestionMarkCircleIcon class="h-5 w-5 mr-2" />
-                      {{ quizLoading ? 'Generating Quiz...' : 'Generate Quiz' }}
-                    </button>
                   </div>
                 </div>
 
                 <!-- Project Tab -->
                 <div v-if="activeTab === 'project'" class="space-y-6">
-                  <!-- Project content remains the same as in your original code -->
-                  <div class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-6">
-                    <div class="flex items-start justify-between mb-4">
-                      <div class="flex-1">
-                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Project Assignment</h3>
-                        <p class="text-gray-600 mb-4">
-                          This topic includes a hands-on project to apply what you've learned.
-                        </p>
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                          <div class="text-center p-3 bg-white rounded-lg border border-purple-100">
-                            <div class="font-bold text-purple-700">{{ current_topic.estimated_duration_minutes }}min</div>
-                            <div class="text-purple-600">Estimated Time</div>
-                          </div>
-                          <div class="text-center p-3 bg-white rounded-lg border border-purple-100">
-                            <div class="font-bold text-purple-700">Hands-on</div>
-                            <div class="text-purple-600">Project Type</div>
-                          </div>
-                          <div class="text-center p-3 bg-white rounded-lg border border-purple-100">
-                            <div class="font-bold text-purple-700">Required</div>
-                            <div class="text-purple-600">Completion</div>
+                  <div v-if="current_topic.has_project">
+                    <div class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-6">
+                      <div class="flex items-start justify-between mb-4">
+                        <div class="flex-1">
+                          <h3 class="text-xl font-semibold text-gray-900 mb-2">Project Assignment</h3>
+                          <p class="text-gray-600 mb-4">
+                            This topic includes a hands-on project to apply what you've learned.
+                          </p>
+                          <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                            <div class="text-center p-3 bg-white rounded-lg border border-purple-100">
+                              <div class="font-bold text-purple-700">{{ current_topic.estimated_duration_minutes }}min</div>
+                              <div class="text-purple-600">Estimated Time</div>
+                            </div>
+                            <div class="text-center p-3 bg-white rounded-lg border border-purple-100">
+                              <div class="font-bold text-purple-700">Hands-on</div>
+                              <div class="text-purple-600">Project Type</div>
+                            </div>
+                            <div class="text-center p-3 bg-white rounded-lg border border-purple-100">
+                              <div class="font-bold text-purple-700">Required</div>
+                              <div class="text-purple-600">Completion</div>
+                            </div>
                           </div>
                         </div>
+                        <BriefcaseIcon class="h-12 w-12 text-purple-400 ml-4 flex-shrink-0" />
                       </div>
-                      <BriefcaseIcon class="h-12 w-12 text-purple-400 ml-4 flex-shrink-0" />
-                    </div>
-                    <!-- Project Requirements -->
-                    <div v-if="course.capstone_project.requirements" class="bg-white rounded-xl border border-purple-100 p-4 mb-4 shadow-sm">
-                      <h4 class="font-semibold text-gray-900 mb-3">Project Requirements</h4>
-                      <div class="space-y-2">
-                        <div
-                          v-for="(requirement, index) in course.capstone_project.requirements"
-                          :key="index"
-                          class="flex items-start"
-                        >
-                          <CheckCircleIcon class="h-4 w-4 text-purple-500 mr-2 mt-1 flex-shrink-0" />
-                          <span class="text-gray-700">{{ requirement }}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <!-- Project Actions -->
-                    <div class="flex space-x-4">
-                      <button
-                        @click="startProject"
-                        class="flex-1 flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-                      >
-                        <PlayCircleIcon class="h-5 w-5 mr-2" />
-                        Start Project
-                      </button>
-                      <button
-                        v-if="current_topic.project_resources"
-                        @click="downloadProjectResources"
-                        class="flex items-center px-4 py-3 border border-purple-300 text-purple-700 font-medium rounded-lg hover:bg-purple-50 transition-colors"
-                      >
-                        <ArrowDownTrayIcon class="h-5 w-5 mr-2" />
-                        Resources
-                      </button>
-                    </div>
-                  </div>
-                  <!-- Project Submission Area -->
-                  <div v-if="projectState === 'active'" class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Submit Your Project</h4>
-                    <div class="space-y-4">
-                      <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Project Submission</label>
-                        <textarea
-                          v-model="projectSubmission"
-                          rows="6"
-                          class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                          placeholder="Describe your project implementation, include code snippets, screenshots, or any relevant details..."
-                        ></textarea>
-                      </div>
-                      <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Attachment (Optional)</label>
-                        <input
-                          type="file"
-                          @change="handleProjectFileUpload"
-                          class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                        />
-                      </div>
-                      <div class="flex justify-end space-x-3">
-                        <button
-                          @click="cancelProject"
-                          class="px-4 py-2.5 border border-emerald-300 text-emerald-700 font-medium rounded-lg hover:bg-emerald-50 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          @click="submitProject"
-                          :disabled="!projectSubmission.trim()"
-                          class="px-6 py-2.5 bg-purple-500 hover:bg-purple-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Submit Project
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- Previous Submissions -->
-                  <div v-if="current_topic.project_submissions?.length" class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Previous Submissions</h4>
-                    <div class="space-y-3">
-                      <div
-                        v-for="submission in current_topic.project_submissions"
-                        :key="submission.id"
-                        class="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-                      >
-                        <div class="flex items-center justify-between mb-2">
-                          <div class="font-medium text-gray-900">
-                            Submitted {{ formatDate(submission.submitted_at) }}
-                          </div>
-                          <span
-                            v-if="submission.status"
-                            :class="[
-                              'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold',
-                              submission.status === 'approved' ? 'bg-emerald-100 text-emerald-800' :
-                              submission.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                              'bg-amber-100 text-amber-800'
-                            ]"
+                      <!-- Project Requirements -->
+                      <div v-if="course.capstone_project?.requirements" class="bg-white rounded-xl border border-purple-100 p-4 mb-4 shadow-sm">
+                        <h4 class="font-semibold text-gray-900 mb-3">Project Requirements</h4>
+                        <div class="space-y-2">
+                          <div
+                            v-for="(requirement, index) in course.capstone_project.requirements"
+                            :key="index"
+                            class="flex items-start"
                           >
-                            {{ submission.status }}
-                          </span>
+                            <CheckCircleIcon class="h-4 w-4 text-purple-500 mr-2 mt-1 flex-shrink-0" />
+                            <span class="text-gray-700">{{ requirement }}</span>
+                          </div>
                         </div>
-                        <p class="text-gray-600 text-sm mb-3">{{ submission.description }}</p>
-                        <div v-if="submission.feedback" class="p-3 bg-blue-50 rounded-lg">
-                          <span class="font-medium text-blue-700">Instructor Feedback:</span>
-                          <p class="mt-1 text-blue-600">{{ submission.feedback }}</p>
+                      </div>
+                      <!-- Project Actions -->
+                      <div class="flex space-x-4">
+                        <button
+                          @click="startProject"
+                          class="flex-1 flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+                        >
+                          <PlayCircleIcon class="h-5 w-5 mr-2" />
+                          Start Project
+                        </button>
+                        <button
+                          v-if="current_topic.project_resources"
+                          @click="downloadProjectResources"
+                          class="flex items-center px-4 py-3 border border-purple-300 text-purple-700 font-medium rounded-lg hover:bg-purple-50 transition-colors"
+                        >
+                          <ArrowDownTrayIcon class="h-5 w-5 mr-2" />
+                          Resources
+                        </button>
+                      </div>
+                    </div>
+                    <!-- Project Submission Area -->
+                    <div v-if="projectState === 'active'" class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                      <h4 class="text-lg font-semibold text-gray-900 mb-4">Submit Your Project</h4>
+                      <div class="space-y-4">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 mb-2">Project Submission</label>
+                          <textarea
+                            v-model="projectSubmission"
+                            rows="6"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                            placeholder="Describe your project implementation, include code snippets, screenshots, or any relevant details..."
+                          ></textarea>
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700 mb-2">Attachment (Optional)</label>
+                          <input
+                            type="file"
+                            @change="handleProjectFileUpload"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                          />
+                        </div>
+                        <div class="flex justify-end space-x-3">
+                          <button
+                            @click="cancelProject"
+                            class="px-4 py-2.5 border border-emerald-300 text-emerald-700 font-medium rounded-lg hover:bg-emerald-50 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            @click="submitProject"
+                            :disabled="!projectSubmission.trim()"
+                            class="px-6 py-2.5 bg-purple-500 hover:bg-purple-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Submit Project
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Previous Submissions -->
+                    <div v-if="current_topic.project_submissions?.length" class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                      <h4 class="text-lg font-semibold text-gray-900 mb-4">Previous Submissions</h4>
+                      <div class="space-y-3">
+                        <div
+                          v-for="submission in current_topic.project_submissions"
+                          :key="submission.id"
+                          class="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                        >
+                          <div class="flex items-center justify-between mb-2">
+                            <div class="font-medium text-gray-900">
+                              Submitted {{ formatDate(submission.submitted_at) }}
+                            </div>
+                            <span
+                              v-if="submission.status"
+                              :class="[
+                                'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold',
+                                submission.status === 'approved' ? 'bg-emerald-100 text-emerald-800' :
+                                submission.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                'bg-amber-100 text-amber-800'
+                              ]"
+                            >
+                              {{ submission.status }}
+                            </span>
+                          </div>
+                          <p class="text-gray-600 text-sm mb-3">{{ submission.description }}</p>
+                          <div v-if="submission.feedback" class="p-3 bg-blue-50 rounded-lg">
+                            <span class="font-medium text-blue-700">Instructor Feedback:</span>
+                            <p class="mt-1 text-blue-600">{{ submission.feedback }}</p>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                <!-- Requirements Tab -->
-                <div v-if="activeTab === 'requirements'" class="space-y-6">
-                <div class="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-6">
-                    <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Project Requirements</h3>
-                        <p class="text-gray-600 mb-4">
-                        Review the project requirements to understand what needs to be delivered for this project.
-                        </p>
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                        <div class="text-center p-3 bg-white rounded-lg border border-blue-100">
-                            <div class="font-bold text-blue-700">{{ current_topic.estimated_duration_minutes }}min</div>
-                            <div class="text-blue-600">Estimated Time</div>
-                        </div>
-                        <div class="text-center p-3 bg-white rounded-lg border border-blue-100">
-                            <div class="font-bold text-blue-700">Hands-on</div>
-                            <div class="text-blue-600">Project Type</div>
-                        </div>
-                        <div class="text-center p-3 bg-white rounded-lg border border-blue-100">
-                            <div class="font-bold text-blue-700">Required</div>
-                            <div class="text-blue-600">Completion</div>
-                        </div>
-                        </div>
-                    </div>
-                    <ClipboardDocumentListIcon class="h-12 w-12 text-blue-400 ml-4 flex-shrink-0" />
-                    </div>
-
-                    <!-- Project Requirements Content -->
-                    <div v-if="current_topic.project_requirements && current_topic.project_requirements.length" class="bg-white rounded-xl border border-blue-100 p-4 mb-4 shadow-sm">
-                    <h4 class="font-semibold text-gray-900 mb-3">Project Requirements</h4>
-                    <div class="space-y-3">
-                        <div
-                        v-for="(requirement, index) in current_topic.project_requirements"
-                        :key="index"
-                        class="flex items-start p-3 bg-blue-50 rounded-lg"
-                        >
-                        <CheckCircleIcon class="h-4 w-4 text-blue-500 mr-2 mt-1 flex-shrink-0" />
-                        <div>
-                            <span class="font-medium text-gray-900">{{ requirement }}</span>
-                        </div>
-                        </div>
-                    </div>
-                    </div>
-
-                    <!-- Generate Requirements Button -->
-                    <div v-else class="text-center py-8">
-                    <ClipboardDocumentListIcon class="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">No Requirements Available</h3>
+                  <!-- No Project Available Message -->
+                  <div v-else class="text-center py-12">
+                    <BriefcaseIcon class="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">No Project Available</h3>
                     <p class="text-gray-500 mb-6 max-w-md mx-auto">
-                        Generate project requirements to understand what needs to be delivered for this project.
+                      This topic doesn't include a project. Check other topics or contact your instructor if you think this is an error.
                     </p>
-                    <button
-                        @click="generateRequirements(current_topic)"
-                        :disabled="requirementsLoading"
-                        class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <ClipboardDocumentListIcon class="h-5 w-5 mr-2" />
-                        {{ requirementsLoading ? 'Generating Requirements...' : 'Generate Requirements' }}
-                    </button>
-                    </div>
-                </div>
+                  </div>
                 </div>
               </div>
             </div>
-            <!-- Navigation Footer - Moved Mark as Complete button here -->
+            <!-- Navigation Footer -->
             <div class="mt-8 flex justify-between items-center">
-            <button
+              <button
                 v-if="hasPreviousTopic"
                 @click="goToPreviousTopic"
                 class="inline-flex items-center px-6 py-3 border border-emerald-300 text-emerald-700 font-medium rounded-lg hover:bg-emerald-50 transition-colors"
-            >
+              >
                 <ChevronLeftIcon class="h-4 w-4 mr-2" />
                 Previous Topic
-            </button>
-            <div v-else></div>
-            <div class="flex items-center space-x-4">
-                <!-- Mark as Complete Button - Moved here -->
+              </button>
+              <div v-else></div>
+              <div class="flex items-center space-x-4">
+                <!-- Mark as Complete Button -->
                 <button
-                v-if="!current_topic.is_completed"
-                @click="markAsComplete"
-                :disabled="!canMarkAsComplete || markCompleteLoading"
-                class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed relative group"
-                :title="!canMarkAsComplete ? getDisabledReason : ''"
+                  v-if="!isTopicComplete"
+                  @click="markAsComplete"
+                  :disabled="!canMarkAsComplete || markCompleteLoading"
+                  class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed relative group"
+                  :title="!canMarkAsComplete ? getDisabledReason : ''"
                 >
-                <CheckCircleIcon class="h-4 w-4 mr-2" />
-                {{ markCompleteLoading ? 'Marking...' : 'Mark as Complete' }}
+                  <CheckCircleIcon class="h-4 w-4 mr-2" />
+                  {{ markCompleteLoading ? 'Marking...' : 'Mark as Complete' }}
                 </button>
                 <button
-                v-else
-                disabled
-                class="inline-flex items-center px-6 py-3 bg-gray-400 text-white font-medium rounded-lg cursor-not-allowed"
+                  v-else
+                  disabled
+                  class="inline-flex items-center px-6 py-3 bg-gray-400 text-white font-medium rounded-lg cursor-not-allowed"
                 >
-                <CheckCircleIcon class="h-4 w-4 mr-2" />
-                Completed
+                  <CheckCircleIcon class="h-4 w-4 mr-2" />
+                  Completed
                 </button>
                 <button
-                v-if="hasNextTopic"
-                @click="goToNextTopic"
-                class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+                  v-if="hasNextTopic"
+                  @click="goToNextTopic"
+                  class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
                 >
-                Next Topic
-                <ChevronRightIcon class="h-4 w-4 ml-2" />
+                  Next Topic
+                  <ChevronRightIcon class="h-4 w-4 ml-2" />
                 </button>
-            </div>
+              </div>
             </div>
           </div>
         </main>
@@ -966,21 +893,20 @@
         @toggle-module="toggleModule"
         :expanded-modules="expandedModules"
       />
-
     </div>
-
   </StudentLayout>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { router,usePage } from '@inertiajs/vue3'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { router, usePage } from '@inertiajs/vue3'
 import StudentLayout from '@/Layouts/StudentLayout.vue'
 import { Head, Link } from '@inertiajs/vue3'
 import { marked } from "marked"
 import DOMPurify from "dompurify"
 import MobileSidebar from '@/Components/LearnMobileSidebar.vue'
 import CourseChatPopup from '@/Components/CourseChatPopup.vue'
+import axios from 'axios'
 import {
   AcademicCapIcon,
   QuestionMarkCircleIcon,
@@ -1011,20 +937,16 @@ const props = defineProps({
   course_stats: Object,
   active_tab: String,
   show_quiz_tab: Boolean,
+  isTopicComplete: Boolean,
 })
-
-
-const chatSession = ref(null)
-const page = usePage()
-const propsTabParam = page.props.active_tab
 
 // Reactive state
 const mobileSidebarOpen = ref(false)
 const markCompleteLoading = ref(false)
-const contentLoading = ref(false)
 const quizLoading = ref(false)
-const activeTab = ref(propsTabParam || urlTabParam || 'content')
+const contentLoading = ref(false)
 const expandedModules = ref({})
+const activeTab = ref(props.active_tab || 'content')
 
 // Quiz state
 const quizState = ref('overview') // 'overview', 'active', 'results'
@@ -1053,43 +975,93 @@ const audioProgressPercentage = ref(0)
 const currentAudio = ref(null)
 const speechSynthesis = ref(null)
 
+// Chat session
+const chatSession = ref(null)
+
 // Check if browser supports speech synthesis
 const hasAudioSupport = computed(() => {
   return 'speechSynthesis' in window
 })
 
-// Initialize expanded modules - expand current module
-onMounted(() => {
-  if (props.current_topic?.module_id) {
-    expandedModules.value[props.current_topic.module_id] = true
-  }
-  // Start time tracking
-  startTimeTracking()
+// Computed properties
+const courseStats = computed(() => props.course_stats || {})
+
+const current_module = computed(() => {
+  return props.course_structure.find(module =>
+    module.topics.some(topic => topic.id === props.current_topic?.id)
+  )
 })
 
-// Clean up timer on unmount
-onUnmounted(() => {
-  if (timerInterval.value) {
-    clearInterval(timerInterval.value)
-  }
-  recordTimeSpent()
+const allTopics = computed(() => {
+  return props.course_structure.flatMap(module => module.topics)
 })
 
-// Get outline type label
-const getOutlineTypeLabel = (type) => {
-  const labels = {
-    topic: 'Topic',
-    quiz: 'Quiz',
-    project: 'Project'
+const currentTopicIndex = computed(() =>
+  allTopics.value.findIndex(topic => topic.id === props.current_topic?.id)
+)
+
+const hasPreviousTopic = computed(() => currentTopicIndex.value > 0)
+const hasNextTopic = computed(() => currentTopicIndex.value < allTopics.value.length - 1)
+
+const canMarkAsComplete = computed(() => {
+  if (!props.current_topic) return false
+
+  const outlineType = props.current_topic.type || 'topic'
+
+  if (outlineType === 'topic') {
+    return props.current_topic.contents?.length > 0
   }
-  return labels[type] || 'Topic'
-}
+  else if (outlineType === 'quiz') {
+    const hasPassedAttempt = props.current_topic.quiz?.attempts?.some(attempt => attempt.is_passed)
+    return hasPassedAttempt || false
+  }
+  else if (outlineType === 'project') {
+    const hasApprovedSubmission = props.current_topic.project_submissions?.some(submission => submission.status === 'approved')
+    return hasApprovedSubmission || props.current_topic.project_submissions?.length > 0
+  }
+
+  return false
+})
+
+// Audio playback methods need to use currentTopic
+const hasAudioContent = computed(() => {
+  return props.current_topic?.contents?.length > 0 && hasAudioSupport.value
+})
+
+// Quiz computed properties
+const currentAttemptsCount = computed(() => {
+  return props.current_topic.quiz?.attempts?.length || 0
+})
+
+const canAttemptQuiz = computed(() => {
+  const quiz = props.current_topic.quiz
+  if (!quiz || !quiz.is_active) return false
+  return quiz.max_attempts === 0 || currentAttemptsCount.value < quiz.max_attempts
+})
+
+const canRetakeQuiz = computed(() => {
+  return canAttemptQuiz.value && quizState.value === 'results'
+})
+
+const getQuizButtonText = computed(() => {
+  if (!canAttemptQuiz.value) return 'No Attempts Left'
+  if (currentAttemptsCount.value === 0) return 'Start Quiz'
+  return `Attempt ${currentAttemptsCount.value + 1}`
+})
+
+const currentQuestion = computed(() => {
+  if (!props.current_topic.quiz || !props.current_topic.quiz.questions) return null
+  return props.current_topic.quiz.questions[currentQuestionIndex.value]
+})
+
+const shuffledOptions = computed(() => {
+  if (!currentQuestion.value?.options) return []
+  return shuffleArray(currentQuestion.value.options)
+})
 
 // Filtered tabs based on topic type
 const filteredTabs = computed(() => {
   const outlineType = props.current_topic.type || 'topic'
-
-  // Start with an empty array instead of baseTabs
   const tabs = []
 
   // Add tabs based on outline type
@@ -1159,8 +1131,6 @@ const filteredTabs = computed(() => {
       badge: (props.current_topic.learning_objectives?.length || 0) + (props.current_topic.key_concepts?.length || 0),
       badgeClass: 'bg-purple-100 text-purple-800'
     })
-
-
   }
 
   return tabs
@@ -1262,161 +1232,12 @@ const recordTimeSpent = async () => {
   }
 }
 
-// Computed properties
-const courseStats = computed(() => props.course_stats || {})
-const current_module = computed(() => {
-  return props.course_structure.find(module =>
-    module.topics.some(topic => topic.id === props.current_topic.id)
-  )
-})
-const allTopics = computed(() => {
-  return props.course_structure.flatMap(module => module.topics)
-})
-const currentTopicIndex = computed(() =>
-  allTopics.value.findIndex(topic => topic.id === props.current_topic.id)
-)
-const hasPreviousTopic = computed(() => currentTopicIndex.value > 0)
-const hasNextTopic = computed(() => currentTopicIndex.value < allTopics.value.length - 1)
-
-// Progress computed properties
-const progressByActivity = computed(() => {
-  if (!props.course.progress_tracking) return null
-  const activities = {}
-  props.course.progress_tracking.forEach(track => {
-    if (!activities[track.activity_type]) {
-      activities[track.activity_type] = { completed: 0, total: 0 }
-    }
-    activities[track.activity_type].total++
-    if (track.is_completed) {
-      activities[track.activity_type].completed++
-    }
-  })
-  return Object.entries(activities).map(([type, stats]) => ({
-    type,
-    ...stats
-  }))
-})
-
-// Quiz computed properties
-const currentAttemptsCount = computed(() => {
-  return props.current_topic.quiz?.attempts?.length || 0
-})
-const canAttemptQuiz = computed(() => {
-  const quiz = props.current_topic.quiz
-  if (!quiz || !quiz.is_active) return false
-  return quiz.max_attempts === 0 || currentAttemptsCount.value < quiz.max_attempts
-})
-const canRetakeQuiz = computed(() => {
-  return canAttemptQuiz.value && quizState.value === 'results'
-})
-const getQuizButtonText = computed(() => {
-  if (!canAttemptQuiz.value) return 'No Attempts Left'
-  if (currentAttemptsCount.value === 0) return 'Start Quiz'
-  return `Attempt ${currentAttemptsCount.value + 1}`
-})
-const currentQuestion = computed(() => {
-  if (!props.current_topic.quiz || !props.current_topic.quiz.questions) return null
-  return props.current_topic.quiz.questions[currentQuestionIndex.value]
-})
-
-// Navigation methods
-const selectTopic = (topic) => {
-  // Record time spent on current topic before navigating
-  recordTimeSpent().then(() => {
-    router.get(route('student.courses.learn', {
-      course: props.course.id,
-      topic: topic.id,
-      tab: activeTab.value // Preserve current tab
-    }))
-    mobileSidebarOpen.value = false
-  })
-}
-
+// Module toggle
 const toggleModule = (moduleId) => {
   expandedModules.value[moduleId] = !expandedModules.value[moduleId]
 }
 
-const goToPreviousTopic = () => {
-  if (hasPreviousTopic.value) {
-    const previousTopic = allTopics.value[currentTopicIndex.value - 1]
-    // Preserve tab parameter when navigating
-    router.get(route('student.courses.learn', {
-      course: props.course.id,
-      topic: previousTopic.id,
-      tab: activeTab.value
-    }))
-  }
-}
-
-const goToNextTopic = () => {
-  if (hasNextTopic.value) {
-    const nextTopic = allTopics.value[currentTopicIndex.value + 1]
-    // Preserve tab parameter when navigating
-    router.get(route('student.courses.learn', {
-      course: props.course.id,
-      topic: nextTopic.id,
-      tab: activeTab.value
-    }))
-  }
-}
-
-const markAsComplete = async () => {
-  markCompleteLoading.value = true
-  try {
-    // Include time spent in completion
-    const totalTimeSpent = currentSessionTime.value
-
-    // FIX: Pass topic ID correctly for route model binding
-    await router.post(route('student.courses.complete-topic', {
-      topic: props.current_topic.id
-    }), {
-      time_spent: totalTimeSpent
-    }, {
-      preserveScroll: true,
-      onSuccess: () => {
-        // Reset timer for next topic
-        startTime.value = new Date()
-        currentSessionTime.value = 0
-
-        // Reload to update completion status
-        router.reload({ preserveScroll: true })
-      }
-    })
-  } catch (error) {
-    console.error('Error marking as complete:', error)
-    alert('Failed to mark as complete. Please try again.')
-  } finally {
-    markCompleteLoading.value = false
-  }
-}
-
-const generateContent = async (topic) => {
-  contentLoading.value = true
-
-  try {
-    await router.post(route('student.outlines.generate-content', {
-      course: props.course.id,
-      outline: topic.id
-    }), {}, {
-      onSuccess: () => {
-        router.reload()
-      },
-      onError: (errors) => {
-        console.error('Failed to generate content:', errors)
-        alert('Failed to generate content. Please try again.')
-      },
-      onFinish: () => {
-        // This ensures the loading overlay disappears even if there's an error
-        contentLoading.value = false
-      }
-    })
-  } catch (error) {
-    console.error('Error generating content:', error)
-    alert('An error occurred while generating content.')
-    contentLoading.value = false
-  }
-}
-
+// Content formatting
 function formatContent(content) {
   if (!content) return ""
   marked.setOptions({
@@ -1430,15 +1251,106 @@ function formatContent(content) {
   return DOMPurify.sanitize(html)
 }
 
+// Topic selection and navigation
+const selectTopic = async (topic) => {
+  // Record time spent on current topic before navigating
+  await recordTimeSpent()
+
+  // Close mobile sidebar
+  mobileSidebarOpen.value = false
+
+  // Navigate to the selected topic
+  router.visit(route('student.courses.learn', {
+    course: props.course.id,
+    topic: topic.id,
+    tab: activeTab.value !== 'content' ? activeTab.value : undefined
+  }), {
+    preserveScroll: true,
+    preserveState: true
+  })
+}
+
+const switchTab = (tabId) => {
+  activeTab.value = tabId
+
+  // Update URL with the active tab
+  router.visit(route('student.courses.learn', {
+    course: props.course.id,
+    topic: props.current_topic.id,
+    tab: tabId !== 'content' ? tabId : undefined
+  }), {
+    preserveScroll: true,
+    preserveState: true
+  })
+}
+
+const goToPreviousTopic = async () => {
+  if (hasPreviousTopic.value) {
+    const previousTopic = allTopics.value[currentTopicIndex.value - 1]
+    await selectTopic(previousTopic)
+  }
+}
+
+const goToNextTopic = async () => {
+  if (hasNextTopic.value) {
+    const nextTopic = allTopics.value[currentTopicIndex.value + 1]
+    await selectTopic(nextTopic)
+  }
+}
+
+// Mark as complete
+const markAsComplete = async () => {
+  if (!props.current_topic || !canMarkAsComplete.value) return
+
+  markCompleteLoading.value = true
+
+  try {
+    const response = await axios.post(route('student.courses.complete-topic', {
+      topic: props.current_topic.id
+    }), {
+      time_spent: currentSessionTime.value
+    })
+
+    if (response.data.success) {
+      // Reload the page to update progress
+      router.reload({
+        preserveScroll: true,
+        preserveState: false
+        })
+
+      showNotification('Topic marked as complete!', 'success')
+    }
+  } catch (error) {
+    console.error('Failed to mark as complete:', error)
+    showNotification('Failed to mark as complete. Please try again.', 'error')
+  } finally {
+    markCompleteLoading.value = false
+  }
+}
+
+// Get disabled reason
+const getDisabledReason = computed(() => {
+  const outlineType = props.current_topic.type || 'topic'
+
+  if (outlineType === 'topic') {
+    return 'Complete the content to mark as complete'
+  }
+  else if (outlineType === 'quiz') {
+    return 'Pass the quiz to mark as complete'
+  }
+  else if (outlineType === 'project') {
+    return 'Submit the project to mark as complete'
+  }
+
+  return 'Complete the requirements to mark as complete'
+})
+
 // Quiz methods
 const startQuiz = async () => {
   if (!canAttemptQuiz.value) return
-  
+
   quizLoading.value = true
-  contentLoading.value = true
-  
   try {
-    // Preserve the tab parameter when making the request
     const response = await fetch(route('student.quizzes.start', props.current_topic.quiz.id), {
       method: 'POST',
       headers: {
@@ -1447,34 +1359,23 @@ const startQuiz = async () => {
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
       }
     })
-    
+
     const data = await response.json()
-    
+
     if (data.success) {
       currentQuizAttempt.value = data.attempt
       userAnswers.value = new Array(data.quiz.questions.length).fill(null)
       currentQuestionIndex.value = 0
       selectedAnswer.value = null
       quizState.value = 'active'
-      
+
       if (props.current_topic.quiz) {
         props.current_topic.quiz.questions = data.quiz.questions
       }
-      
+
       if (data.quiz.time_limit_minutes) {
         startTimer(data.quiz.time_limit_minutes * 60)
       }
-      
-      // Update URL to show quiz tab
-      router.replace(route('student.courses.learn', {
-        course: props.course.id,
-        topic: props.current_topic.id,
-        tab: 'quiz'
-      }), {
-        preserveState: true,
-        preserveScroll: true,
-        replace: true
-      })
     } else {
       throw new Error(data.message || 'Failed to start quiz')
     }
@@ -1483,7 +1384,6 @@ const startQuiz = async () => {
     alert('Failed to start quiz: ' + error.message)
   } finally {
     quizLoading.value = false
-    contentLoading.value = false
   }
 }
 
@@ -1523,7 +1423,6 @@ const submitQuiz = async () => {
   }
 
   quizLoading.value = true
-  //contentLoading.value = true
 
   try {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content')
@@ -1562,7 +1461,6 @@ const submitQuiz = async () => {
     alert('Failed to submit quiz: ' + error.message)
   } finally {
     quizLoading.value = false
-    contentLoading.value = false
   }
 }
 
@@ -1606,41 +1504,6 @@ const retakeQuiz = () => {
     timeRemaining.value = 0
   } else {
     alert('You have no attempts left for this quiz.')
-  }
-}
-
-
-
-const generateQuiz = async (topic) => {
-  quizLoading.value = true
-  contentLoading.value = true
-  
-  try {
-    await router.post(route('student.outlines.generate-quiz', {
-      course: props.course.id,
-      outline: topic.id
-    }), {}, {
-      onSuccess: () => {
-        // After generating quiz, reload and show quiz tab
-        router.reload({
-          only: ['current_topic'],
-          onSuccess: () => {
-            // Set active tab to quiz
-            activeTab.value = 'quiz'
-          }
-        })
-      },
-      onError: (errors) => {
-        console.error('Failed to generate quiz:', errors)
-        alert('Failed to generate quiz. Please try again.')
-      }
-    })
-  } catch (error) {
-    console.error('Error generating quiz:', error)
-    alert('An error occurred while generating quiz.')
-  } finally {
-    quizLoading.value = false
-    contentLoading.value = false
   }
 }
 
@@ -1691,34 +1554,8 @@ const submitProject = async () => {
 }
 
 const downloadProjectResources = () => {
-  // Implementation for downloading project resources
   if (props.current_topic.project_resources) {
-    // Trigger download logic here
     console.log('Downloading project resources')
-  }
-}
-
-// Criteria methods
-const generateCriteria = async (topic) => {
-  criteriaLoading.value = true
-  try {
-    await router.post(route('student.outlines.generate-criteria', {
-      course: props.course.id,
-      outline: topic.id
-    }), {}, {
-      onSuccess: () => {
-        router.reload()
-      },
-      onError: (errors) => {
-        console.error('Failed to generate criteria:', errors)
-        alert('Failed to generate criteria. Please try again.')
-      }
-    })
-  } catch (error) {
-    console.error('Error generating criteria:', error)
-    alert('An error occurred while generating criteria.')
-  } finally {
-    criteriaLoading.value = false
   }
 }
 
@@ -1731,28 +1568,6 @@ const shuffleArray = (array) => {
   }
   return shuffled
 }
-
-// Computed property for shuffled options
-const shuffledOptions = computed(() => {
-  if (!currentQuestion.value?.options) return []
-  return shuffleArray(currentQuestion.value.options)
-})
-
-const hasAudioContent = computed(() => {
-  return props.current_topic.contents?.length > 0 && hasAudioSupport.value
-})
-
-// Initialize speech synthesis
-onMounted(() => {
-  if (hasAudioSupport.value) {
-    speechSynthesis.value = window.speechSynthesis
-  }
-})
-
-// Clean up audio on unmount
-onUnmounted(() => {
-  stopAudioPlayback()
-})
 
 // Audio playback methods
 const playContentAudio = (content) => {
@@ -1883,164 +1698,38 @@ const estimateReadTime = (content) => {
   return minutes
 }
 
-// Set default active tab based on available tabs
-const setDefaultActiveTab = () => {
-  // Only set default if no tab is specified in URL
-  if (!props.active_tab) {
-    const outlineType = props.current_topic.type || 'topic'
-    const tabs = filteredTabs.value
-
-    if (tabs.length > 0) {
-      activeTab.value = tabs[0].id
-    }
+const getOutlineTypeLabel = (type) => {
+  const labels = {
+    topic: 'Topic',
+    quiz: 'Quiz',
+    project: 'Project'
   }
+  return labels[type] || 'Topic'
 }
 
-const canMarkAsComplete = computed(() => {
-  const outlineType = props.current_topic.type || 'topic'
-
-  if (outlineType === 'topic') {
-    // For topics: require content to be generated and viewed
-    return props.current_topic.contents?.length > 0
-  }
-  else if (outlineType === 'quiz') {
-    // For quizzes: require a passing attempt
-    const hasPassedAttempt = props.current_topic.quiz?.attempts?.some(attempt => attempt.is_passed)
-    return hasPassedAttempt || false
-  }
-  else if (outlineType === 'project') {
-    // For projects: require at least one approved submission
-    const hasApprovedSubmission = props.current_topic.project_submissions?.some(submission => submission.status === 'approved')
-    return hasApprovedSubmission || props.current_topic.project_submissions?.length > 0
-  }
-
-  return false
-})
-
-// Computed property to get reason why marking as complete is disabled
-const getDisabledReason = computed(() => {
-  const outlineType = props.current_topic.type || 'topic'
-
-  if (outlineType === 'topic') {
-    return 'Complete the content to mark as complete'
-  }
-  else if (outlineType === 'quiz') {
-    return 'Pass the quiz to mark as complete'
-  }
-  else if (outlineType === 'project') {
-    return 'Submit the project to mark as complete'
-  }
-
-  return 'Complete the requirements to mark as complete'
-})
-
-// Initialize expanded modules - expand current module
-onMounted(() => {
-  if (props.current_topic?.module_id) {
-    expandedModules.value[props.current_topic.module_id] = true
-  }
-  // Set default active tab based on available tabs
-  setDefaultActiveTab()
-  // Start time tracking
-  startTimeTracking()
-})
-
-// Watch for topic changes and update active tab
-watch(activeTab, (newTab) => {
-  // Create URLSearchParams from current URL
-  const currentUrl = new URL(window.location.href)
-  const searchParams = new URLSearchParams(currentUrl.search)
-  
-  // Update or remove the tab parameter
-  if (newTab && newTab !== 'content') {
-    searchParams.set('tab', newTab)
-  } else {
-    searchParams.delete('tab')
-  }
-  
-  // Update the URL without reloading
-  const newUrl = `${currentUrl.pathname}?${searchParams.toString()}`
-  window.history.replaceState({}, '', newUrl)
-})
-
-// When topic changes, check if we need to show quiz tab
-watch(() => props.current_topic, (newTopic, oldTopic) => {
-  // If topic changed, check if we should switch tabs
-  if (newTopic.id !== oldTopic?.id) {
-    // If URL has a tab parameter, use it
-    if (props.active_tab) {
-      activeTab.value = props.active_tab
-    } else {
-      // Otherwise use default based on topic type
-      setDefaultActiveTab()
-    }
-    
-    // If the new topic has a quiz that was just generated, show quiz tab
-    if (newTopic.has_quiz && props.show_quiz_tab) {
-      activeTab.value = 'quiz'
-    }
-  }
-}, { immediate: true })
-
-onMounted(async () => {
-  // Pre-load chat session if needed
-  try {
-    const response = await axios.get(route('student.courses.chat.initialize', { course: props.course.id }))
-    chatSession.value = response.data.session
-  } catch (error) {
-    console.error('Failed to pre-load chat session:', error)
-  }
-})
-
-
-// Method to extract all topics from course structure
+// Get all topics for chat
 const getAllTopics = () => {
   try {
-    // Validate course_structure
     if (!props.course_structure) {
-      console.warn('course_structure prop is not defined')
-      return []
-    }
-
-    if (!Array.isArray(props.course_structure)) {
-      console.warn('course_structure is not an array:', typeof props.course_structure)
-      return []
-    }
-
-    if (props.course_structure.length === 0) {
-      console.log('course_structure is empty array')
       return []
     }
 
     const extractedTopics = []
 
-    // Loop through each module
     props.course_structure.forEach((module, moduleIndex) => {
-      // Validate module
       if (!module || typeof module !== 'object') {
-        console.warn(`Invalid module at index ${moduleIndex}`)
         return
       }
 
       const moduleId = module.id || `module-${moduleIndex}`
       const moduleTitle = module.title || `Module ${module.order || (moduleIndex + 1)}`
 
-      // Check if module has topics
-      if (!module.topics) {
-        console.warn(`Module ${moduleId} has no topics property`)
+      if (!module.topics || !Array.isArray(module.topics)) {
         return
       }
 
-      if (!Array.isArray(module.topics)) {
-        console.warn(`Module ${moduleId} topics is not an array:`, typeof module.topics)
-        return
-      }
-
-      // Process each topic in the module
       module.topics.forEach((topic, topicIndex) => {
-        // Validate topic
         if (!topic || typeof topic !== 'object') {
-          console.warn(`Invalid topic at index ${topicIndex} in module ${moduleId}`)
           return
         }
 
@@ -2064,7 +1753,6 @@ const getAllTopics = () => {
       })
     })
 
-    console.log(`Successfully extracted ${extractedTopics.length} topics from ${props.course_structure.length} modules`)
     return extractedTopics
 
   } catch (error) {
@@ -2078,10 +1766,56 @@ const availableTopics = computed(() => {
   return getAllTopics()
 })
 
-// You can also log the topics for debugging when the component mounts
+// Notification helper
+const showNotification = (message, type = 'info') => {
+  if (type === 'error') {
+    alert(`Error: ${message}`)
+  } else {
+    alert(message)
+  }
+}
+
+// Lifecycle hooks
 onMounted(() => {
-  console.log('Available topics:', availableTopics.value)
+  // Initialize expanded modules
+  if (props.current_topic?.module_id) {
+    expandedModules.value[props.current_topic.module_id] = true
+  }
+
+  // Initialize speech synthesis
+  if (hasAudioSupport.value) {
+    speechSynthesis.value = window.speechSynthesis
+  }
+
+  // Start time tracking
+  startTimeTracking()
+
+  // Pre-load chat session if needed
+  loadChatSession()
 })
+
+onUnmounted(() => {
+  // Clean up timer
+  if (timerInterval.value) {
+    clearInterval(timerInterval.value)
+  }
+
+  // Record time spent
+  recordTimeSpent()
+
+  // Clean up audio
+  stopAudioPlayback()
+})
+
+// Load chat session
+const loadChatSession = async () => {
+  try {
+    const response = await axios.get(route('student.courses.chat.initialize', { course: props.course.id }))
+    chatSession.value = response.data.session
+  } catch (error) {
+    console.error('Failed to pre-load chat session:', error)
+  }
+}
 </script>
 
 <style scoped>
