@@ -199,7 +199,7 @@
                     <div class="flex items-center justify-between">
                       <h3 class="font-medium text-gray-900">{{ module.title }}</h3>
                       <div class="text-sm text-gray-500">
-                        {{ module.topics?.length || 0 }} topics • {{ module.estimated_duration_minutes || 0 }} min
+                        {{ module.topics?.length || 0 }} topics • {{ Math.ceil((module.estimated_duration_minutes || 120) / 60) }}h
                       </div>
                     </div>
                     <p v-if="module.description" class="mt-1 text-sm text-gray-600">{{ module.description }}</p>

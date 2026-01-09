@@ -342,7 +342,7 @@
                                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                             </svg>
-                                                            {{ module.estimated_duration_hours || 2 }}h
+                                                            {{ Math.ceil((module.estimated_duration_minutes || 120) / 60) }}h
                                                         </span>
                                                     </div>
                                                 </div>
@@ -391,18 +391,9 @@
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                                     </svg>
                                                                     {{ topic.estimated_duration_minutes }} min
-                                                                    <span class="mx-2">•</span>
-                                                                    <span v-if="topic.is_completed" class="text-green-600 font-medium">Completed</span>
-                                                                    <span v-else class="text-gray-400">Not started</span>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <button
-                                                            @click.stop="startTopic(topic)"
-                                                            class="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg font-medium hover:bg-emerald-100 transition-colors text-sm"
-                                                        >
-                                                            {{ topic.is_completed ? 'Review' : 'Start' }}
-                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>

@@ -133,9 +133,6 @@
                 {{ item.name }}
               </span>
             </NavLink>
-            <div class="mt-8">
-                <OnboardingButton />
-            </div>
           </div>
         </nav>
 
@@ -186,14 +183,116 @@
               <XMarkIcon v-show="showingNavigationDropdown" class="h-5 w-5 transform transition-transform duration-300" />
             </button>
 
-            <!-- Quick Actions -->
-            <div class="hidden sm:flex space-x-3">
+            <!-- Search Bar (Hidden on mobile - mobile will have separate search) -->
+            <div class="hidden md:flex flex-1 max-w-xl mx-8">
+              <div class="relative w-full group">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg class="h-4 w-4 text-gray-400 group-hover:text-emerald-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  v-model="globalSearch"
+                  placeholder="Search courses, topics, skills..."
+                  class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 hover:bg-white hover:border-gray-300"
+                  @keyup.enter="handleGlobalSearch"
+                  @focus="showSearchSuggestions = true"
+                  @blur="onSearchBlur"
+                />
+                <button
+                  @click="handleGlobalSearch"
+                  class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-emerald-600 transition-colors p-1.5 rounded-lg hover:bg-emerald-50"
+                  aria-label="Search"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </button>
 
+                <!-- Search Suggestions -->
+                <div
+                  v-if="showSearchSuggestions && globalSearch.trim() && (filteredCourses.length > 0 || filteredPopularSearches.length > 0)"
+                  class="absolute top-full mt-1 w-full bg-white rounded-xl border border-gray-200 shadow-lg py-2 z-50 max-h-96 overflow-y-auto"
+                >
+                  <!-- Courses Section -->
+                  <div v-if="filteredCourses.length > 0">
+                    <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                      Courses
+                    </div>
+                    <div
+                      v-for="course in filteredCourses"
+                      :key="course.id"
+                      @click="goToCourse(course)"
+                      @mousedown.prevent
+                      class="px-3 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer flex items-start group"
+                    >
+                      <div class="flex-shrink-0 mr-3 mt-0.5">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                          <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="font-medium text-gray-900 group-hover:text-emerald-700 truncate">{{ course.title }}</div>
+                        <div class="flex items-center mt-1 space-x-2">
+                          <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ course.level }}</span>
+                          <span class="text-xs text-gray-500">{{ course.subject }}</span>
+                          <span v-if="course.is_enrolled" class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Enrolled</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
+                  <!-- Popular Searches Section -->
+                  <div v-if="filteredPopularSearches.length > 0">
+                    <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider border-t border-gray-100">
+                      Popular Searches
+                    </div>
+                    <div
+                      v-for="search in filteredPopularSearches"
+                      :key="search"
+                      @click="selectPopularSearch(search)"
+                      @mousedown.prevent
+                      class="px-3 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer flex items-center group"
+                    >
+                      <svg class="w-4 h-4 mr-3 text-gray-400 group-hover:text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      {{ search }}
+                    </div>
+                  </div>
+
+                  <!-- View All Results -->
+                  <div
+                    v-if="globalSearch.trim()"
+                    @click="handleGlobalSearch"
+                    @mousedown.prevent
+                    class="px-3 py-3 text-sm font-medium text-emerald-600 hover:bg-emerald-50 cursor-pointer border-t border-gray-100 flex items-center justify-center group"
+                  >
+                    View all results for "{{ globalSearch }}"
+                    <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Right-side controls -->
             <div class="flex items-center space-x-2">
+              <!-- Mobile Search Button -->
+              <button
+                @click="toggleMobileSearch"
+                class="md:hidden text-gray-600 hover:text-emerald-600 transition-colors p-2 rounded-lg hover:bg-gray-100"
+                aria-label="Search"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+
               <!-- Notifications -->
               <Link
                 :href="route('student.notifications.index')"
@@ -256,6 +355,106 @@
               </Dropdown>
             </div>
           </div>
+
+          <!-- Mobile Search Bar -->
+          <div
+            v-if="showMobileSearch"
+            class="md:hidden py-4 px-4 border-t border-gray-100 animate-slide-down"
+          >
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                v-model="globalSearch"
+                placeholder="Search courses..."
+                class="w-full pl-10 pr-12 py-3 text-sm rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                @keyup.enter="handleGlobalSearch"
+                @focus="showSearchSuggestions = true"
+                @blur="onSearchBlur"
+              />
+              <button
+                @click="handleGlobalSearch"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-emerald-600 transition-colors"
+                aria-label="Search"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Mobile Search Suggestions -->
+            <div
+              v-if="showSearchSuggestions && globalSearch.trim() && (filteredCourses.length > 0 || filteredPopularSearches.length > 0)"
+              class="mt-4 bg-white rounded-xl border border-gray-200 shadow-lg py-2 max-h-80 overflow-y-auto"
+            >
+              <!-- Courses Section -->
+              <div v-if="filteredCourses.length > 0">
+                <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                  Courses
+                </div>
+                <div
+                  v-for="course in filteredCourses"
+                  :key="course.id"
+                  @click="goToCourse(course)"
+                  @mousedown.prevent
+                  class="px-3 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer flex items-start group"
+                >
+                  <div class="flex-shrink-0 mr-3 mt-0.5">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                      <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="font-medium text-gray-900 group-hover:text-emerald-700 truncate">{{ course.title }}</div>
+                    <div class="flex flex-wrap items-center mt-1 space-x-2">
+                      <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 mb-1">{{ course.level }}</span>
+                      <span class="text-xs text-gray-500 mb-1">{{ course.subject }}</span>
+                      <span v-if="course.is_enrolled" class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 mb-1">Enrolled</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Popular Searches Section -->
+              <div v-if="filteredPopularSearches.length > 0">
+                <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider border-t border-gray-100">
+                  Popular Searches
+                </div>
+                <div
+                  v-for="search in filteredPopularSearches"
+                  :key="search"
+                  @click="selectPopularSearch(search)"
+                  @mousedown.prevent
+                  class="px-3 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer flex items-center group"
+                >
+                  <svg class="w-4 h-4 mr-3 text-gray-400 group-hover:text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  {{ search }}
+                </div>
+              </div>
+
+              <!-- View All Results -->
+              <div
+                v-if="globalSearch.trim()"
+                @click="handleGlobalSearch"
+                @mousedown.prevent
+                class="px-3 py-3 text-sm font-medium text-emerald-600 hover:bg-emerald-50 cursor-pointer border-t border-gray-100 flex items-center justify-center group"
+              >
+                View all results for "{{ globalSearch }}"
+                <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </div>
+            </div>
+          </div>
         </header>
 
         <!-- Main Page Content -->
@@ -307,9 +506,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, nextTick, onUnmounted } from 'vue'
-import { router, usePage, Head } from '@inertiajs/vue3'
-import { Link } from '@inertiajs/vue3'
+import { ref, onMounted, watch, nextTick, computed, onUnmounted, h } from 'vue'
+import { router, usePage, Head, Link } from '@inertiajs/vue3'
+import { debounce } from 'lodash-es'
 import Dropdown from '@/Components/Dropdown.vue'
 import DropdownLink from '@/Components/DropdownLink.vue'
 import NavLink from '@/Components/NavLink.vue'
@@ -455,6 +654,154 @@ const checkLocalStorage = () => {
 onMounted(() => {
     checkLocalStorage();
 });
+
+// Search state
+const globalSearch = ref('')
+const showMobileSearch = ref(false)
+const showSearchSuggestions = ref(false)
+
+// Popular search suggestions
+const popularSearches = ref([
+  'Python Programming',
+  'Data Science',
+  'Web Development',
+  'Machine Learning',
+  'Digital Marketing',
+  'Business Analytics',
+  'Artificial Intelligence',
+  'Graphic Design',
+  'JavaScript',
+  'React',
+  'Vue.js',
+  'Laravel',
+  'Python Django',
+  'Mobile Development',
+  'UI/UX Design',
+  'Cloud Computing',
+  'Cybersecurity',
+  'Blockchain',
+  'DevOps',
+  'SQL Database'
+])
+
+// Course data
+const courses = ref([])
+
+// Filtered results
+const filteredCourses = computed(() => {
+  if (!globalSearch.value.trim()) {
+    // Show top courses when empty
+    return courses.value.slice(0, 5)
+  }
+
+  const query = globalSearch.value.toLowerCase().trim()
+  return courses.value.filter(course => {
+    return (
+      course.title.toLowerCase().includes(query) ||
+      course.description?.toLowerCase().includes(query) ||
+      course.subject?.toLowerCase().includes(query) ||
+      course.tags?.some(tag => tag.toLowerCase().includes(query))
+    )
+  }).slice(0, 5)
+})
+
+const filteredPopularSearches = computed(() => {
+  if (!globalSearch.value.trim()) {
+    return popularSearches.value.slice(0, 4)
+  }
+
+  const query = globalSearch.value.toLowerCase().trim()
+  return popularSearches.value.filter(search =>
+    search.toLowerCase().includes(query)
+  ).slice(0, 4)
+})
+
+// Search functions
+const handleSearchInput = debounce(async () => {
+  if (globalSearch.value.trim().length >= 2) {
+    try {
+      // Fetch courses from API
+      await fetchCourses(globalSearch.value)
+    } catch (error) {
+      console.error('Search error:', error)
+    }
+  }
+}, 300)
+
+const handleGlobalSearch = () => {
+  if (globalSearch.value.trim()) {
+    router.visit(route('student.catalog.browse', {
+      search: globalSearch.value.trim(),
+      q: globalSearch.value.trim()
+    }), {
+      preserveScroll: false,
+      preserveState: false
+    })
+    showSearchSuggestions.value = false
+    showMobileSearch.value = false
+  } else {
+    router.visit(route('student.catalog.browse'))
+  }
+}
+
+const selectPopularSearch = (searchTerm) => {
+  globalSearch.value = searchTerm
+  handleGlobalSearch()
+}
+
+const goToCourse = (course) => {
+  if (course.is_enrolled) {
+    router.visit(route('student.courses.learn', { course: course.id }), {
+      preserveScroll: false,
+      preserveState: false
+    })
+  } else {
+    router.visit(route('student.courses.preview', course.id), {
+      preserveScroll: false,
+      preserveState: false
+    })
+  }
+  showSearchSuggestions.value = false
+  showMobileSearch.value = false
+}
+
+const onSearchBlur = () => {
+  setTimeout(() => {
+    showSearchSuggestions.value = false
+  }, 200)
+}
+
+// Fetch courses from API
+const fetchCourses = async (query = '') => {
+  try {
+    const response = await fetch(route('api.student.courses.search', {
+      search: query,
+      limit: 10,
+      include_enrolled: true
+    }))
+
+    if (response.ok) {
+      const data = await response.json()
+      courses.value = data.courses || data.data || []
+    }
+  } catch (error) {
+    console.error('Failed to fetch courses:', error)
+    // Fallback to sample data if API fails
+    courses.value = getSampleCourses()
+  }
+}
+
+// Mobile search toggle
+const toggleMobileSearch = () => {
+  showMobileSearch.value = !showMobileSearch.value
+  if (showMobileSearch.value) {
+    // Focus the search input when opened on mobile
+    setTimeout(() => {
+      const input = document.querySelector('.md\\:hidden input[type="text"]')
+      if (input) input.focus()
+    }, 100)
+  }
+}
 </script>
 
 <style scoped>

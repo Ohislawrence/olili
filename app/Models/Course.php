@@ -211,22 +211,34 @@ class Course extends Model
         return true;
     }
 
-    public function enrollStudent(User $user): ?CourseEnrollment
+    public function enrollStudent(User $user, bool $isMassEnrollment = false): ?CourseEnrollment
     {
-        if (!$this->canEnroll($user)) {
+        // For mass enrollment, skip some checks
+        if (!$isMassEnrollment && !$this->canEnroll($user)) {
             return null;
         }
+
         $numberOfWeeks = $this->estimated_duration_hours / 6;
         $expectedCompletionDate = Carbon::now()->addWeeks(ceil($numberOfWeeks));
 
         try {
             \DB::beginTransaction();
 
+            // Check if already enrolled (not dropped)
+            $existingEnrollment = $this->enrollments()
+                ->where('user_id', $user->id)
+                ->where('status', '!=', 'dropped')
+                ->first();
+
+            if ($existingEnrollment) {
+                return null; // Already enrolled
+            }
+
             // Create enrollment record
             $enrollment = CourseEnrollment::create([
                 'course_id' => $this->id,
                 'user_id' => $user->id,
-                'student_profile_id' => $user->studentProfile->id,
+                'student_profile_id' => $user->studentProfile?->id,
                 'status' => 'enrolled',
                 'enrolled_at' => now(),
                 'total_modules' => $this->modules()->count(),

@@ -223,18 +223,56 @@ class FrontpageController extends Controller
             ->with(['modules', 'examBoard'])
             ->latest();
 
-        // Filter by subject
-        if ($request->has('subject') && !empty($request->subject)) {
-            // Handle both single subject string and array of subjects
-            $subjects = is_array($request->subject) ? $request->subject : [$request->subject];
+        // Search by keyword
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'LIKE', "%{$searchTerm}%")
+                ->orWhere('description', 'LIKE', "%{$searchTerm}%")
+                ->orWhere('subject', 'LIKE', "%{$searchTerm}%")
+                ->orWhereJsonContains('tags', $searchTerm);
+            });
+        }
+
+        if ($request->has('sort')) {
+            switch ($request->sort) {
+                case 'popular':
+                    $query->orderBy('current_enrollment', 'desc');
+                    break;
+                case 'duration':
+                    $query->orderBy('estimated_duration_hours', 'asc');
+                    break;
+                case 'latest':
+                default:
+                    $query->latest();
+                    break;
+            }
+        }
+
+        // Filter by subjects (comma-separated or array)
+        if ($request->has('subjects') && !empty($request->subjects)) {
+            $subjects = is_array($request->subjects)
+                ? $request->subjects
+                : explode(',', $request->subjects);
             $query->whereIn('subject', $subjects);
         }
 
-        // Filter by level
-        if ($request->has('level') && !empty($request->level)) {
-            // Handle both single level string and array of levels
-            $levels = is_array($request->level) ? $request->level : [$request->level];
+        // Filter by levels (comma-separated or array)
+        if ($request->has('levels') && !empty($request->levels)) {
+            $levels = is_array($request->levels)
+                ? $request->levels
+                : explode(',', $request->levels);
             $query->whereIn('level', $levels);
+        }
+
+        // Filter by certificate availability
+        if ($request->has('certificate') && $request->certificate === 'true') {
+            $query->where('has_certificate', true); // You'll need to add this field to courses table
+        }
+
+        // Filter by projects availability
+        if ($request->has('projects') && $request->projects === 'true') {
+            $query->where('has_projects', true); // You'll need to add this field to courses table
         }
 
         // Apply pagination
@@ -252,7 +290,8 @@ class FrontpageController extends Controller
                 'modules_count' => $course->modules->count(),
                 'status' => $course->status,
                 'slug' => $course->slug,
-                // Include any other fields you need
+                'thumbnail_url' => $course->thumbnail_url,
+                'tags' => $course->tags ?? [],
                 'created_at' => $course->created_at,
                 'updated_at' => $course->updated_at,
             ];
@@ -260,9 +299,9 @@ class FrontpageController extends Controller
 
         return Inertia::render('Frontpages/Courses/Index', [
             'courses' => $courses,
-            'filters' => $request->only(['subject', 'level']),
-            'subjects' => Course::where('visibility', 'public')->distinct()->pluck('subject'),
-            'levels' => Course::where('visibility', 'public')->distinct()->pluck('level'),
+            'filters' => $request->only(['search', 'subjects', 'levels', 'certificate', 'projects', 'sort']),
+            'subjects' => Course::where('visibility', 'public')->distinct()->pluck('subject')->filter(),
+            'levels' => Course::where('visibility', 'public')->distinct()->pluck('level')->filter(),
             'meta' => [
                 'title' => 'Explore Courses',
                 'description' => 'Discover our AI-powered courses designed to help you learn smarter and faster.',
@@ -297,4 +336,27 @@ class FrontpageController extends Controller
             ]
         ]);
     }
+
+    public function search(Request $request)
+    {
+        $query = Course::query()->public()->availableForEnrollment();
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'LIKE', "%{$search}%")
+                ->orWhere('description', 'LIKE', "%{$search}%")
+                ->orWhere('subject', 'LIKE', "%{$search}%")
+                ->orWhereJsonContains('tags', $search);
+            });
+        }
+
+        $limit = $request->input('limit', 10);
+        $courses = $query->limit($limit)->get(['id', 'title', 'slug', 'description', 'subject', 'level', 'is_paid']);
+
+        return response()->json([
+            'courses' => $courses,
+            'count' => $courses->count()
+        ]);
+    }
+
 }

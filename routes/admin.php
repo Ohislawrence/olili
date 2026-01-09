@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\NotificationController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Admin\CoursesController;
 use App\Http\Controllers\Admin\EnrollmentController;
+use App\Http\Controllers\Admin\MassEnrollmentController;
 use Inertia\Inertia;
 
 
@@ -80,6 +81,7 @@ Route::middleware([
     Route::post('courses/{course}/publish', [CourseController::class, 'publish'])->name('courses.publish');
     Route::post('courses/{course}/unpublish', [CourseController::class, 'unpublish'])->name('courses.unpublish');
     Route::get('/courses/outline/{course}/outline', [CourseController::class, 'outline'])->name('courses.outline');
+
         //modules
     Route::get('/courses/modules/{course}/outline/mod', [CourseController::class, 'outline'])->name('quizzes.create');
     Route::get('/courses/modules/{course}/outline/mo', [CourseController::class, 'outline'])->name('courses.modules.edit');
@@ -142,6 +144,20 @@ Route::middleware([
         Route::post('/import', [EnrollmentController::class, 'import'])->name('import');
         Route::get('/export', [EnrollmentController::class, 'export'])->name('export');
         Route::get('/export-template', [EnrollmentController::class, 'exportTemplate'])->name('export-template');
+    });
+
+    //mass enrollment
+    Route::prefix('assign/courses')->group(function () {
+        Route::get('/mass-enrollment', [MassEnrollmentController::class, 'index'])
+            ->name('courses.mass-enrollment.index');
+        Route::post('/mass-enrollment', [MassEnrollmentController::class, 'store'])
+            ->name('courses.mass-enrollment.store');
+        Route::get('/{course}/mass-enrollment/eligible-students', [MassEnrollmentController::class, 'getEligibleStudents'])
+            ->name('courses.mass-enrollment.get-eligible-students');
+        Route::get('/{course}/mass-enrollment/stats', [MassEnrollmentController::class, 'getEnrollmentStats'])
+            ->name('courses.mass-enrollment.stats');
+        Route::post('/mass-enrollment/upload-csv', [MassEnrollmentController::class, 'uploadCsv'])
+            ->name('courses.mass-enrollment.upload-csv');
     });
 
 

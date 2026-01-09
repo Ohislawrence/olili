@@ -36,7 +36,7 @@ class EnrollmentController extends Controller
             'course' => $course,
             'enrollments' => $enrollments,
             'statuses' => $this->getEnrollmentStatuses(),
-            'filters' => $request->only(['search', 'status']), // Pass filters to Vue
+            'filters' => $request->only(['search', 'status']),
         ]);
     }
 
