@@ -123,18 +123,7 @@
           </div>
         </div>
 
-        <!-- Mobile Nav -->
-        <div v-if="showMobileMenu" class="md:hidden border-t py-4 space-y-2">
-          <MobileNavLink
-            v-for="item in navigation"
-            :key="item.name"
-            :href="item.href"
-            :active="route().current(item.active)"
-            @click="showMobileMenu = false"
-          >
-            {{ item.name }}
-          </MobileNavLink>
-        </div>
+
       </div>
     </header>
 
@@ -200,7 +189,6 @@
 import { ref } from 'vue'
 import { Link, router } from '@inertiajs/vue3'
 import NavLink from '@/Components/NavLink.vue'
-import MobileNavLink from '@/Components/MobileNavLink.vue'
 
 const showProfileDropdown = ref(false)
 const showMobileMenu = ref(false)
