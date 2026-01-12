@@ -111,7 +111,7 @@ class CourseController extends Controller
         // Show available courses for enrollment
         $query = Course::availableForEnrollment()
             ->with(['examBoard', 'creator'])
-            ->withCount('enrollments');
+            ->withCount('enrollments','modules');
 
         // Search
         if ($request->has('search') && $request->search) {
