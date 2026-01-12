@@ -110,10 +110,7 @@ class Course extends Model
         return $this->belongsTo(ExamBoard::class);
     }
 
-    public function student_profile_id()
-    {
-        return auth()->user()->studentProfile->id;
-    }
+
 
     public function creator(): BelongsTo
     {

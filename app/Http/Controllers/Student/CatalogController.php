@@ -24,10 +24,9 @@ class CatalogController extends Controller
         ->latest();
 
     // Get IDs of courses the student is already enrolled in
-    $enrolledCourseIds = $student->courses()
-        ->whereNotNull('original_course_id')
-        ->pluck('original_course_id')
-        ->toArray();
+    $enrolledCourseIds = $student->enrolledCourses->id;
+
+        //$student->enrolledCourses->id;
 
     // Filter by subject
     if ($request->has('subject') && $request->subject) {
