@@ -19,6 +19,8 @@ class GenerateCourseContentJob implements ShouldQueue
 {
     use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public $queue = 'default';
+
     public $tries = 3;
     public $timeout = 300; // 5 minutes
     public $backoff = [30, 60, 120];
@@ -108,7 +110,6 @@ class GenerateCourseContentJob implements ShouldQueue
             // Dispatch quiz generation if needed (with delay)
             if ($topic->has_quiz && $topic->needs_quiz_generation) {
                 GenerateCourseQuizzesJob::dispatch($topic)
-                    ->onQueue('course_generation')
                     ->delay(now()->addSeconds(30)); // Wait 30 seconds
 
                 Log::debug('Quiz generation job dispatched', [
