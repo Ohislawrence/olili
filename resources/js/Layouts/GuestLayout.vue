@@ -18,8 +18,153 @@
             </Link>
           </div>
 
-          <!-- Centered Search Bar (Desktop) -->
-          <div class="hidden lg:flex flex-1 max-w-xl mx-8">
+          <!-- Explore Dropdown -->
+        <div class="hidden lg:flex items-center relative group">
+        <button
+            @click="toggleExploreDropdown"
+            @mouseenter="showExploreDropdown = true"
+            @mouseleave="startExploreHideTimer"
+            class="flex items-center space-x-1.5 text-gray-700 hover:text-emerald-600 text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-all duration-200"
+            aria-label="Explore courses by category"
+        >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+            <span>Explore</span>
+        </button>
+
+        <!-- Explore Mega Menu -->
+        <div
+            v-if="showExploreDropdown"
+            @mouseenter="showExploreDropdown = true; clearExploreHideTimer()"
+            @mouseleave="startExploreHideTimer()"
+            class="absolute top-full left-0 mt-2 w-[800px] bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 animate-slide-down overflow-hidden"
+        >
+            <div class="grid grid-cols-4 divide-x divide-gray-100">
+            <!-- Academic Exams Column -->
+            <div class="p-6">
+                <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center mr-3">
+                    🎓
+                </span>
+                Academic Exams
+                </h3>
+                <ul class="space-y-3">
+                <li v-for="exam in academicExams" :key="exam.id">
+                    <Link
+                    :href="exam.route"
+                    @click="closeExploreDropdown"
+                    class="text-sm text-gray-700 hover:text-emerald-600 hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors flex items-center group"
+                    >
+                    <span class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover:bg-emerald-500 mr-3 transition-colors"></span>
+                    {{ exam.name }}
+                    <span v-if="exam.count" class="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                        {{ exam.count }}
+                    </span>
+                    </Link>
+                </li>
+                </ul>
+            </div>
+
+            <!-- Professional Certifications Column -->
+            <div class="p-6">
+                <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center mr-3">
+                    📜
+                </span>
+                Professional
+                </h3>
+                <ul class="space-y-3">
+                <li v-for="cert in professionalCerts" :key="cert.id">
+                    <Link
+                    :href="cert.route"
+                    @click="closeExploreDropdown"
+                    class="text-sm text-gray-700 hover:text-emerald-600 hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors flex items-center group"
+                    >
+                    <span class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover:bg-emerald-500 mr-3 transition-colors"></span>
+                    {{ cert.name }}
+                    <span v-if="cert.count" class="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                        {{ cert.count }}
+                    </span>
+                    </Link>
+                </li>
+                </ul>
+            </div>
+
+            <!-- Career Skills Column -->
+            <div class="p-6">
+                <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center mr-3">
+                    💼
+                </span>
+                Career Skills
+                </h3>
+                <ul class="space-y-3">
+                <li v-for="skill in careerSkills" :key="skill.id">
+                    <Link
+                    :href="skill.route"
+                    @click="closeExploreDropdown"
+                    class="text-sm text-gray-700 hover:text-emerald-600 hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors flex items-center group"
+                    >
+                    <span class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover:bg-emerald-500 mr-3 transition-colors"></span>
+                    {{ skill.name }}
+                    <span v-if="skill.count" class="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                        {{ skill.count }}
+                    </span>
+                    </Link>
+                </li>
+                </ul>
+            </div>
+
+            <!-- Popular Subjects Column -->
+            <div class="p-6">
+                <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center mr-3">
+                    📚
+                </span>
+                Popular Subjects
+                </h3>
+                <ul class="space-y-3">
+                <li v-for="subject in popularSubjects" :key="subject.id">
+                    <Link
+                    :href="subject.route"
+                    @click="closeExploreDropdown"
+                    class="text-sm text-gray-700 hover:text-emerald-600 hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors flex items-center group"
+                    >
+                    <span class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover:bg-emerald-500 mr-3 transition-colors"></span>
+                    {{ subject.name }}
+                    <span v-if="subject.count" class="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                        {{ subject.count }}
+                    </span>
+                    </Link>
+                </li>
+                </ul>
+            </div>
+            </div>
+
+            <!-- Bottom CTA -->
+            <div class="bg-gradient-to-r from-emerald-50 to-blue-50 border-t border-gray-100 p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                <svg class="w-5 h-5 text-emerald-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <span class="text-sm text-gray-700">All courses include AI tutor support</span>
+                </div>
+                <Link
+                :href="route('courses.index')"
+                @click="closeExploreDropdown"
+                class="text-sm font-medium text-emerald-600 hover:text-emerald-700"
+                >
+                View all courses →
+                </Link>
+            </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Centered Search Bar (Desktop) -->
+        <div class="hidden lg:flex flex-1 max-w-xl mx-8">
             <div class="relative w-full group">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg class="h-4 w-4 text-gray-400 group-hover:text-emerald-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -335,6 +480,47 @@
           v-if="showMobileMenu"
           class="lg:hidden py-4 border-t border-gray-100 animate-slide-down bg-white/95 backdrop-blur-sm"
         >
+        <button
+  @click="toggleMobileExplore"
+  class="block w-full text-left px-3 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors flex items-center justify-between"
+>
+  <span class="flex items-center">
+    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+    </svg>
+    Explore Categories
+  </span>
+  <svg class="w-5 h-5 transform transition-transform" :class="{ 'rotate-180': showMobileExplore }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+  </svg>
+</button>
+
+<!-- Mobile explore dropdown -->
+<div v-if="showMobileExplore" class="pl-8 space-y-1 mt-2">
+  <!-- Academic Exams -->
+  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Academic Exams</div>
+  <Link
+    v-for="exam in academicExams"
+    :key="exam.id"
+    :href="exam.route"
+    @click="showMobileMenu = false"
+    class="block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+  >
+    {{ exam.name }}
+  </Link>
+
+  <!-- Professional Certs -->
+  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-4 mb-2">Professional</div>
+  <Link
+    v-for="cert in professionalCerts"
+    :key="cert.id"
+    :href="cert.route"
+    @click="showMobileMenu = false"
+    class="block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+  >
+    {{ cert.name }}
+  </Link>
+</div>
           <div class="space-y-1">
             <Link
               v-for="item in navItems"
@@ -598,6 +784,15 @@ import { BellIcon, UserCircleIcon, CreditCardIcon, ArrowRightOnRectangleIcon } f
 const searchQuery = ref('');
 const showSuggestions = ref(false);
 const isSearching = ref(false);
+
+const showExploreDropdown = ref(false);
+let exploreHideTimer = null;
+
+const showMobileExplore = ref(false);
+
+const toggleMobileExplore = () => {
+  showMobileExplore.value = !showMobileExplore.value;
+};
 
 // Course data
 const courses = ref([]);
@@ -939,6 +1134,79 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('scroll', checkScrollPosition);
 });
+
+const academicExams = ref([
+  { id: 1, name: 'WAEC Preparation', route: '/course?search=waec' },
+  { id: 2, name: 'JAMB/UTME CBT', route: '/course?search=jamb' },
+  { id: 3, name: 'NECO Exams', route: '/course?search=neco' },
+  { id: 4, name: 'Post-UTME', route: '/course?search=post-utme' },
+  { id: 5, name: 'SAT/TOEFL/IELTS', route: '/course?search=international' },
+]);
+
+const professionalCerts = ref([
+  { id: 1, name: 'ICAN Accounting', route: '/course?search=ican' },
+  { id: 2, name: 'ACCA Certification', route: '/course?search=acca' },
+  { id: 3, name: 'NBA Law School', route: '/course?search=law' },
+  { id: 4, name: 'Medical Licensing', route: '/course?search=medical' },
+  { id: 5, name: 'Project Management', route: '/course?search=project-management' },
+]);
+
+const careerSkills = ref([
+  { id: 1, name: 'Web Development', route: '/course?search=web development' },
+  { id: 2, name: 'Data Science', route: '/course?search=data science' },
+  { id: 3, name: 'Digital Marketing', route: '/course?search=marketing' },
+  { id: 4, name: 'UI/UX Design', route: '/course?search=design' },
+  { id: 5, name: 'Cloud Computing', route: '/course?search=cloud' },
+]);
+
+const popularSubjects = ref([
+  { id: 1, name: 'Mathematics', route: '/course?search=mathematics'  },
+  { id: 2, name: 'English Language', route: '/course?search=english' },
+  { id: 3, name: 'Computer Science', route: '/course?search=computer-science' },
+  { id: 4, name: 'Physics', route: '/course?search=physics'},
+  { id: 5, name: 'Chemistry', route: '/course?search=chemistry' },
+]);
+
+// Explore dropdown methods
+const toggleExploreDropdown = () => {
+  showExploreDropdown.value = !showExploreDropdown.value;
+  if (showExploreDropdown.value) {
+    clearExploreHideTimer();
+  }
+};
+
+const closeExploreDropdown = () => {
+  showExploreDropdown.value = false;
+  clearExploreHideTimer();
+};
+
+const startExploreHideTimer = () => {
+  clearExploreHideTimer();
+  exploreHideTimer = setTimeout(() => {
+    showExploreDropdown.value = false;
+  }, 300); // 300ms delay before hiding
+};
+
+const clearExploreHideTimer = () => {
+  if (exploreHideTimer) {
+    clearTimeout(exploreHideTimer);
+    exploreHideTimer = null;
+  }
+};
+
+// Close dropdown on escape key
+onMounted(() => {
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && showExploreDropdown.value) {
+      closeExploreDropdown();
+    }
+  });
+});
+
+onUnmounted(() => {
+  clearExploreHideTimer();
+});
+
 </script>
 
 <style scoped>
@@ -1014,5 +1282,20 @@ onUnmounted(() => {
 
 .search-suggestions::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.2s ease-out;
 }
 </style>

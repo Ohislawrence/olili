@@ -1,11 +1,11 @@
 <template>
   <MetaTags
-    title="Master In-Demand Skills with AI-Powered Courses | OliLearn"
+    title="Exam-focused learning + guided understanding (with AI support)"
     description="Nigeria's premier AI-powered learning platform. Access expert-led courses, prepare for local/international exams, and gain practical skills with personalized AI tutoring."
     image="/images/olingolearn.png"
   />
   <AppLayout>
-    <Head title="Learn Skills That Matter in Today's World" />
+    <Head title="Exam-focused learning + guided understanding (with AI support)" />
 
     <!-- Hero Section with Carousel -->
 <section class="relative overflow-hidden bg-white">
@@ -19,7 +19,7 @@
       <!-- Background Image with Gradient Overlay -->
       <div
         class="absolute inset-0 bg-cover bg-center"
-        :style="{ backgroundImage: 'url(/images/hero/skill-bg.png)' }"
+        :style="{ backgroundImage: 'url(/images/hero/skill-bg.webp)' }"
       >
         <div class="absolute inset-0 bg-gradient-to-r from-emerald-900/80 via-emerald-800/70 to-emerald-700/60"></div>
         <div class="absolute inset-0 bg-black/30"></div>
@@ -81,7 +81,7 @@
       <!-- Background Image with Gradient Overlay -->
       <div
         class="absolute inset-0 bg-cover bg-center"
-        :style="{ backgroundImage: 'url(/images/hero/exam-bg2.png)' }"
+        :style="{ backgroundImage: 'url(/images/hero/exam-bg2.webp)' }"
       >
         <div class="absolute inset-0 bg-gradient-to-r from-emerald-800/80 via-emerald-700/70 to-emerald-600/60"></div>
         <div class="absolute inset-0 bg-black/30"></div>
@@ -121,7 +121,7 @@
       <!-- Background Image with Gradient Overlay -->
       <div
         class="absolute inset-0 bg-cover bg-center"
-        :style="{ backgroundImage: 'url(/images/hero/exam-bg.png)' }"
+        :style="{ backgroundImage: 'url(/images/hero/exam-bg.webp)' }"
       >
         <div class="absolute inset-0 bg-gradient-to-r from-emerald-900/80 via-emerald-800/70 to-emerald-700/60"></div>
         <div class="absolute inset-0 bg-black/30"></div>
@@ -604,7 +604,7 @@
     <section class="py-16 bg-gradient-to-r from-emerald-700 to-emerald-800">
       <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
         <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">
-          Ready to Transform Your Learning Journey?
+          Join Free and Start Practicing
         </h2>
         <p class="text-lg text-emerald-100 mb-8 max-w-2xl mx-auto">
           Join 10,000+ Nigerian learners who are mastering new skills, acing exams, and advancing their careers with OliLearn.

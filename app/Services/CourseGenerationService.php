@@ -59,6 +59,7 @@ class CourseGenerationService
                 'created_by_user_id' => $createdByUserId,
                 'created_by' => $courseData['created_by'] ?? 'admin',
                 'needs_content_generation' => true, // Flag to indicate content needs to be generated
+                'has_certificate' => $courseData['has_certificate'] ?? false,
             ]);
 
             // Generate course outline using AI

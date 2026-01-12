@@ -3,6 +3,9 @@
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
+use App\Console\Commands\SendInactivityReminders;
+use App\Console\Commands\SendCompletionReminders;
+use App\Console\Commands\SendAllReminders;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -11,25 +14,22 @@ Artisan::command('inspire', function () {
 
 // ================= NOTIFICATION COMMANDS =================
 // Morning notification batch
-Schedule::command('notifications:course-due-soon')
+// ================= REMINDER COMMANDS =================
+
+// Morning notification batch
+Schedule::command('reminders:completion')
     ->dailyAt('08:00')
+    ->timezone(config('app.timezone', 'UTC'))
     ->withoutOverlapping()
+    ->onOneServer()
     ->description('Send notifications for courses due soon');
 
-Schedule::command('notifications:check-inactive-students')
+Schedule::command('reminders:inactivity')
     ->dailyAt('09:00')
+    ->timezone(config('app.timezone', 'UTC'))
     ->withoutOverlapping()
+    ->onOneServer()
     ->description('Check for inactive students and send reminders');
-
-Schedule::command('notifications:course-overdue')
-    ->dailyAt('10:00')
-    ->withoutOverlapping()
-    ->description('Send notifications for overdue courses');
-
-Schedule::command('notifications:immediate')
-    ->dailyAt('10:00')
-    ->withoutOverlapping()
-    ->description('Checking for courses needing immediate notifications...');
 
 
 

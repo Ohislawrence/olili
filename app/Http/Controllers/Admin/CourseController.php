@@ -194,6 +194,7 @@ class CourseController extends Controller
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:50',
             'target_completion_date' => 'nullable|date|after:today',
+            'has_certificate' => 'boolean',
         ]);
 
         // Prepare course data for generation
@@ -217,6 +218,7 @@ class CourseController extends Controller
             'status' => 'draft',
             'visibility' => 'private',
             'is_public' => false,
+            'has_certificate' => $validated['has_certificate'] ?? false,
         ];
 
         try {
@@ -267,6 +269,7 @@ class CourseController extends Controller
             'is_public' => 'boolean',
             'estimated_duration_hours' => 'required|integer|min:1',
             'target_completion_date' => 'nullable|date|after:today',
+            'has_certificate' => 'boolean',
         ]);
 
         // Update slug if title changed

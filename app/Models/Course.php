@@ -60,6 +60,8 @@ class Course extends Model
         'quiz_generation_started_at',
         'quiz_generation_retry_count',
         'est_completion_time',
+        'has_certificate',
+
     ];
 
     protected $casts = [
