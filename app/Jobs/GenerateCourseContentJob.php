@@ -19,7 +19,6 @@ class GenerateCourseContentJob implements ShouldQueue
 {
     use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $queue = 'default';
 
     public $tries = 3;
     public $timeout = 300; // 5 minutes
