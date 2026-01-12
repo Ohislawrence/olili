@@ -31,6 +31,8 @@ class Module extends Model
         'completed_at' => 'datetime',
         'needs_content_generation' => 'boolean',
         'content_generated_at' => 'datetime',
+        'id' => 'integer',
+        'course_id' => 'integer',
     ];
 
     protected $appends = ['is_completed'];
