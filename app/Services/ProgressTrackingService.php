@@ -78,7 +78,7 @@ class ProgressTrackingService
             ->first();
 
         return $topic?->course_outline_id
-            ?? $enrollment->course->outlines()->first()?->id
+            ?? $enrollment->course->topics()->first()?->id
             ?? null;
     }
 
@@ -90,7 +90,7 @@ class ProgressTrackingService
 
         //dd($topic->course_outline_id);
         return $topic?->course_outline_id
-            ?? $enrollment->course->outlines()->first()?->id
+            ?? $enrollment->course->topics()->first()?->id
             ?? null;
     }
 
