@@ -17,6 +17,7 @@ use App\Services\ContentGenerationService;
 use App\Services\CourseNotificationService;
 use App\Services\ProgressTrackingService;
 use Illuminate\Http\Request;
+use App\Notifications\CourseEnrollmentNotification;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
 
@@ -376,6 +377,8 @@ class CourseController extends Controller
             return redirect()->back()
                 ->with('error', 'Unable to enroll in this course. Please check if the course is available and has space.');
         }
+
+        $student->notify(new CourseEnrollmentNotification($course, $enrollment));
 
         return redirect()->route('student.courses.learn', $course->id)
             ->with('success', 'Successfully enrolled in the course!');

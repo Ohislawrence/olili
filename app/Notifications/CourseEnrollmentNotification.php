@@ -43,7 +43,7 @@ class CourseEnrollmentNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('🎓 You have been enrolled in a new course!')
+            ->subject('You have been enrolled in a new course!')
             ->greeting("Hello {$notifiable->name},")
             ->line($this->customMessage ?? "You have been enrolled in the course: **{$this->course->title}**")
             ->line('**Course Details:**')

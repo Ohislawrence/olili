@@ -478,7 +478,7 @@
                   <div class="text-xs text-gray-500">Topics</div>
                 </div>
                 <div class="text-center">
-                  <div class="text-lg font-bold text-gray-900">{{ course.estimated_duration_hours || 0 }}</div>
+                  <div class="text-lg font-bold text-gray-900">{{ Math.ceil(course.total_time_minutes/60) || 0 }}</div>
                   <div class="text-xs text-gray-500">Hours</div>
                 </div>
               </div>
@@ -813,7 +813,7 @@ const activeFiltersText = computed(() => {
 })
 
 const totalLearningHours = computed(() => {
-  return props.courses.data.reduce((sum, course) => sum + (course.estimated_duration_hours || 0), 0)
+  return props.courses.data.reduce((sum, course) => sum + (Math.ceil(course.total_time_minutes/60) || 0), 0)
 })
 
 const filteredSubjects = computed(() => {

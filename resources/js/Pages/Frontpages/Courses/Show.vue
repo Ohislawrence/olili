@@ -10,30 +10,30 @@
         <Head :title="`${course.title}`" />
 
         <!-- Course Header - Lighter Green -->
-        <section class="relative py-16 bg-gradient-to-br from-emerald-50 via-teal-50 to-white">
+        <section class="relative py-8 md:py-16 bg-gradient-to-br from-emerald-50 via-teal-50 to-white">
             <!-- Decorative elements -->
             <div class="absolute inset-0 overflow-hidden">
-                <div class="absolute -top-40 -right-40 w-80 h-80 bg-emerald-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-                <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-teal-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+                <div class="absolute -top-40 -right-40 w-60 md:w-80 h-60 md:h-80 bg-emerald-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+                <div class="absolute -bottom-40 -left-40 w-60 md:w-80 h-60 md:h-80 bg-teal-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
             </div>
 
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <!-- Breadcrumb -->
-                <nav class="mb-6">
-                    <ol class="flex items-center space-x-2 text-sm">
-                        <li>
+                <nav class="mb-4 md:mb-6">
+                    <ol class="flex items-center space-x-2 text-sm overflow-x-auto py-2">
+                        <li class="flex-shrink-0">
                             <Link :href="route('courses.index')" class="text-emerald-600 hover:text-emerald-700 transition-colors">
                                 Courses
                             </Link>
                         </li>
-                        <li class="text-gray-400">/</li>
-                        <li class="text-gray-400">{{ course.subject }}</li>
-                        <li class="text-gray-400">/</li>
-                        <li class="font-medium text-gray-700 truncate">{{ course.title }}</li>
+                        <li class="text-gray-400 flex-shrink-0">/</li>
+                        <li class="text-gray-400 truncate flex-shrink-0">{{ course.subject }}</li>
+                        <li class="text-gray-400 flex-shrink-0">/</li>
+                        <li class="font-medium text-gray-700 truncate flex-shrink-0">{{ course.title }}</li>
                     </ol>
                 </nav>
 
-                <div class="flex flex-col lg:flex-row items-start gap-8">
+                <div class="flex flex-col lg:flex-row items-start gap-6 md:gap-8">
                     <!-- Course Info -->
                     <div class="flex-1">
                         <!-- Badges -->
@@ -52,114 +52,179 @@
                             </span>
                         </div>
 
-                        <h1 class="text-4xl md:text-5xl font-bold mb-6 text-gray-900 leading-tight">{{ course.title }}</h1>
-                        <p class="text-xl text-gray-600 mb-8 leading-relaxed max-w-3xl">{{ course.description }}</p>
+                        <h1 class="text-2xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6 text-gray-900 leading-tight">{{ course.title }}</h1>
+                        <p class="text-lg md:text-xl text-gray-600 mb-6 md:mb-8 leading-relaxed max-w-3xl">{{ course.description }}</p>
 
                         <!-- Course Meta - Compact -->
-                        <div class="flex flex-wrap items-center gap-6 mb-8 p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-sm">
+                        <div class="flex flex-wrap items-center gap-4 md:gap-6 mb-6 md:mb-8 p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-sm">
                             <div class="flex items-center">
                                 <div class="p-2 bg-emerald-100 rounded-lg mr-3">
-                                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 md:w-5 md:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-semibold text-gray-900">{{ course.estimated_duration_hours }} Hours</div>
-                                    <div class="text-sm text-gray-500">Duration</div>
+                                    <div class="font-semibold text-gray-900 text-sm md:text-base">{{ course.estimated_duration_hours }} Hours</div>
+                                    <div class="text-xs md:text-sm text-gray-500">Duration</div>
                                 </div>
                             </div>
 
                             <div class="flex items-center">
                                 <div class="p-2 bg-blue-100 rounded-lg mr-3">
-                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 md:w-5 md:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-semibold text-gray-900">{{ course.modules?.length || 0 }} Modules</div>
-                                    <div class="text-sm text-gray-500">Content</div>
+                                    <div class="font-semibold text-gray-900 text-sm md:text-base">{{ course.modules?.length || 0 }} Modules</div>
+                                    <div class="text-xs md:text-sm text-gray-500">Content</div>
                                 </div>
                             </div>
 
                             <div class="flex items-center">
                                 <div class="p-2 bg-purple-100 rounded-lg mr-3">
-                                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 md:w-5 md:h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-semibold text-gray-900">{{ course.status }}</div>
-                                    <div class="text-sm text-gray-500">Status</div>
+                                    <div class="font-semibold text-gray-900 text-sm md:text-base">{{ course.status }}</div>
+                                    <div class="text-xs md:text-sm text-gray-500">Status</div>
                                 </div>
                             </div>
 
                             <div class="flex items-center ml-auto">
                                 <div class="flex items-center">
                                     <div class="flex mr-1">
-                                        <svg v-for="n in 5" :key="n" class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <svg v-for="n in 5" :key="n" class="w-4 h-4 md:w-5 md:h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
                                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
                                         </svg>
                                     </div>
-                                    <span class="text-gray-900 font-semibold ml-1">4.8</span>
-                                    <span class="text-gray-500 text-sm ml-1">(24 reviews)</span>
+                                    <span class="text-gray-900 font-semibold text-sm md:text-base ml-1">4.8</span>
+                                    <span class="text-gray-500 text-xs md:text-sm ml-1">(24 reviews)</span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Action Buttons - More Visible -->
-                        <div class="flex flex-col sm:flex-row gap-4 mb-8">
+                        <div class="flex flex-col sm:flex-row gap-3 md:gap-4 mb-6 md:mb-8">
                             <!-- Main Action Button -->
                             <button
                                 v-if="course.progress_percentage > 0"
                                 @click="enrollInCourse"
-                                class="group relative bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl"
+                                class="group relative bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl flex-1"
                             >
                                 <div class="absolute inset-0 bg-gradient-to-r from-emerald-700 to-teal-700 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                                <svg class="w-5 h-5 mr-2 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 md:w-5 md:h-5 mr-2 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                <span class="relative z-10">Continue Learning ({{ course.progress_percentage }}%)</span>
+                                <span class="relative z-10 text-sm md:text-base">Continue Learning ({{ course.progress_percentage }}%)</span>
                             </button>
                             <button
                                 v-else-if="$page.props.auth.user && isEnrolled"
                                 @click="enrollInCourse"
-                                class="group relative bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl"
+                                class="group relative bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl flex-1"
                             >
                                 <div class="absolute inset-0 bg-gradient-to-r from-emerald-700 to-teal-700 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                                <svg class="w-5 h-5 mr-2 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 md:w-5 md:h-5 mr-2 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
                                 </svg>
-                                <span class="relative z-10">Go to Course Dashboard</span>
+                                <span class="relative z-10 text-sm md:text-base">Go to Course Dashboard</span>
                             </button>
                             <button
                                 v-else-if="$page.props.auth.user"
                                 @click="enrollInCourse"
-                                class="group relative bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl"
+                                class="group relative bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl flex-1"
                             >
                                 <div class="absolute inset-0 bg-gradient-to-r from-emerald-700 to-teal-700 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                                <svg class="w-5 h-5 mr-2 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 md:w-5 md:h-5 mr-2 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
                                 </svg>
-                                <span class="relative z-10">Enroll Now - Start Learning</span>
+                                <span class="relative z-10 text-sm md:text-base">Enroll Now - Start Learning</span>
                             </button>
                             <Link
                                 v-else
                                 :href="route('login')"
-                                class="group relative bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl"
+                                class="group relative bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl flex-1"
                             >
                                 <div class="absolute inset-0 bg-gradient-to-r from-emerald-700 to-teal-700 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                                <svg class="w-5 h-5 mr-2 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 md:w-5 md:h-5 mr-2 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
                                 </svg>
-                                <span class="relative z-10">Sign In to Enroll</span>
+                                <span class="relative z-10 text-sm md:text-base">Sign In to Enroll</span>
                             </Link>
 
                             <!-- Secondary Actions -->
-                            <div class="flex gap-3">
+                            <div class="flex gap-2 md:gap-3">
+                                <!-- Share Button with Dropdown -->
+                                <div class="relative" ref="shareContainer">
+                                    <button
+                                        @click="toggleShareDropdown"
+                                        class="group p-3 md:p-4 bg-white border border-gray-200 rounded-xl hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-300 shadow-sm hover:shadow-md flex items-center justify-center"
+                                    >
+                                        <svg class="w-5 h-5 text-gray-500 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                                        </svg>
+                                    </button>
+
+                                    <!-- Share Dropdown -->
+                                    <div v-if="showShareDropdown" class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
+                                        <div class="p-4">
+                                            <h4 class="text-sm font-semibold text-gray-900 mb-3">Share this course</h4>
+                                            <div class="grid grid-cols-5 gap-2">
+                                                <button
+                                                    @click="shareCourse('facebook')"
+                                                    class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                                                >
+                                                    <svg class="w-6 h-6 text-blue-600 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clip-rule="evenodd" />
+                                                    </svg>
+                                                </button>
+                                                <button
+                                                    @click="shareCourse('twitter')"
+                                                    class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                                                >
+                                                    <svg class="w-6 h-6 text-blue-400 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
+                                                    </svg>
+                                                </button>
+                                                <button
+                                                    @click="shareCourse('linkedin')"
+                                                    class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                                                >
+                                                    <svg class="w-6 h-6 text-blue-700 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path fill-rule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clip-rule="evenodd" />
+                                                    </svg>
+                                                </button>
+                                                <button
+                                                    @click="shareCourse('whatsapp')"
+                                                    class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                                                >
+                                                    <svg class="w-6 h-6 text-green-600 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.76.982.998-3.675-.236-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.897 6.994c-.004 5.45-4.438 9.88-9.888 9.88m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.333.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.333 11.893-11.893 0-3.18-1.24-6.162-3.495-8.411" />
+                                                    </svg>
+                                                </button>
+                                                <button
+                                                    @click="copyCourseLink"
+                                                    class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                                                >
+                                                    <svg class="w-6 h-6 text-gray-600 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                            <div v-if="copySuccess" class="mt-3 p-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+                                                <p class="text-xs text-emerald-700 text-center">Link copied to clipboard!</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Wishlist Button -->
                                 <button
                                     @click="toggleWishlist"
-                                    class="group p-4 bg-white border border-gray-200 rounded-xl hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-300 shadow-sm hover:shadow-md"
+                                    class="group p-3 md:p-4 bg-white border border-gray-200 rounded-xl hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-300 shadow-sm hover:shadow-md flex items-center justify-center"
                                     :title="isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'"
                                 >
                                     <svg
@@ -172,27 +237,15 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                                     </svg>
                                 </button>
-
-                                <!-- Share Button -->
-                                <div class="relative" ref="shareContainer">
-                                    <button
-                                        @click.stop="toggleShareDropdown"
-                                        class="group p-4 bg-white border border-gray-200 rounded-xl hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-300 shadow-sm hover:shadow-md flex items-center"
-                                    >
-                                        <svg class="w-5 h-5 text-gray-500 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
-                                        </svg>
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Course Visual Card -->
-                    <div class="lg:w-96 flex-shrink-0">
-                        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg">
+                    <div class="w-full lg:w-96 flex-shrink-0">
+                        <div class="bg-white rounded-2xl p-4 md:p-6 border border-gray-200 shadow-lg">
                             <!-- Progress Indicator -->
-                            <div v-if="course.progress_percentage > 0" class="mb-6">
+                            <div v-if="course.progress_percentage > 0" class="mb-4 md:mb-6">
                                 <div class="flex justify-between items-center mb-2">
                                     <span class="text-sm font-medium text-gray-700">Your Progress</span>
                                     <span class="text-sm font-semibold text-emerald-600">{{ course.progress_percentage }}%</span>
@@ -205,38 +258,38 @@
                                 </div>
                             </div>
 
-                            <div class="text-center mb-6">
-                                <div class="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl flex items-center justify-center text-emerald-600 text-2xl">
+                            <div class="text-center mb-4 md:mb-6">
+                                <div class="w-16 h-16 md:w-20 md:h-20 mx-auto mb-3 md:mb-4 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl flex items-center justify-center text-emerald-600 text-xl md:text-2xl">
                                     📚
                                 </div>
-                                <h3 class="text-lg font-bold text-gray-900 mb-1">Course Overview</h3>
-                                <p class="text-gray-500 text-sm">AI-Powered Learning Journey</p>
+                                <h3 class="text-base md:text-lg font-bold text-gray-900 mb-1">Course Overview</h3>
+                                <p class="text-gray-500 text-xs md:text-sm">AI-Powered Learning Journey</p>
                             </div>
 
-                            <div class="space-y-3">
+                            <div class="space-y-2 md:space-y-3">
                                 <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                    <span class="text-gray-600 text-sm">Difficulty Level</span>
-                                    <span class="font-semibold text-gray-900">{{ course.level }}</span>
+                                    <span class="text-gray-600 text-xs md:text-sm">Difficulty Level</span>
+                                    <span class="font-semibold text-gray-900 text-sm md:text-base">{{ course.level }}</span>
                                 </div>
                                 <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                    <span class="text-gray-600 text-sm">Total Enrolled</span>
-                                    <span class="font-semibold text-gray-900">{{ course.enrollment_count || 134 }} Students</span>
+                                    <span class="text-gray-600 text-xs md:text-sm">Total Enrolled</span>
+                                    <span class="font-semibold text-gray-900 text-sm md:text-base">{{ course.enrollment_count || 134 }} Students</span>
                                 </div>
                                 <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                    <span class="text-gray-600 text-sm">Last Updated</span>
-                                    <span class="font-semibold text-gray-900">{{ formatDate(course.updated_at) }}</span>
+                                    <span class="text-gray-600 text-xs md:text-sm">Last Updated</span>
+                                    <span class="font-semibold text-gray-900 text-sm md:text-base">{{ formatDate(course.updated_at) }}</span>
                                 </div>
                             </div>
 
                             <!-- Quick Stats -->
-                            <div class="mt-6 pt-6 border-t border-gray-200">
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div class="text-center p-3 bg-emerald-50 rounded-lg">
-                                        <div class="text-lg font-bold text-emerald-700">{{ course.modules?.length || 0 }}</div>
+                            <div class="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-gray-200">
+                                <div class="grid grid-cols-2 gap-2 md:gap-3">
+                                    <div class="text-center p-2 md:p-3 bg-emerald-50 rounded-lg">
+                                        <div class="text-base md:text-lg font-bold text-emerald-700">{{ course.modules?.length || 0 }}</div>
                                         <div class="text-xs text-emerald-600">Modules</div>
                                     </div>
-                                    <div class="text-center p-3 bg-blue-50 rounded-lg">
-                                        <div class="text-lg font-bold text-blue-700">{{ getTotalTopics() }}</div>
+                                    <div class="text-center p-2 md:p-3 bg-blue-50 rounded-lg">
+                                        <div class="text-base md:text-lg font-bold text-blue-700">{{ getTotalTopics() }}</div>
                                         <div class="text-xs text-blue-600">Topics</div>
                                     </div>
                                 </div>
@@ -248,16 +301,16 @@
         </section>
 
         <!-- Course Content -->
-        <section class="py-16 bg-gray-50">
+        <section class="py-8 md:py-16 bg-gray-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <!-- Navigation Tabs -->
-                <div class="mb-8">
-                    <div class="border-b border-gray-200">
-                        <nav class="-mb-px flex space-x-8">
+                <!-- Navigation Tabs - Mobile Scrollable -->
+                <div class="mb-6 md:mb-8">
+                    <div class="border-b border-gray-200 overflow-x-auto">
+                        <nav class="-mb-px flex space-x-4 md:space-x-8 min-w-max">
                             <button
                                 @click="activeTab = 'curriculum'"
                                 :class="[
-                                    'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
+                                    'py-3 md:py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap',
                                     activeTab === 'curriculum'
                                         ? 'border-emerald-500 text-emerald-600'
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -268,7 +321,7 @@
                             <button
                                 @click="activeTab = 'overview'"
                                 :class="[
-                                    'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
+                                    'py-3 md:py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap',
                                     activeTab === 'overview'
                                         ? 'border-emerald-500 text-emerald-600'
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -279,7 +332,7 @@
                             <button
                                 @click="activeTab = 'reviews'"
                                 :class="[
-                                    'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
+                                    'py-3 md:py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap',
                                     activeTab === 'reviews'
                                         ? 'border-emerald-500 text-emerald-600'
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -290,7 +343,7 @@
                             <button
                                 @click="activeTab = 'faq'"
                                 :class="[
-                                    'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
+                                    'py-3 md:py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap',
                                     activeTab === 'faq'
                                         ? 'border-emerald-500 text-emerald-600'
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -302,20 +355,20 @@
                     </div>
                 </div>
 
-                <div class="flex flex-col lg:flex-row gap-8">
+                <div class="flex flex-col lg:flex-row gap-6 md:gap-8">
                     <!-- Main Content -->
                     <div class="lg:w-2/3">
                         <!-- Curriculum Tab -->
-                        <div v-if="activeTab === 'curriculum'" class="space-y-6">
+                        <div v-if="activeTab === 'curriculum'" class="space-y-4 md:space-y-6">
                             <!-- Course Progress Summary -->
-                            <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h3 class="text-xl font-bold text-gray-900">Course Content</h3>
-                                    <span class="text-sm text-gray-500">{{ getTotalTopics() }} topics • {{ course.estimated_duration_hours }} total hours</span>
+                            <div class="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-gray-200 shadow-sm">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+                                    <h3 class="text-lg md:text-xl font-bold text-gray-900">Course Content</h3>
+                                    <span class="text-xs md:text-sm text-gray-500">{{ getTotalTopics() }} topics • {{ course.estimated_duration_hours }} total hours</span>
                                 </div>
 
                                 <!-- Module Accordions -->
-                                <div class="space-y-3">
+                                <div class="space-y-2 md:space-y-3">
                                     <div
                                         v-for="module in course.modules || []"
                                         :key="module.id"
@@ -323,23 +376,23 @@
                                     >
                                         <button
                                             @click="toggleModule(module.id)"
-                                            class="w-full flex items-center justify-between p-5 text-left bg-white hover:bg-gray-50 transition-colors"
+                                            class="w-full flex items-center justify-between p-4 md:p-5 text-left bg-white hover:bg-gray-50 transition-colors"
                                         >
                                             <div class="flex items-center flex-1">
-                                                <div class="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600 font-semibold mr-4 flex-shrink-0">
+                                                <div class="w-8 h-8 md:w-10 md:h-10 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600 font-semibold mr-3 md:mr-4 flex-shrink-0">
                                                     {{ module.order }}
                                                 </div>
-                                                <div class="flex-1">
-                                                    <h4 class="font-semibold text-gray-900">{{ module.title }}</h4>
-                                                    <div class="flex items-center mt-1 text-sm text-gray-500">
-                                                        <span class="flex items-center mr-4">
-                                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <div class="flex-1 min-w-0">
+                                                    <h4 class="font-semibold text-gray-900 text-sm md:text-base truncate">{{ module.title }}</h4>
+                                                    <div class="flex items-center mt-1 text-xs md:text-sm text-gray-500">
+                                                        <span class="flex items-center mr-3 md:mr-4">
+                                                            <svg class="w-3 h-3 md:w-4 md:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                                                             </svg>
                                                             {{ module.topics?.length || 0 }} topics
                                                         </span>
                                                         <span class="flex items-center">
-                                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <svg class="w-3 h-3 md:w-4 md:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                             </svg>
                                                             {{ Math.ceil((module.estimated_duration_minutes || 120) / 60) }}h
@@ -348,11 +401,11 @@
                                                 </div>
                                             </div>
                                             <div class="flex items-center">
-                                                <span v-if="getModuleProgress(module.id)" class="text-sm text-emerald-600 font-medium mr-3">
+                                                <span v-if="getModuleProgress(module.id)" class="text-xs md:text-sm text-emerald-600 font-medium mr-2 md:mr-3">
                                                     {{ getModuleProgress(module.id) }}% complete
                                                 </span>
                                                 <svg
-                                                    class="w-5 h-5 text-gray-400 transition-transform duration-300"
+                                                    class="w-4 h-4 md:w-5 md:h-5 text-gray-400 transition-transform duration-300 flex-shrink-0"
                                                     :class="{ 'rotate-180': expandedModule === module.id }"
                                                     fill="none"
                                                     stroke="currentColor"
@@ -366,12 +419,12 @@
                                         <!-- Module Topics -->
                                         <div
                                             v-if="expandedModule === module.id"
-                                            class="border-t border-gray-200 bg-gray-50/50"
+                                            class="border-t border-gray-200 bg-gray-50/50 overflow-hidden"
                                             :class="isModuleExpanded(module.id) ? 'animate-slideDown' : 'animate-slideUp'"
                                         >
-                                            <div class="p-4">
-                                                <div v-if="module.description" class="mb-4 p-4 bg-white rounded-lg border border-gray-200">
-                                                    <p class="text-gray-600">{{ module.description }}</p>
+                                            <div class="p-3 md:p-4">
+                                                <div v-if="module.description" class="mb-3 md:mb-4 p-3 md:p-4 bg-white rounded-lg border border-gray-200">
+                                                    <p class="text-gray-600 text-sm md:text-base">{{ module.description }}</p>
                                                 </div>
 
                                                 <div class="space-y-2">
@@ -380,19 +433,27 @@
                                                         :key="topic.id"
                                                         class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-emerald-300 hover:shadow-sm transition-all"
                                                     >
-                                                        <div class="flex items-center">
-                                                            <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-medium mr-3">
+                                                        <div class="flex items-center min-w-0">
+                                                            <div class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-xs md:text-sm font-medium mr-2 md:mr-3 flex-shrink-0">
                                                                 {{ topic.order }}
                                                             </div>
-                                                            <div>
-                                                                <h5 class="font-medium text-gray-900">{{ topic.title }}</h5>
-                                                                <div class="flex items-center text-sm text-gray-500 mt-1">
-                                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <div class="min-w-0">
+                                                                <h5 class="font-medium text-gray-900 text-sm md:text-base truncate">{{ topic.title }}</h5>
+                                                                <div class="flex items-center text-xs md:text-sm text-gray-500 mt-1">
+                                                                    <svg class="w-3 h-3 md:w-4 md:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                                     </svg>
                                                                     {{ topic.estimated_duration_minutes }} min
                                                                 </div>
                                                             </div>
+                                                        </div>
+                                                        <div class="flex-shrink-0">
+                                                            <button
+                                                                @click="startTopic(topic)"
+                                                                class="text-xs md:text-sm text-emerald-600 hover:text-emerald-700 font-medium px-2 py-1 rounded hover:bg-emerald-50 transition-colors"
+                                                            >
+                                                                Start
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -404,117 +465,118 @@
                         </div>
 
                         <!-- Overview Tab -->
-                        <div v-if="activeTab === 'overview'" class="space-y-8">
+                        <div v-if="activeTab === 'overview'" class="space-y-6 md:space-y-8">
                             <!-- Learning Objectives -->
-                            <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                                <h3 class="text-xl font-bold text-gray-900 mb-6">What You'll Learn</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-gray-200 shadow-sm">
+                                <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-4 md:mb-6">What You'll Learn</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                                     <div
                                         v-for="(objective, index) in course.learning_objectives || []"
                                         :key="index"
-                                        class="flex items-start p-4 bg-emerald-50/50 rounded-xl border border-emerald-100"
+                                        class="flex items-start p-3 md:p-4 bg-emerald-50/50 rounded-lg md:rounded-xl border border-emerald-100"
                                     >
-                                        <svg class="w-5 h-5 text-emerald-600 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <svg class="w-4 h-4 md:w-5 md:h-5 text-emerald-600 mr-2 md:mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                                         </svg>
-                                        <span class="text-gray-700">{{ objective }}</span>
+                                        <span class="text-gray-700 text-sm md:text-base">{{ objective }}</span>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Prerequisites -->
-                            <div v-if="course.prerequisites && course.prerequisites.length > 0" class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                                <h3 class="text-xl font-bold text-gray-900 mb-6">Prerequisites</h3>
-                                <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-5">
-                                    <div class="flex items-start mb-4">
-                                        <svg class="w-6 h-6 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div v-if="course.prerequisites && course.prerequisites.length > 0" class="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-gray-200 shadow-sm">
+                                <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-4 md:mb-6">Prerequisites</h3>
+                                <div class="bg-blue-50/50 border border-blue-100 rounded-lg md:rounded-xl p-4 md:p-5">
+                                    <div class="flex items-start mb-3 md:mb-4">
+                                        <svg class="w-5 h-5 md:w-6 md:h-6 text-blue-600 mr-2 md:mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
-                                        <p class="text-blue-800">Before starting this course, we recommend having basic knowledge in these areas:</p>
+                                        <p class="text-blue-800 text-sm md:text-base">Before starting this course, we recommend having basic knowledge in these areas:</p>
                                     </div>
-                                    <ul class="space-y-2">
+                                    <ul class="space-y-1 md:space-y-2">
                                         <li
                                             v-for="(prereq, index) in course.prerequisites"
                                             :key="index"
-                                            class="flex items-center text-blue-700 ml-9"
+                                            class="flex items-center text-blue-700 ml-7 md:ml-9 text-sm md:text-base"
                                         >
-                                            <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-3 h-3 md:w-4 md:h-4 mr-2 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                             </svg>
-                                            {{ prereq }}
+                                            <span>{{ prereq }}</span>
                                         </li>
                                     </ul>
                                 </div>
                             </div>
 
                             <!-- Target Audience -->
-                            <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                                <h3 class="text-xl font-bold text-gray-900 mb-6">Who is this course for?</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    <div class="p-4 bg-gradient-to-br from-emerald-50 to-white rounded-xl border border-emerald-100">
-                                        <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 mb-3">
+                            <div class="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-gray-200 shadow-sm">
+                                <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-4 md:mb-6">Who is this course for?</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                                    <div class="p-3 md:p-4 bg-gradient-to-br from-emerald-50 to-white rounded-lg md:rounded-xl border border-emerald-100">
+                                        <div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 mb-2 md:mb-3 text-lg md:text-xl">
                                             👩‍💻
                                         </div>
-                                        <h4 class="font-semibold text-gray-900 mb-2">Beginners</h4>
-                                        <p class="text-gray-600 text-sm">Starting their journey in this subject</p>
+                                        <h4 class="font-semibold text-gray-900 mb-1 md:mb-2 text-sm md:text-base">Beginners</h4>
+                                        <p class="text-gray-600 text-xs md:text-sm">Starting their journey in this subject</p>
                                     </div>
-                                    <div class="p-4 bg-gradient-to-br from-blue-50 to-white rounded-xl border border-blue-100">
-                                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-3">
+                                    <div class="p-3 md:p-4 bg-gradient-to-br from-blue-50 to-white rounded-lg md:rounded-xl border border-blue-100">
+                                        <div class="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-2 md:mb-3 text-lg md:text-xl">
                                             🎓
                                         </div>
-                                        <h4 class="font-semibold text-gray-900 mb-2">Students</h4>
-                                        <p class="text-gray-600 text-sm">Looking to supplement their academic studies</p>
+                                        <h4 class="font-semibold text-gray-900 mb-1 md:mb-2 text-sm md:text-base">Students</h4>
+                                        <p class="text-gray-600 text-xs md:text-sm">Looking to supplement their academic studies</p>
                                     </div>
-                                    <div class="p-4 bg-gradient-to-br from-purple-50 to-white rounded-xl border border-purple-100">
-                                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 mb-3">
+                                    <div class="p-3 md:p-4 bg-gradient-to-br from-purple-50 to-white rounded-lg md:rounded-xl border border-purple-100">
+                                        <div class="w-10 h-10 md:w-12 md:h-12 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 mb-2 md:mb-3 text-lg md:text-xl">
                                             💼
                                         </div>
-                                        <h4 class="font-semibold text-gray-900 mb-2">Professionals</h4>
-                                        <p class="text-gray-600 text-sm">Seeking to upgrade their skills for career growth</p>
+                                        <h4 class="font-semibold text-gray-900 mb-1 md:mb-2 text-sm md:text-base">Professionals</h4>
+                                        <p class="text-gray-600 text-xs md:text-sm">Seeking to upgrade their skills for career growth</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Reviews Tab -->
-                        <div v-if="activeTab === 'reviews'" class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                            <h3 class="text-xl font-bold text-gray-900 mb-6">Student Reviews</h3>
+                        <div v-if="activeTab === 'reviews'" class="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-gray-200 shadow-sm">
+                            <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-4 md:mb-6">Student Reviews</h3>
                             <!-- Add reviews content here -->
-                            <div class="text-center py-12 text-gray-500">
-                                <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="text-center py-8 md:py-12 text-gray-500">
+                                <svg class="w-12 h-12 md:w-16 md:h-16 mx-auto text-gray-300 mb-3 md:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
                                 </svg>
-                                <p>No reviews yet. Be the first to review this course!</p>
+                                <p class="text-sm md:text-base">No reviews yet. Be the first to review this course!</p>
                             </div>
                         </div>
 
                         <!-- FAQ Tab -->
-                        <div v-if="activeTab === 'faq'" class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                            <h3 class="text-xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h3>
+                        <div v-if="activeTab === 'faq'" class="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-gray-200 shadow-sm">
+                            <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-4 md:mb-6">Frequently Asked Questions</h3>
                             <!-- Add FAQ content here -->
-                            <div class="text-center py-12 text-gray-500">
-                                <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="text-center py-8 md:py-12 text-gray-500">
+                                <svg class="w-12 h-12 md:w-16 md:h-16 mx-auto text-gray-300 mb-3 md:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                <p>Common questions will appear here</p>
+                                <p class="text-sm md:text-base">Common questions will appear here</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Sidebar -->
                     <div class="lg:w-1/3">
+                        <!-- Share Course Card (Removed duplicate) -->
                         <!-- Instructor Card -->
-                        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm mb-6">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Course Instructor</h3>
-                            <div class="flex items-start space-x-4">
-                                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-600 text-xl font-bold">
+                        <div class="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-gray-200 shadow-sm mb-4 md:mb-6">
+                            <h3 class="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Course Instructor</h3>
+                            <div class="flex items-start space-x-3 md:space-x-4">
+                                <div class="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-600 text-lg md:text-xl font-bold flex-shrink-0">
                                     AI
                                 </div>
-                                <div>
-                                    <h4 class="font-bold text-gray-900">OliLearn AI</h4>
-                                    <p class="text-sm text-gray-600 mt-1">AI-Powered Learning Assistant</p>
-                                    <div class="flex items-center mt-3 text-sm text-gray-500">
-                                        <svg class="w-4 h-4 mr-1 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="min-w-0">
+                                    <h4 class="font-bold text-gray-900 text-sm md:text-base">OliLearn AI</h4>
+                                    <p class="text-xs md:text-sm text-gray-600 mt-1">AI-Powered Learning Assistant</p>
+                                    <div class="flex items-center mt-2 md:mt-3 text-xs md:text-sm text-gray-500">
+                                        <svg class="w-3 h-3 md:w-4 md:h-4 mr-1 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                         </svg>
                                         <span>Expert in {{ course.subject }}</span>
@@ -524,72 +586,72 @@
                         </div>
 
                         <!-- Course Features -->
-                        <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm mb-6">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Course Features</h3>
-                            <div class="space-y-3">
-                                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
-                                    <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 mr-3">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-gray-200 shadow-sm mb-4 md:mb-6">
+                            <h3 class="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Course Features</h3>
+                            <div class="space-y-2 md:space-y-3">
+                                <div class="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
+                                    <div class="w-8 h-8 md:w-10 md:h-10 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 mr-2 md:mr-3">
+                                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
                                     </div>
                                     <div>
-                                        <h4 class="font-medium text-gray-900">Certificate</h4>
-                                        <p class="text-sm text-gray-500">Upon completion</p>
+                                        <h4 class="font-medium text-gray-900 text-sm md:text-base">Certificate</h4>
+                                        <p class="text-gray-500 text-xs md:text-sm">Upon completion</p>
                                     </div>
                                 </div>
-                                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
-                                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mr-3">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
+                                    <div class="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mr-2 md:mr-3">
+                                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"></path>
                                         </svg>
                                     </div>
                                     <div>
-                                        <h4 class="font-medium text-gray-900">Hands-on Projects</h4>
-                                        <p class="text-sm text-gray-500">Practical experience</p>
+                                        <h4 class="font-medium text-gray-900 text-sm md:text-base">Hands-on Projects</h4>
+                                        <p class="text-gray-500 text-xs md:text-sm">Practical experience</p>
                                     </div>
                                 </div>
-                                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
-                                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 mr-3">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="flex items-center p-2 md:p-3 bg-gray-50 rounded-lg">
+                                    <div class="w-8 h-8 md:w-10 md:h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 mr-2 md:mr-3">
+                                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                                         </svg>
                                     </div>
                                     <div>
-                                        <h4 class="font-medium text-gray-900">Lifetime Access</h4>
-                                        <p class="text-sm text-gray-500">Learn at your pace</p>
+                                        <h4 class="font-medium text-gray-900 text-sm md:text-base">Lifetime Access</h4>
+                                        <p class="text-gray-500 text-xs md:text-sm">Learn at your pace</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Related Courses -->
-                        <div v-if="relatedCourses.length > 0" class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-lg font-semibold text-gray-900">Related Courses</h3>
-                                <Link :href="route('courses.index')" class="text-sm text-emerald-600 hover:text-emerald-700 font-medium">
+                        <div v-if="relatedCourses.length > 0" class="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-gray-200 shadow-sm">
+                            <div class="flex items-center justify-between mb-3 md:mb-4">
+                                <h3 class="text-base md:text-lg font-semibold text-gray-900">Related Courses</h3>
+                                <Link :href="route('courses.index')" class="text-xs md:text-sm text-emerald-600 hover:text-emerald-700 font-medium">
                                     View all
                                 </Link>
                             </div>
-                            <div class="space-y-4">
+                            <div class="space-y-3 md:space-y-4">
                                 <Link
                                     v-for="relatedCourse in relatedCourses.slice(0, 3)"
                                     :key="relatedCourse.id"
                                     :href="route('courses.show', relatedCourse.id)"
-                                    class="group flex items-start space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200"
+                                    class="group flex items-start space-x-3 p-2 md:p-3 rounded-lg md:rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200"
                                 >
-                                    <div class="w-12 h-12 flex-shrink-0 rounded-lg bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-600 font-semibold">
+                                    <div class="w-10 h-10 md:w-12 md:h-12 flex-shrink-0 rounded-lg bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-600 font-semibold text-sm md:text-base">
                                         {{ relatedCourse.subject?.charAt(0) || 'C' }}
                                     </div>
                                     <div class="flex-1 min-w-0">
-                                        <h4 class="font-medium text-gray-900 group-hover:text-emerald-600 transition-colors truncate">
+                                        <h4 class="font-medium text-gray-900 group-hover:text-emerald-600 transition-colors truncate text-sm md:text-base">
                                             {{ relatedCourse.title }}
                                         </h4>
-                                        <div class="flex items-center text-sm text-gray-500 mt-1">
+                                        <div class="flex items-center text-xs md:text-sm text-gray-500 mt-1">
                                             <span class="truncate">{{ relatedCourse.level }}</span>
-                                            <span class="mx-2">•</span>
+                                            <span class="mx-1 md:mx-2">•</span>
                                             <span class="flex items-center">
-                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="w-3 h-3 md:w-4 md:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                 </svg>
                                                 {{ relatedCourse.estimated_duration_hours }}h
@@ -630,7 +692,6 @@ const isEnrolled = computed(() => props.course.user_enrollment_count > 0);
 
 // Share functionality
 const courseUrl = typeof window !== 'undefined' ? window.location.href : '';
-const shareText = `Check out this course: ${props.course.title}`;
 
 const toggleShareDropdown = () => {
     showShareDropdown.value = !showShareDropdown.value;
@@ -642,12 +703,13 @@ const closeShareDropdown = (event) => {
     }
 };
 
-const copyUrl = async () => {
+const copyCourseLink = async () => {
     try {
         await navigator.clipboard.writeText(courseUrl);
         copySuccess.value = true;
         setTimeout(() => {
             copySuccess.value = false;
+            showShareDropdown.value = false;
         }, 2000);
     } catch (err) {
         console.error('Failed to copy: ', err);
@@ -661,6 +723,7 @@ const copyUrl = async () => {
             copySuccess.value = true;
             setTimeout(() => {
                 copySuccess.value = false;
+                showShareDropdown.value = false;
             }, 2000);
         } catch (err) {
             console.error('Fallback copy failed: ', err);
@@ -669,44 +732,34 @@ const copyUrl = async () => {
     }
 };
 
-const shareOnWhatsApp = () => {
-    const url = `https://wa.me/?text=${encodeURIComponent(`${shareText}\n\n${courseUrl}`)}`;
-    window.open(url, '_blank');
-    showShareDropdown.value = false;
-};
+const shareCourse = (platform) => {
+    const title = props.course?.title || 'Course Preview';
+    const text = `Check out this course: ${title}`;
 
-const shareOnFacebook = () => {
-    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(courseUrl)}&quote=${encodeURIComponent(shareText)}`;
-    window.open(url, '_blank', 'width=600,height=400');
-    showShareDropdown.value = false;
-};
+    // Generate the URL according to your new route structure
+    const url = `${window.location.origin}/course/${props.course.id}${props.course.slug ? '/' + props.course.slug : ''}`;
 
-const shareOnTwitter = () => {
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(courseUrl)}`;
-    window.open(url, '_blank', 'width=600,height=400');
-    showShareDropdown.value = false;
-};
+    const shareUrls = {
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+        twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
+        linkedin: `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`,
+        whatsapp: `https://wa.me/?text=${encodeURIComponent(`${text}\n\n${url}`)}`,
+    };
 
-const shareOnLinkedIn = () => {
-    const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(courseUrl)}`;
-    window.open(url, '_blank', 'width=600,height=400');
-    showShareDropdown.value = false;
-};
-
-const shareOnTelegram = () => {
-    const url = `https://t.me/share/url?url=${encodeURIComponent(courseUrl)}&text=${encodeURIComponent(shareText)}`;
-    window.open(url, '_blank', 'width=600,height=400');
-    showShareDropdown.value = false;
+    if (shareUrls[platform]) {
+        window.open(shareUrls[platform], '_blank', 'width=600,height=400');
+        showShareDropdown.value = false;
+    }
 };
 
 // Course functionality
 const enrollInCourse = () => {
     if (isEnrolled.value) {
-        router.visit(route('student.courses.show', { id: props.course.id, slug: props.course.slug}));
+        router.visit(route('student.courses.show', { id: props.course.id, slug: props.course.slug }));
     } else {
         router.post(route('student.catalog.enroll', props.course.id), {}, {
             onSuccess: () => {
-                router.visit(route('student.courses.show', props.course.id));
+                router.visit(route('student.courses.show', { id: props.course.id, slug: props.course.slug }));
             },
             onError: (errors) => {
                 if (errors.message) {
@@ -772,13 +825,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
 /* Animations */
 @keyframes blob {
     0% {

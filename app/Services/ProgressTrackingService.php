@@ -74,10 +74,12 @@ class ProgressTrackingService
     {
         $topic = ProgressTracking::where('user_id', $enrollment->user_id)
             ->where('course_id', $enrollment->course_id)
-            ->latest()->first();
+            ->latest()
+            ->first();
 
-        //dd($topic->course_outline_id);
-        return $topic->course_outline_id;
+        return $topic?->course_outline_id
+            ?? $enrollment->course->outlines()->first()?->id
+            ?? null;
     }
 
     public function noViewedTopic(CourseEnrollment $enrollment)

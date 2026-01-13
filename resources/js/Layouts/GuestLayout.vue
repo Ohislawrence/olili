@@ -670,7 +670,7 @@
                 </div>
               </Link>
               <p class="text-gray-600 text-sm leading-relaxed max-w-md mb-6">
-                Transforming education through AI-powered personalized learning. We help learners worldwide achieve their goals with smart, adaptive courses and expert guidance.
+                Empowering learners with AI-driven personalized education, adaptive courses, and expert guidance to transform goals into achievements
               </p>
               <div class="flex space-x-4">
                 <a
@@ -746,7 +746,7 @@
                 <svg class="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                 </svg>
-                <span>Trusted by 10,000+ learners in Nigeria</span>
+                <span>Trusted by 10,000+ learners across Africa</span>
               </div>
               <div class="flex items-center space-x-2">
                 <img src="/images/secure-payment.svg" alt="Secure Payment" class="h-6" />
