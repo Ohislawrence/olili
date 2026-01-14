@@ -1136,4 +1136,17 @@ class UserController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
+    public function loginHistory(User $user)
+    {
+        // Get login stats
+        $loginStats = $this->loginTrackerService->getUserLoginStats($user);
+        $loginHistory = LoginHistory::where('user_id', $user->id);
+
+        return Inertia::render('Admin/Users/LoginHistory', [
+            'user' => $user,
+            'loginHistory' => $loginHistory->latest()->paginate(20),
+            'loginStats' => $loginStats,
+        ]);
+    }
+
 }
