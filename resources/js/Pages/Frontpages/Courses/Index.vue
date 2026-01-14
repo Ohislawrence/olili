@@ -424,9 +424,7 @@
               Filtered by: <span class="font-medium">{{ activeFiltersText }}</span>
             </p>
           </div>
-          <div class="text-sm text-gray-600">
-            Total: {{ totalCourses }} courses • {{ totalLearningHours }}+ learning hours
-          </div>
+
         </div>
 
         <!-- Courses Grid -->

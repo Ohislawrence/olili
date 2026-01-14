@@ -70,50 +70,9 @@ class CourseCodeService
      */
     protected function getSubjectCode(string $subject): string
     {
-        // Remove special characters and numbers
-        $cleanSubject = preg_replace('/[^a-zA-Z\s]/', '', $subject);
-
-        // Common subject abbreviations
-        $subjectAbbreviations = [
-            'mathematics' => 'MATH',
-            'physics' => 'PHYS',
-            'chemistry' => 'CHEM',
-            'biology' => 'BIOL',
-            'english' => 'ENG',
-            'literature' => 'LIT',
-            'history' => 'HIST',
-            'geography' => 'GEOG',
-            'economics' => 'ECON',
-            'accounting' => 'ACCT',
-            'business' => 'BUS',
-            'computer' => 'COMP',
-            'programming' => 'PROG',
-            'science' => 'SCI',
-            'data' => 'DATA',
-            'artificial' => 'AI',
-            'web' => 'WEB',
-            'mobile' => 'MOB',
-            'graphic' => 'GRAPH',
-            'music' => 'MUS',
-            'art' => 'ART',
-        ];
-
-        $subjectLower = strtolower($cleanSubject);
-
-        // Check for exact matches first
-        if (isset($subjectAbbreviations[$subjectLower])) {
-            return $subjectAbbreviations[$subjectLower];
-        }
-
-        // Check for partial matches
-        foreach ($subjectAbbreviations as $key => $abbr) {
-            if (str_contains($subjectLower, $key)) {
-                return $abbr;
-            }
-        }
-
-        // Default: use first 4 letters
-        return strtoupper(substr($cleanSubject, 0, 4));
+        // Remove special characters and spaces, take first 3 letters
+        $cleanSubject = preg_replace('/[^a-zA-Z]/', '', $subject);
+        return strtoupper(substr($cleanSubject, 0, 3));
     }
 
     /**
@@ -181,35 +140,18 @@ class CourseCodeService
      */
     protected function getSequenceNumber(string $subjectCode, string $examBoardCode, string $levelCode, ?string $yearCode = null): string
     {
-        $query = Course::query();
-
-        // Build search pattern
-        $pattern = $subjectCode;
-        if ($examBoardCode) {
-            $pattern .= '-' . $examBoardCode;
-        }
-        $pattern .= '-' . $levelCode;
-
-        if ($yearCode) {
-            $pattern .= '-' . $yearCode;
-        }
-
-        $pattern .= '-%';
-
-        // Find highest existing sequence
-        $existingCodes = $query->where('code', 'like', $pattern)
-            ->pluck('code')
-            ->map(function ($code) use ($pattern) {
-                // Extract sequence number from code
-                $baseLength = strlen(str_replace('%', '', $pattern)) - 3; // -3 for the placeholder
-                $sequencePart = substr($code, $baseLength + 1); // +1 for the dash
-                return intval($sequencePart);
+        // Count existing courses with the exact same parameters
+        $count = Course::where('subject', 'like', $subjectCode . '%')
+            ->when($examBoardCode, function ($query) use ($examBoardCode) {
+                $examBoard = ExamBoard::where('code', 'like', $examBoardCode . '%')->first();
+                return $query->where('exam_board_id', $examBoard?->id);
             })
-            ->filter()
-            ->toArray();
+            ->where('level', 'like', $levelCode . '%')
+            ->when($yearCode, function ($query) use ($yearCode) {
+                return $query->whereYear('created_at', '20' . $yearCode);
+            })
+            ->count();
 
-        $nextSequence = empty($existingCodes) ? 1 : max($existingCodes) + 1;
-
-        return str_pad($nextSequence, 3, '0', STR_PAD_LEFT);
+        return str_pad($count + 1, 3, '0', STR_PAD_LEFT);
     }
 }
