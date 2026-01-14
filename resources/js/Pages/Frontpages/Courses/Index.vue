@@ -96,7 +96,7 @@
   </div>
 
   <!-- Filters -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 p-6">
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-6 p-6">
     <!-- Subject Dropdown -->
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-3">
@@ -221,6 +221,75 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-3">
+        Tags
+    </label>
+    <div class="relative">
+        <button
+        @click.stop="toggleTagsDropdown"
+        class="w-full flex items-center justify-between px-4 py-3 text-left bg-white border border-gray-300 rounded-xl hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+        >
+        <span class="text-sm text-gray-700">
+            {{ selectedTags.length > 0 ? `${selectedTags.length} selected` : 'All tags' }}
+        </span>
+        <svg
+            class="w-4 h-4 text-gray-500 transition-transform"
+            :class="{ 'rotate-180': showTagsDropdown }"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+        >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+        </button>
+
+        <!-- Tags Dropdown Menu -->
+        <div
+        v-if="showTagsDropdown"
+        class="absolute z-50 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-64 overflow-y-auto"
+        >
+        <div class="p-2">
+            <div class="relative mb-2">
+            <input
+                v-model="tagsSearch"
+                type="text"
+                placeholder="Search tags..."
+                class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                @click.stop
+            />
+            <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            </div>
+
+            <div class="space-y-1">
+            <label
+                v-for="tag in filteredTags"
+                :key="tag"
+                class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer group"
+            >
+                <input
+                type="checkbox"
+                :value="tag"
+                v-model="selectedTags"
+                @change="applyFilters"
+                class="h-4 w-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                />
+                <span class="ml-3 text-sm text-gray-700 group-hover:text-gray-900">
+                {{ tag }}
+                </span>
+            </label>
+
+            <div v-if="filteredTags.length === 0" class="px-3 py-2 text-sm text-gray-500 text-center">
+                No tags found
+            </div>
+            </div>
+        </div>
+        </div>
+    </div>
     </div>
 
     <!-- Features Dropdown -->
@@ -408,6 +477,19 @@
           </svg>
         </button>
       </span>
+
+      <span
+        v-for="tag in selectedTags"
+        :key="tag"
+        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm bg-green-50 text-green-700 border border-green-200"
+        >
+        {{ tag }}
+        <button @click="removeFilter('tag', tag)" class="text-green-600 hover:text-green-800 hover:bg-green-100 rounded-full p-0.5">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </span>
     </div>
   </div>
 </div>
@@ -563,6 +645,7 @@ const props = defineProps({
   courses: Object,
   subjects: Array,
   levels: Array,
+  tags: Array,
   filters: Object
 });
 
@@ -574,19 +657,31 @@ const sortBy = ref(props.filters.sort || 'latest');
 const hasCertificate = ref(props.filters.certificate === 'true');
 const hasProjects = ref(props.filters.projects === 'true');
 const hasQuizzes = ref(props.filters.quizzes === 'true');
+const selectedTags = ref(props.filters.tags ? props.filters.tags.split(',') : []);
+const showTagsDropdown = ref(false);
+const tagsSearch = ref('');
 
 // Popular search tags
 const popularTags = [
-  'Python',
-  'Data Science',
-  'Web Development',
   'AI',
-  'Marketing',
-  'Design',
+  'WAEC',
+  'NECO',
+  'Machine Learning',
+  'Data Science',
+  'Python',
+  'Web Development',
+  'Exam Prep',
   'Business',
-  'Programming'
+  'Design'
 ];
 
+const filteredTags = computed(() => {
+  if (!tagsSearch.value.trim()) return props.tags;
+  const searchTerm = tagsSearch.value.toLowerCase();
+  return props.tags.filter(tag =>
+    tag.toLowerCase().includes(searchTerm)
+  );
+});
 
 // Dropdown states
 const showSubjectDropdown = ref(false);
@@ -601,6 +696,7 @@ const closeAllDropdowns = () => {
   showLevelDropdown.value = false;
   showFeaturesDropdown.value = false;
   showSortDropdown.value = false;
+  showTagsDropdown.value = false;
 };
 
 // Toggle methods
@@ -632,6 +728,14 @@ const toggleSortDropdown = () => {
   showFeaturesDropdown.value = false;
 };
 
+const toggleTagsDropdown = () => {
+  showTagsDropdown.value = !showTagsDropdown.value;
+  showSubjectDropdown.value = false;
+  showLevelDropdown.value = false;
+  showFeaturesDropdown.value = false;
+  showSortDropdown.value = false;
+};
+
 // Filter subjects based on search
 const filteredSubjects = computed(() => {
   if (!subjectSearch.value.trim()) return props.subjects;
@@ -657,6 +761,7 @@ const hasActiveFilters = computed(() => {
   return search.value ||
          selectedSubjects.value.length > 0 ||
          selectedLevels.value.length > 0 ||
+         selectedTags.value.length > 0 || // Add this
          hasCertificate.value ||
          hasProjects.value ||
          hasQuizzes.value;
@@ -667,6 +772,7 @@ const getTotalFilters = () => {
   if (search.value) count++;
   count += selectedSubjects.value.length;
   count += selectedLevels.value.length;
+  count += selectedTags.value.length; // Add this
   if (hasCertificate.value) count++;
   if (hasProjects.value) count++;
   if (hasQuizzes.value) count++;
@@ -699,6 +805,9 @@ const removeFilter = (type, value) => {
   } else if (type === 'level') {
     const index = selectedLevels.value.indexOf(value);
     if (index !== -1) selectedLevels.value.splice(index, 1);
+  } else if (type === 'tag') { // Add this
+    const index = selectedTags.value.indexOf(value);
+    if (index !== -1) selectedTags.value.splice(index, 1);
   } else if (type === 'search') {
     search.value = '';
   }
@@ -744,6 +853,7 @@ const applyFilters = () => {
     search: search.value || null,
     subjects: selectedSubjects.value.length ? selectedSubjects.value.join(',') : null,
     levels: selectedLevels.value.length ? selectedLevels.value.join(',') : null,
+    tags: selectedTags.value.length ? selectedTags.value.join(',') : null, // Add this
     certificate: hasCertificate.value ? 'true' : null,
     projects: hasProjects.value ? 'true' : null,
     sort: sortBy.value
@@ -760,6 +870,7 @@ const clearFilters = () => {
   search.value = '';
   selectedSubjects.value = [];
   selectedLevels.value = [];
+  selectedTags.value = []; // Add this
   hasCertificate.value = false;
   hasProjects.value = false;
   sortBy.value = 'latest';

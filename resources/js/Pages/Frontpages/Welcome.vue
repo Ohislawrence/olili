@@ -547,11 +547,12 @@
                       </div>
                     </div>
                     <div class="p-5">
+                         <p class="text-gray-700 text-sm line-clamp-2 mb-4">
+                            {{ course.description || 'Start your learning journey today' }}
+                        </p>
                       <div class="flex items-center justify-between mb-4">
                         <span class="text-sm text-gray-600">{{ course.subject }}</span>
-                        <span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full">
-                          {{ course.enrollment_count || 0 }}+ enrolled
-                        </span>
+                        <span class="text-emerald-400 font-medium">{{ course.level }}</span>
                       </div>
                       <Link
                         :href="route('courses.show', { id: course.id, slug: course.slug })"
