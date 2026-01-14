@@ -335,7 +335,7 @@
             <div class="h-40 relative overflow-hidden bg-gradient-to-r from-emerald-500 to-emerald-600">
               <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
               <div class="absolute bottom-4 left-4 right-4">
-                <span class="inline-block px-3 py-1 rounded-full text-xs bg-white/30 backdrop-blur-sm text-white font-medium mb-2">
+                <span class="inline-block px-3 py-1 rounded-full text-xs bg-white/30 backdrop-blur-sm text-white font-medium mb-2 capitalize-first">
                   {{ course.subject }}
                 </span>
                 <h3 class="text-white font-bold text-lg line-clamp-2">{{ course.title }}</h3>
@@ -352,13 +352,13 @@
                   </svg>
                   {{ course.estimated_duration_hours || 'Self-paced' }} hrs
                 </div>
-                <span class="text-emerald-600 font-medium">{{ course.level }}</span>
+                <span class="text-emerald-600 font-medium capitalize-first">{{ course.level }}</span>
               </div>
               <Link
                 :href="route('courses.show', { id: course.id, slug: course.slug })"
                 class="w-full text-center block bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-2.5 rounded-lg text-sm font-medium hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300"
               >
-                Enroll Now
+                See Course
               </Link>
             </div>
           </div>
@@ -551,14 +551,14 @@
                             {{ course.description || 'Start your learning journey today' }}
                         </p>
                       <div class="flex items-center justify-between mb-4">
-                        <span class="text-sm text-gray-600">{{ course.subject }}</span>
-                        <span class="text-emerald-400 font-medium">{{ course.level }}</span>
+                        <span class="text-sm text-gray-600 capitalize-first">{{ course.subject }}</span>
+                        <span class="text-emerald-400 font-medium capitalize-first">{{ course.level }}</span>
                       </div>
                       <Link
                         :href="route('courses.show', { id: course.id, slug: course.slug })"
                         class="w-full text-center block bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-2.5 rounded-lg text-sm font-medium hover:from-emerald-700 hover:to-emerald-800 transition-all"
                       >
-                        Join Now
+                        See Course
                       </Link>
                     </div>
                   </div>
@@ -913,5 +913,9 @@ onUnmounted(() => {
 .slide-enter-from,
 .slide-leave-to {
   opacity: 0;
+}
+
+.capitalize-first {
+  text-transform: capitalize;
 }
 </style>

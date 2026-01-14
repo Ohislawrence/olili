@@ -7,6 +7,7 @@ use App\Models\BlogPost;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
 use App\Models\SubscriptionPlan;
+use App\Services\ProgressTrackingService;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -469,7 +470,9 @@ class FrontpageController extends Controller
 
         // Calculate average rating
         $reviewCount = mt_rand(500, 10000);
-        $averageRating = $reviewCount / $course->count();
+        //$averageRating = $reviewCount / $course->count();
+        $ratingOptions = [3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 5.0];
+        $averageRating = $ratingOptions[array_rand($ratingOptions)];
 
 
         // Get prerequisites if they exist
@@ -605,7 +608,7 @@ class FrontpageController extends Controller
                 'learning_objectives' => $course->learning_objectives ?? [],
                 'target_audience' => $course->target_audience ?? [],
                 'what_you_get' => $course->what_you_get ?? [],
-                'enrollments_count' => $course->enrollments_count,
+                'enrollments_count' => $course->enrollments->count('id'),
                 'reviews_count' => $reviewCount,
                 'average_rating' => round($averageRating, 1),
                 'faqs' => $course->faqs ?? [],

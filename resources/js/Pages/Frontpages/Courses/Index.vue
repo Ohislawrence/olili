@@ -547,7 +547,7 @@
                     {{ course.modules_count || 0 }} modules
                   </span>
                 </div>
-                <span class="text-emerald-700 font-medium">{{ course.level}}</span>
+                <span class="text-emerald-700 font-medium capitalize-first">{{ course.level}}</span>
               </div>
 
 
@@ -556,7 +556,7 @@
                 :href="route('courses.show', { id: course.id, slug: course.slug })"
                 class="w-full block text-center bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-3 rounded-xl font-medium transition-all duration-300 group-hover:shadow-lg"
               >
-                Enroll Now • Start Today
+                See Course
               </Link>
             </div>
           </div>
@@ -921,5 +921,9 @@ const getSortLabel = () => {
 /* Close dropdowns when clicking outside */
 :deep(body) {
   @apply relative;
+}
+
+.capitalize-first {
+  text-transform: capitalize;
 }
 </style>

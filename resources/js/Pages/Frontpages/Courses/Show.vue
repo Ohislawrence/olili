@@ -41,7 +41,7 @@
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
                                 {{ course.subject }}
                             </span>
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200 capitalize-first">
                                 {{ course.level }}
                             </span>
                             <span v-if="course.status === 'published'" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
@@ -88,20 +88,98 @@
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-semibold text-gray-900 text-sm md:text-base">{{ course.status }}</div>
+                                    <div class="font-semibold text-gray-900 text-sm md:text-base capitalize-first">{{ course.status }}</div>
                                     <div class="text-xs md:text-sm text-gray-500">Status</div>
                                 </div>
                             </div>
 
                             <div class="flex items-center ml-auto">
                                 <div class="flex items-center">
-                                    <div class="flex mr-1">
-                                        <svg v-for="n in 5" :key="n" class="w-4 h-4 md:w-5 md:h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <!-- Star Ratings -->
+                                    <div class="flex mr-2">
+                                        <!-- Full stars -->
+                                        <svg
+                                            v-for="n in Math.floor(course.average_rating || 0)"
+                                            :key="'full-' + n"
+                                            class="w-4 h-4 md:w-5 md:h-5 text-amber-400"
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                        >
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                        </svg>
+
+                                        <!-- Half star (if needed) -->
+                                        <svg
+                                            v-if="(course.average_rating || 0) % 1 >= 0.3 && (course.average_rating || 0) % 1 <= 0.7"
+                                            key="half"
+                                            class="w-4 h-4 md:w-5 md:h-5 text-amber-400"
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                        >
+                                            <defs>
+                                                <linearGradient id="halfGradient">
+                                                    <stop offset="50%" stop-color="currentColor" />
+                                                    <stop offset="50%" stop-color="#E5E7EB" />
+                                                </linearGradient>
+                                            </defs>
+                                            <path fill="url(#halfGradient)" d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                        </svg>
+
+                                        <!-- Quarter star (if needed) -->
+                                        <svg
+                                            v-else-if="(course.average_rating || 0) % 1 > 0 && (course.average_rating || 0) % 1 < 0.3"
+                                            key="quarter"
+                                            class="w-4 h-4 md:w-5 md:h-5 text-amber-400"
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                        >
+                                            <defs>
+                                                <linearGradient id="quarterGradient">
+                                                    <stop offset="25%" stop-color="currentColor" />
+                                                    <stop offset="25%" stop-color="#E5E7EB" />
+                                                </linearGradient>
+                                            </defs>
+                                            <path fill="url(#quarterGradient)" d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                        </svg>
+
+                                        <!-- Three-quarter star (if needed) -->
+                                        <svg
+                                            v-else-if="(course.average_rating || 0) % 1 > 0.7"
+                                            key="three-quarter"
+                                            class="w-4 h-4 md:w-5 md:h-5 text-amber-400"
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                        >
+                                            <defs>
+                                                <linearGradient id="threeQuarterGradient">
+                                                    <stop offset="75%" stop-color="currentColor" />
+                                                    <stop offset="75%" stop-color="#E5E7EB" />
+                                                </linearGradient>
+                                            </defs>
+                                            <path fill="url(#threeQuarterGradient)" d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                        </svg>
+
+                                        <!-- Empty stars -->
+                                        <svg
+                                            v-for="n in 5 - Math.ceil(course.average_rating || 0)"
+                                            :key="'empty-' + n"
+                                            class="w-4 h-4 md:w-5 md:h-5 text-gray-300"
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                        >
                                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
                                         </svg>
                                     </div>
-                                    <span class="text-gray-900 font-semibold text-sm md:text-base ml-1">4.8</span>
-                                    <span class="text-gray-500 text-xs md:text-sm ml-1">(24 reviews)</span>
+
+                                    <!-- Rating number and review count -->
+                                    <div class="flex flex-col sm:flex-row sm:items-baseline">
+                                        <span class="text-gray-900 font-semibold text-sm md:text-base">
+                                            {{ (course.average_rating || 0).toFixed(1) }}
+                                        </span>
+                                        <span class="text-gray-500 text-xs md:text-sm sm:ml-1">
+                                            ({{ course.reviews_count || 0 }} {{ (course.reviews_count || 0) === 1 ? 'review' : 'reviews' }})
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -269,11 +347,11 @@
                             <div class="space-y-2 md:space-y-3">
                                 <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                                     <span class="text-gray-600 text-xs md:text-sm">Difficulty Level</span>
-                                    <span class="font-semibold text-gray-900 text-sm md:text-base">{{ course.level }}</span>
+                                    <span class="font-semibold text-gray-900 text-sm md:text-base capitalize-first">{{ course.level }}</span>
                                 </div>
                                 <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                                     <span class="text-gray-600 text-xs md:text-sm">Total Enrolled</span>
-                                    <span class="font-semibold text-gray-900 text-sm md:text-base">{{ course.enrollment_count || 134 }} Students</span>
+                                    <span class="font-semibold text-gray-900 text-sm md:text-base">{{ course.enrollments_count || 134 }} Learners</span>
                                 </div>
                                 <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                                     <span class="text-gray-600 text-xs md:text-sm">Last Updated</span>
@@ -637,7 +715,7 @@
                                 <Link
                                     v-for="relatedCourse in relatedCourses.slice(0, 3)"
                                     :key="relatedCourse.id"
-                                    :href="route('courses.show', relatedCourse.id)"
+                                    :href="route('courses.show', { id: relatedCourse.id, slug: relatedCourse.slug })"
                                     class="group flex items-start space-x-3 p-2 md:p-3 rounded-lg md:rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200"
                                 >
                                     <div class="w-10 h-10 md:w-12 md:h-12 flex-shrink-0 rounded-lg bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-600 font-semibold text-sm md:text-base">
@@ -648,7 +726,7 @@
                                             {{ relatedCourse.title }}
                                         </h4>
                                         <div class="flex items-center text-xs md:text-sm text-gray-500 mt-1">
-                                            <span class="truncate">{{ relatedCourse.level }}</span>
+                                            <span class="truncate capitalize-first">{{ relatedCourse.level }}</span>
                                             <span class="mx-1 md:mx-2">•</span>
                                             <span class="flex items-center">
                                                 <svg class="w-3 h-3 md:w-4 md:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -881,5 +959,9 @@ onUnmounted(() => {
 
 .animate-slideUp {
     animation: slideUp 0.3s ease-in forwards;
+}
+
+.capitalize-first {
+  text-transform: capitalize;
 }
 </style>
