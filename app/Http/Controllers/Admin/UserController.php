@@ -10,6 +10,7 @@ use App\Models\CourseEnrollment;
 use App\Models\StudentProfile;
 use App\Models\ExamBoard;
 use App\Models\LoginHistory;
+use App\Models\Payment;
 use App\Models\Certificate;
 use App\Services\LoginTrackerService;
 use App\Helpers\CertificateHelper;
@@ -21,6 +22,7 @@ use Illuminate\Validation\Rules;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use App\Services\ProgressTrackingService;
+
 
 class UserController extends Controller
 {
@@ -1147,6 +1149,31 @@ class UserController extends Controller
             'loginHistory' => $loginHistory->latest()->paginate(20),
             'loginStats' => $loginStats,
         ]);
+    }
+
+    public function paymentHistory(User $user, Request $request)
+    {
+
+        $payments = Payment::where('user_id', $user->id);
+        $stats = [
+            'total_payments'=> $payments->where('status', 'success')->sum('amount'),
+            'successful_payments'=> $payments->where('status', 'success')->count(),
+            'failed_payments'=> $payments->where('status', 'failed')->count(),
+            'pending_payments'=> $payments->where('status', 'pending')->count(),
+            'total_spent'=> $payments->where('status', 'success')->sum('amount'),
+        ];
+        $filters = [];
+
+        return Inertia::render('Admin/Users/PaymentHistory', [
+            'user' => $user,
+            'filters' => $filters,
+            'payments' => $payments->latest()->paginate(20),
+            'stats' => $stats,
+        ]);
+
+
+
+
     }
 
 }

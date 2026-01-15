@@ -348,7 +348,7 @@ class CourseController extends Controller
 
         if ($existingEnrollment) {
             return redirect()->route('student.courses.learn', $course->id)
-                ->with('info', 'You are already enrolled in this course.');
+                ->with('message', 'You are already enrolled in this course.');
         }
 
         // Check if student previously dropped this course
@@ -365,9 +365,14 @@ class CourseController extends Controller
                 //'progress_percentage' => 0, // Reset progress or keep previous?
                 // You can decide whether to keep previous progress
             ]);
+            $student->notify(new CourseEnrollmentNotification(
+                $course->id,
+                $droppedEnrollment->id,
+                'Welcome back! Your enrollment has been reactivated.'
+            ));
 
             return redirect()->route('student.courses.learn', $course->id)
-                ->with('success', 'Successfully re-enrolled in the course! Your previous progress has been restored.');
+                ->with('message', 'Successfully re-enrolled in the course! Your previous progress has been restored.');
         }
 
         // Enroll in course (new enrollment)
@@ -375,10 +380,11 @@ class CourseController extends Controller
 
         if (!$enrollment) {
             return redirect()->back()
-                ->with('error', 'Unable to enroll in this course. Please check if the course is available and has space.');
+                ->with('message', 'Unable to enroll in this course. Please check if the course is available and has space.');
         }
 
-        $student->notify(new CourseEnrollmentNotification($course, $enrollment));
+
+        $student->notify(new CourseEnrollmentNotification($course->id, $enrollment->id));
 
         return redirect()->route('student.courses.learn', $course->id)
             ->with('success', 'Successfully enrolled in the course!');
