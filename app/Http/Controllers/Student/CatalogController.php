@@ -55,6 +55,8 @@ class CatalogController extends Controller
 
     $courses = $query->paginate(12);
 
+    $enrolledCourseIds = CourseEnrollment::where('user_id', $student)->pluck('course_id')->toArray();
+
     // Get enrolled course details for each public course
     $enrolledCourses = [];
     if (!empty($enrolledCourseIds)) {
