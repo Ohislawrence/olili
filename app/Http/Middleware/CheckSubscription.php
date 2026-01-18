@@ -115,7 +115,7 @@ class CheckSubscription
     protected function validateStudentFeature($plan, string $feature): bool
     {
         $studentFeatures = [
-            'create_course' => ['basic','pro', 'premium'],
+            'create_course' => ['premium'],
             'unlimited_ai_learning' => ['basic','pro', 'premium'],
             'full_course_library' => ['pro', 'premium'],
             'advanced_explanations' => ['pro', 'premium'],

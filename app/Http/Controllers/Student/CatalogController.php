@@ -24,8 +24,9 @@ class CatalogController extends Controller
         ->latest();
 
     // Get IDs of courses the student is already enrolled in
-    $enrolledCourseIds = [];
+    $enrolledCourseIds = [$student->enrollments->course->toArray()];
 
+    dd($enrolledCourseIds);
 
         //$student->enrollments->course->toArray();
 
@@ -54,8 +55,6 @@ class CatalogController extends Controller
     }
 
     $courses = $query->paginate(12);
-
-    $enrolledCourseIds = CourseEnrollment::where('user_id', $student)->pluck('course_id')->toArray();
 
     // Get enrolled course details for each public course
     $enrolledCourses = [];

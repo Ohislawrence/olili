@@ -671,7 +671,7 @@ const popularTags = [
   'Python',
   'Web Development',
   'Exam Prep',
-  'Business',
+  'JAMB',
   'Design'
 ];
 

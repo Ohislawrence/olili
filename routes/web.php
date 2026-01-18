@@ -40,6 +40,10 @@ Route::get('/cookies', [FrontpageController::class, 'pricing'])->name('cookies')
 Route::get('/accessibility', [FrontpageController::class, 'pricing'])->name('accessibility');
 Route::get('/gdpr', [FrontpageController::class, 'pricing'])->name('gdpr');
 
+//landing pages
+Route::get('/pass/weac', [FrontpageController::class, 'waeclanding'])->name('waeclanding');
+Route::get('/pass/jamb', [FrontpageController::class, 'jamblanding'])->name('jamblanding');
+
 // Courses routes
 Route::get('/course', [FrontpageController::class, 'coursesIndex'])->name('courses.index');
 Route::get('/course/{id}/{slug?}', [FrontpageController::class, 'courseShow'])->name('courses.show');

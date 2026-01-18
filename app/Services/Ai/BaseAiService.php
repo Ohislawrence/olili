@@ -142,7 +142,7 @@ abstract class BaseAiService
 
     protected function getTimeout(): int
     {
-        return $this->provider->getConfigValue('timeout', 120);
+        return $this->provider->getConfigValue('timeout', 240);
     }
 
     protected function createUsageLog(string $purpose): AiUsageLog

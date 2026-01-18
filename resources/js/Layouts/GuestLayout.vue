@@ -1013,9 +1013,9 @@ const navItems = [
 // Footer links (unchanged)
 const quickLinks = [
   { name: 'Browse Courses', route: route('courses.index') },
-  { name: 'Learning Paths', route: route('learning-paths') },
-  { name: 'AI Tutor', route: route('ai-tutor') },
-  { name: 'For Teams', route: route('teams') },
+  { name: 'WAEC', route: route('waeclanding') },
+  { name: 'JAMB', route: route('jamblanding') },
+  { name: 'Schools/Organizations', route: route('teams') },
   { name: 'Home', route: route('welcome'), component: 'frontpages/Welcome' },
   { name: 'About', route: route('about'), component: 'frontpages/About' },
 ];

@@ -51,45 +51,45 @@ class FrontpageController extends Controller
     }
 
     public function pricing()
-{
-    $subscriptionPlans = SubscriptionPlan::active()
-        ->orderBy('sort_order')
-        ->get()
-        ->map(function ($plan) {
-            return [
-                'id' => $plan->id,
-                'name' => $plan->name,
-                'code' => $plan->code,
-                'description' => $plan->description,
-                'price' => $plan->price,
-                'currency' => $plan->currency,
-                'monthly_price' => $plan->monthly_price,
-                'yearly_price' => $plan->yearly_price,
-                'features' => $plan->features,
-                'max_courses' => $plan->max_courses,
-                'max_ai_requests_per_month' => $plan->max_ai_requests_per_month,
-                'ai_grading' => $plan->ai_grading,
-                'priority_support' => $plan->priority_support,
-                'is_active' => $plan->is_active,
-                'is_popular' => $plan->is_popular,
-                'sort_order' => $plan->sort_order,
-                'role' => $plan->role,
-                'tier' => $plan->tier,
-                'is_free' => $plan->isFree(),
-                'recommended_features' => $plan->getRecommendedFeatures(),
-            ];
-        });
+    {
+        $subscriptionPlans = SubscriptionPlan::active()
+            ->orderBy('sort_order')
+            ->get()
+            ->map(function ($plan) {
+                return [
+                    'id' => $plan->id,
+                    'name' => $plan->name,
+                    'code' => $plan->code,
+                    'description' => $plan->description,
+                    'price' => $plan->price,
+                    'currency' => $plan->currency,
+                    'monthly_price' => $plan->monthly_price,
+                    'yearly_price' => $plan->yearly_price,
+                    'features' => $plan->features,
+                    'max_courses' => $plan->max_courses,
+                    'max_ai_requests_per_month' => $plan->max_ai_requests_per_month,
+                    'ai_grading' => $plan->ai_grading,
+                    'priority_support' => $plan->priority_support,
+                    'is_active' => $plan->is_active,
+                    'is_popular' => $plan->is_popular,
+                    'sort_order' => $plan->sort_order,
+                    'role' => $plan->role,
+                    'tier' => $plan->tier,
+                    'is_free' => $plan->isFree(),
+                    'recommended_features' => $plan->getRecommendedFeatures(),
+                ];
+            });
 
-    return Inertia::render('Frontpages/Pricing', [
-        'subscriptionPlans' => $subscriptionPlans, 'meta' => [
-                'title' => 'Choose Your Perfect Plan',
-                'description' => 'Select the ideal plan for your learning journey. All plans include our core AI features and personalized learning tools.',
-                'image' => asset('olilearn-main.png'),
-                'url' => url()->current(),
+        return Inertia::render('Frontpages/Pricing', [
+            'subscriptionPlans' => $subscriptionPlans, 'meta' => [
+                    'title' => 'Choose Your Perfect Plan',
+                    'description' => 'Select the ideal plan for your learning journey. All plans include our core AI features and personalized learning tools.',
+                    'image' => asset('olilearn-main.png'),
+                    'url' => url()->current(),
+                ]
             ]
-        ]
-        );
-}
+            );
+    }
 
 
     public function help()
@@ -743,6 +743,547 @@ class FrontpageController extends Controller
         return response()->json([
             'courses' => $courses,
             'count' => $courses->count()
+        ]);
+    }
+
+
+
+    public function waeclanding()
+    {
+        // Get WAEC-specific courses with proper filtering
+        $courses = Course::where('visibility', 'public')
+            ->where('status', 'active')
+            ->where(function($query) {
+                $query->where('subject', 'LIKE', '%WAEC%')
+                    ->orWhere('title', 'LIKE', '%WAEC%')
+                    ->orWhere('tags', 'LIKE', '%WAEC%')
+                    ->orWhereHas('examBoard', function($q) {
+                        $q->where('name', 'LIKE', '%WAEC%');
+                    })
+                    ->orWhere('subject', 'LIKE', '%Mathematics%')
+                    ->orWhere('subject', 'LIKE', '%English%')
+                    ->orWhere('subject', 'LIKE', '%Biology%')
+                    ->orWhere('subject', 'LIKE', '%Chemistry%')
+                    ->orWhere('subject', 'LIKE', '%Physics%')
+                    ->orWhere('subject', 'LIKE', '%Economics%')
+                    ->orWhere('subject', 'LIKE', '%Government%')
+                    ->orWhere('subject', 'LIKE', '%Geography%');
+            })
+            ->with(['modules', 'examBoard'])
+            ->limit(9)
+            ->latest()
+            ->get()
+            ->map(function ($course) {
+                // Calculate if course is free based on model logic
+                $isFree = !$course->is_paid || ($course->price <= 0);
+
+                return [
+                    'id' => $course->id,
+                    'code' => $course->code,
+                    'title' => $course->title,
+                    'subject' => $course->subject,
+                    'description' => $course->description,
+                    'level' => $course->level,
+                    'estimated_duration_hours' => $course->estimated_duration_hours,
+                    'modules_count' => $course->modules->count(),
+                    'status' => $course->status,
+                    'slug' => $course->slug,
+                    'price' => (float) $course->price,
+                    'is_paid' => (bool) $course->is_paid,
+                    'is_free' => $isFree,
+                    'thumbnail_url' => $course->thumbnail_url,
+                    'tags' => $course->tags,
+                    'exam_board' => $course->examBoard ? $course->examBoard->name : null,
+                    'learning_objectives' => $course->learning_objectives,
+                    'has_certificate' => (bool) $course->has_certificate,
+                    'current_enrollment' => $course->current_enrollment,
+                    // Add calculated fields
+                    'display_price' => $isFree ? 'FREE' : '₦' . number_format($course->price, 0),
+                    'duration_display' => $course->estimated_duration_hours
+                        ? $course->estimated_duration_hours . ' hrs'
+                        : 'Self-paced',
+                    'enrollment_status' => $course->isFull() ? 'Full' : 'Available',
+                ];
+            });
+
+        // If no WAEC-specific courses found, get general exam courses
+        if ($courses->isEmpty()) {
+            $courses = Course::where('visibility', 'public')
+                ->where('status', 'active')
+                ->where(function($query) {
+                    $query->where('subject', 'LIKE', '%Exam%')
+                        ->orWhere('title', 'LIKE', '%Exam%')
+                        ->orWhere('tags', 'LIKE', '%exam%');
+                })
+                ->with(['modules', 'examBoard'])
+                ->limit(9)
+                ->latest()
+                ->get()
+                ->map(function ($course) {
+                    $isFree = !$course->is_paid || ($course->price <= 0);
+
+                    return [
+                        'id' => $course->id,
+                        'code' => $course->code,
+                        'title' => $course->title,
+                        'subject' => $course->subject,
+                        'description' => $course->description,
+                        'level' => $course->level,
+                        'estimated_duration_hours' => $course->estimated_duration_hours,
+                        'modules_count' => $course->modules->count(),
+                        'status' => $course->status,
+                        'slug' => $course->slug,
+                        'price' => (float) $course->price,
+                        'is_paid' => (bool) $course->is_paid,
+                        'is_free' => $isFree,
+                        'thumbnail_url' => $course->thumbnail_url,
+                        'tags' => $course->tags,
+                        'exam_board' => $course->examBoard ? $course->examBoard->name : null,
+                        'learning_objectives' => $course->learning_objectives,
+                        'has_certificate' => (bool) $course->has_certificate,
+                        'current_enrollment' => $course->current_enrollment,
+                        'display_price' => $isFree ? 'FREE' : '₦' . number_format($course->price, 0),
+                        'duration_display' => $course->estimated_duration_hours
+                            ? $course->estimated_duration_hours . ' hrs'
+                            : 'Self-paced',
+                        'enrollment_status' => $course->isFull() ? 'Full' : 'Available',
+                    ];
+                });
+        }
+
+        // Get subscription plans - ensure free plan is included
+        $subscriptionPlans = SubscriptionPlan::active()
+            ->orderBy('sort_order')
+            ->get()
+            ->map(function ($plan) {
+                $features = is_array($plan->features) ? $plan->features : json_decode($plan->features, true);
+
+                // Add WAEC-specific features for display
+                $waecFeatures = [
+                    'waec_courses_access' => true,
+                    'ai_tutor_access' => true,
+                    'practice_tests' => true,
+                    'performance_analytics' => $plan->tier === 'premium' || $plan->tier === 'pro',
+                    'certificate_included' => $plan->tier !== 'free',
+                    'priority_support' => $plan->tier === 'premium' || $plan->tier === 'pro',
+                ];
+
+                // Merge with existing features
+                $allFeatures = array_merge($features ?? [], $waecFeatures);
+
+                // Format features for display
+                $formattedFeatures = array_map(function ($feature) {
+                    if (is_bool($feature)) {
+                        return $feature ? 'Available' : 'Not available';
+                    }
+                    return $feature;
+                }, $allFeatures);
+
+                return [
+                    'id' => $plan->id,
+                    'name' => $plan->name,
+                    'code' => $plan->code,
+                    'description' => $plan->description,
+                    'price' => $plan->price,
+                    'currency' => $plan->currency,
+                    'monthly_price' => $plan->monthly_price,
+                    'yearly_price' => $plan->yearly_price,
+                    'features' => $formattedFeatures,
+                    'max_courses' => $plan->max_courses,
+                    'max_ai_requests_per_month' => $plan->max_ai_requests_per_month,
+                    'ai_grading' => $plan->ai_grading,
+                    'priority_support' => $plan->priority_support,
+                    'is_active' => $plan->is_active,
+                    'is_popular' => $plan->is_popular,
+                    'sort_order' => $plan->sort_order,
+                    'role' => $plan->role,
+                    'tier' => $plan->tier,
+                    'is_free' => $plan->isFree(),
+                    'recommended_features' => $plan->getRecommendedFeatures(),
+                    // Add plan-specific data for WAEC page
+                    'waec_subjects_limit' => $plan->tier === 'free' ? 2 : 'unlimited',
+                    'practice_tests_limit' => $plan->tier === 'free' ? 10 : 'unlimited',
+                    'ai_tutor_access_limit' => $plan->tier === 'free' ? 'Limited' : 'Unlimited',
+                    'display_price' => $plan->isFree() ? 'FREE' : '₦' . number_format($plan->price, 0) . '/month',
+                ];
+            });
+
+        // Get WAEC-specific subjects for the subjects section
+        $waecSubjects = [
+            ['name' => 'Mathematics', 'description' => 'Complete syllabus coverage', 'icon' => '➕'],
+            ['name' => 'English Language', 'description' => 'Comprehension & Essay writing', 'icon' => '🔤'],
+            ['name' => 'Biology', 'description' => 'Life sciences & experiments', 'icon' => '🧬'],
+            ['name' => 'Chemistry', 'description' => 'Organic & inorganic chemistry', 'icon' => '⚗️'],
+            ['name' => 'Physics', 'description' => 'Mechanics & modern physics', 'icon' => '⚛️'],
+            ['name' => 'Economics', 'description' => 'Micro & macroeconomics', 'icon' => '📈'],
+            ['name' => 'Government', 'description' => 'Political science topics', 'icon' => '🏛️'],
+            ['name' => 'Geography', 'description' => 'Physical & human geography', 'icon' => '🗺️'],
+            ['name' => 'Further Mathematics', 'description' => 'Advanced mathematics topics', 'icon' => '📐'],
+            ['name' => 'Literature in English', 'description' => 'Text analysis & comprehension', 'icon' => '📖'],
+        ];
+
+        // Get WAEC success statistics
+        $waecStats = [
+            'student_improvement' => [
+                ['subject' => 'Mathematics', 'improvement' => 42, 'color' => '#10b981'],
+                ['subject' => 'English', 'improvement' => 38, 'color' => '#0ea5e9'],
+                ['subject' => 'Biology', 'improvement' => 45, 'color' => '#8b5cf6'],
+                ['subject' => 'Chemistry', 'improvement' => 40, 'color' => '#f59e0b'],
+            ],
+            'total_students' => 2500,
+            'average_score_increase' => 35,
+            'overall_pass_rate' => 98,
+            'ai_tutor_usage' => [
+                'questions_answered' => '10,000+',
+                'average_response_time' => '2 minutes',
+                'student_satisfaction' => 96,
+            ]
+        ];
+
+        // Get AI-powered features data
+        $aiFeatures = [
+            [
+                'title' => 'AI Course Creation',
+                'description' => 'Every course is created using AI to ensure it follows the latest WAEC syllabus',
+                'icon' => 'AI',
+                'color' => 'emerald'
+            ],
+            [
+                'title' => 'Dedicated AI Tutor',
+                'description' => 'Every WAEC course comes with a dedicated AI tutor for personalized help',
+                'icon' => 'T',
+                'color' => 'blue'
+            ],
+            [
+                'title' => 'AI-Generated Practice',
+                'description' => 'Practice questions generated based on your weak areas',
+                'icon' => 'P',
+                'color' => 'purple'
+            ],
+            [
+                'title' => 'Performance Analytics',
+                'description' => 'AI-powered insights on your progress and areas for improvement',
+                'icon' => 'A',
+                'color' => 'amber'
+            ],
+        ];
+
+        return Inertia::render('Frontpages/Landing/Waec', [
+            'courses' => $courses,
+            'subscriptionPlans' => $subscriptionPlans,
+            'waecSubjects' => $waecSubjects,
+            'waecStats' => $waecStats,
+            'aiFeatures' => $aiFeatures,
+            'meta' => [
+                'title' => 'WAEC Online Classes in Nigeria | WAEC Exam Preparation Platform – OliLearn',
+                'description' => 'Prepare for WAEC in Nigeria with OliLearn. WAEC syllabus-based lessons, AI tutor, quizzes, flashcards, and exam-style practice for SS2 & SS3 students.',
+                'image' => asset('images/waec-landing.png'),
+                'url' => url()->current(),
+                'keywords' => 'WAEC online classes Nigeria, WAEC exam preparation Nigeria, WAEC syllabus lessons, WAEC practice questions, WAEC learning platform',
+            ],
+            'seo' => [
+                'title' => 'WAEC Online Classes in Nigeria | WAEC Exam Preparation Platform – OliLearn',
+                'description' => 'Prepare for WAEC in Nigeria with OliLearn. WAEC syllabus-based lessons, AI tutor, quizzes, flashcards, and exam-style practice for SS2 & SS3 students.',
+                'canonical' => url()->current(),
+                'og_type' => 'website',
+                'twitter_card' => 'summary_large_image',
+            ],
+            'page_data' => [
+                'cta_text' => 'Start Free WAEC Preparation',
+                'hero_title' => 'WAEC Online Classes & Exam Preparation for Nigerian Students',
+                'hero_subtitle' => 'Pass WAEC with understanding — not guesswork.',
+                'total_courses' => $courses->count(),
+                'has_free_courses' => $courses->where('is_free', true)->count() > 0,
+            ]
+        ]);
+    }
+
+    public function jamblanding()
+    {
+        // Get JAMB-specific courses with proper filtering
+        $courses = Course::where('visibility', 'public')
+            ->where('status', 'active')
+            ->where(function($query) {
+                $query->where('subject', 'LIKE', '%JAMB%')
+                    ->orWhere('title', 'LIKE', '%JAMB%')
+                    ->orWhere('tags', 'LIKE', '%JAMB%')
+                    ->orWhere('subject', 'LIKE', '%UTME%')
+                    ->orWhere('title', 'LIKE', '%UTME%')
+                    ->orWhere('tags', 'LIKE', '%UTME%')
+                    ->orWhereHas('examBoard', function($q) {
+                        $q->where('name', 'LIKE', '%JAMB%');
+                    })
+                    // Common JAMB subjects
+                    ->orWhere('subject', 'LIKE', '%Mathematics%')
+                    ->orWhere('subject', 'LIKE', '%English%')
+                    ->orWhere('subject', 'LIKE', '%Biology%')
+                    ->orWhere('subject', 'LIKE', '%Chemistry%')
+                    ->orWhere('subject', 'LIKE', '%Physics%')
+                    ->orWhere('subject', 'LIKE', '%Economics%')
+                    ->orWhere('subject', 'LIKE', '%Government%')
+                    ->orWhere('subject', 'LIKE', '%Geography%')
+                    ->orWhere('subject', 'LIKE', '%Commerce%')
+                    ->orWhere('subject', 'LIKE', '%Accounting%')
+                    ->orWhere('subject', 'LIKE', '%Literature%');
+            })
+            ->with(['modules', 'examBoard'])
+            ->limit(9)
+            ->latest()
+            ->get()
+            ->map(function ($course) {
+                // Calculate if course is free based on model logic
+                $isFree = !$course->is_paid || ($course->price <= 0);
+
+                return [
+                    'id' => $course->id,
+                    'code' => $course->code,
+                    'title' => $course->title,
+                    'subject' => $course->subject,
+                    'description' => $course->description,
+                    'level' => $course->level,
+                    'estimated_duration_hours' => $course->estimated_duration_hours,
+                    'modules_count' => $course->modules->count(),
+                    'status' => $course->status,
+                    'slug' => $course->slug,
+                    'price' => (float) $course->price,
+                    'is_paid' => (bool) $course->is_paid,
+                    'is_free' => $isFree,
+                    'thumbnail_url' => $course->thumbnail_url,
+                    'tags' => $course->tags,
+                    'exam_board' => $course->examBoard ? $course->examBoard->name : null,
+                    'learning_objectives' => $course->learning_objectives,
+                    'has_certificate' => (bool) $course->has_certificate,
+                    'current_enrollment' => $course->current_enrollment,
+                    // Add calculated fields
+                    'display_price' => $isFree ? 'FREE' : '₦' . number_format($course->price, 0),
+                    'duration_display' => $course->estimated_duration_hours
+                        ? $course->estimated_duration_hours . ' hrs'
+                        : 'Self-paced',
+                    'enrollment_status' => $course->isFull() ? 'Full' : 'Available',
+                    // JAMB-specific fields
+                    'cbt_practice' => str_contains($course->tags ?? '', 'CBT') || str_contains($course->title ?? '', 'CBT'),
+                    'mock_exams' => str_contains($course->tags ?? '', 'mock') || str_contains($course->title ?? '', 'Mock'),
+                ];
+            });
+
+        // If no JAMB-specific courses found, get general exam courses with CBT focus
+        if ($courses->isEmpty()) {
+            $courses = Course::where('visibility', 'public')
+                ->where('status', 'active')
+                ->where(function($query) {
+                    $query->where('subject', 'LIKE', '%Exam%')
+                        ->orWhere('title', 'LIKE', '%Exam%')
+                        ->orWhere('tags', 'LIKE', '%exam%')
+                        ->orWhere('tags', 'LIKE', '%CBT%')
+                        ->orWhere('title', 'LIKE', '%CBT%');
+                })
+                ->with(['modules', 'examBoard'])
+                ->limit(9)
+                ->latest()
+                ->get()
+                ->map(function ($course) {
+                    $isFree = !$course->is_paid || ($course->price <= 0);
+
+                    return [
+                        'id' => $course->id,
+                        'code' => $course->code,
+                        'title' => $course->title,
+                        'subject' => $course->subject,
+                        'description' => $course->description,
+                        'level' => $course->level,
+                        'estimated_duration_hours' => $course->estimated_duration_hours,
+                        'modules_count' => $course->modules->count(),
+                        'status' => $course->status,
+                        'slug' => $course->slug,
+                        'price' => (float) $course->price,
+                        'is_paid' => (bool) $course->is_paid,
+                        'is_free' => $isFree,
+                        'thumbnail_url' => $course->thumbnail_url,
+                        'tags' => $course->tags,
+                        'exam_board' => $course->examBoard ? $course->examBoard->name : null,
+                        'learning_objectives' => $course->learning_objectives,
+                        'has_certificate' => (bool) $course->has_certificate,
+                        'current_enrollment' => $course->current_enrollment,
+                        'display_price' => $isFree ? 'FREE' : '₦' . number_format($course->price, 0),
+                        'duration_display' => $course->estimated_duration_hours
+                            ? $course->estimated_duration_hours . ' hrs'
+                            : 'Self-paced',
+                        'enrollment_status' => $course->isFull() ? 'Full' : 'Available',
+                        'cbt_practice' => str_contains($course->tags ?? '', 'CBT') || str_contains($course->title ?? '', 'CBT'),
+                        'mock_exams' => str_contains($course->tags ?? '', 'mock') || str_contains($course->title ?? '', 'Mock'),
+                    ];
+                });
+        }
+
+        // Get subscription plans - ensure free plan is included
+        $subscriptionPlans = SubscriptionPlan::active()
+            ->orderBy('sort_order')
+            ->get()
+            ->map(function ($plan) {
+                $features = is_array($plan->features) ? $plan->features : json_decode($plan->features, true);
+
+                // Add JAMB-specific features for display
+                $jambFeatures = [
+                    'jamb_cbt_practice' => true,
+                    'ai_tutor_access' => true,
+                    'timed_mock_exams' => true,
+                    'performance_analytics' => $plan->tier === 'premium' || $plan->tier === 'pro',
+                    'detailed_explanations' => $plan->tier !== 'free',
+                    'unlimited_practice' => $plan->tier === 'premium' || $plan->tier === 'pro',
+                    'priority_support' => $plan->tier === 'premium' || $plan->tier === 'pro',
+                ];
+
+                // Merge with existing features
+                $allFeatures = array_merge($features ?? [], $jambFeatures);
+
+                // Format features for display
+                $formattedFeatures = array_map(function ($feature) {
+                    if (is_bool($feature)) {
+                        return $feature ? 'Available' : 'Not available';
+                    }
+                    return $feature;
+                }, $allFeatures);
+
+                return [
+                    'id' => $plan->id,
+                    'name' => $plan->name,
+                    'code' => $plan->code,
+                    'description' => $plan->description,
+                    'price' => $plan->price,
+                    'currency' => $plan->currency,
+                    'monthly_price' => $plan->monthly_price,
+                    'yearly_price' => $plan->yearly_price,
+                    'features' => $formattedFeatures,
+                    'max_courses' => $plan->max_courses,
+                    'max_ai_requests_per_month' => $plan->max_ai_requests_per_month,
+                    'ai_grading' => $plan->ai_grading,
+                    'priority_support' => $plan->priority_support,
+                    'is_active' => $plan->is_active,
+                    'is_popular' => $plan->is_popular,
+                    'sort_order' => $plan->sort_order,
+                    'role' => $plan->role,
+                    'tier' => $plan->tier,
+                    'is_free' => $plan->isFree(),
+                    'recommended_features' => $plan->getRecommendedFeatures(),
+                    // Add plan-specific data for JAMB page
+                    'jamb_subjects_limit' => $plan->tier === 'free' ? 2 : 'unlimited',
+                    'cbt_tests_limit' => $plan->tier === 'free' ? 10 : 'unlimited',
+                    'mock_exams_limit' => $plan->tier === 'free' ? 2 : 'unlimited',
+                    'ai_tutor_access_limit' => $plan->tier === 'free' ? 'Limited' : 'Unlimited',
+                    'display_price' => $plan->isFree() ? 'FREE' : '₦' . number_format($plan->price, 0) . '/month',
+                    // JAMB-specific display
+                    'jamb_features' => [
+                        'cbt_simulator' => $plan->tier !== 'free',
+                        'timed_practice' => true,
+                        'instant_scoring' => true,
+                        'detailed_analytics' => $plan->tier === 'premium' || $plan->tier === 'pro',
+                    ]
+                ];
+            });
+
+        // Get JAMB-specific subjects for the subjects section
+        $jambSubjects = [
+            ['name' => 'Mathematics', 'description' => 'Complete JAMB syllabus', 'icon' => '➕'],
+            ['name' => 'English Language', 'description' => 'Comprehension & Usage', 'icon' => '🔤'],
+            ['name' => 'Biology', 'description' => 'Life sciences focus', 'icon' => '🧬'],
+            ['name' => 'Chemistry', 'description' => 'Organic & inorganic', 'icon' => '⚗️'],
+            ['name' => 'Physics', 'description' => 'Mechanics & waves', 'icon' => '⚛️'],
+            ['name' => 'Economics', 'description' => 'Micro & macroeconomics', 'icon' => '📈'],
+            ['name' => 'Government', 'description' => 'Political systems', 'icon' => '🏛️'],
+            ['name' => 'Geography', 'description' => 'Physical geography', 'icon' => '🗺️'],
+            ['name' => 'Commerce', 'description' => 'Business studies', 'icon' => '🏪'],
+            ['name' => 'Accounting', 'description' => 'Financial accounting', 'icon' => '📊'],
+            ['name' => 'Literature in English', 'description' => 'Text analysis', 'icon' => '📖'],
+            ['name' => 'Christian Religious Studies', 'description' => 'CRS topics', 'icon' => '✝️'],
+        ];
+
+        // Get JAMB success statistics
+        $jambStats = [
+            'subject_improvement' => [
+                ['subject' => 'Mathematics', 'improvement' => 35, 'color' => '#10b981'],
+                ['subject' => 'English Language', 'improvement' => 28, 'color' => '#059669'],
+                ['subject' => 'Physics', 'improvement' => 42, 'color' => '#047857'],
+                ['subject' => 'Chemistry', 'improvement' => 38, 'color' => '#065f46'],
+            ],
+            'total_students' => 3000,
+            'average_improvement' => 25,
+            'cbt_speed_improvement' => 40,
+            'accuracy_increase' => 35,
+            'ai_tutor_usage' => [
+                'questions_answered' => '15,000+',
+                'average_response_time' => '1 minute',
+                'student_satisfaction' => 95,
+            ]
+        ];
+
+        // Get JAMB-specific features data
+        $jambFeatures = [
+            [
+                'title' => 'Real JAMB-style CBT',
+                'description' => 'Simulated exam environment with timed practice just like the actual JAMB',
+                'icon' => '💻',
+                'color' => 'emerald'
+            ],
+            [
+                'title' => 'Instant Scoring & Feedback',
+                'description' => 'Get results immediately with detailed explanations for every question',
+                'icon' => '⚡',
+                'color' => 'blue'
+            ],
+            [
+                'title' => 'AI-Powered Tutoring',
+                'description' => 'Step-by-step explanations for difficult questions when you need help',
+                'icon' => '🤖',
+                'color' => 'purple'
+            ],
+            [
+                'title' => 'Performance Analytics',
+                'description' => 'Track progress, identify weak areas, and focus your study time effectively',
+                'icon' => '📊',
+                'color' => 'amber'
+            ],
+            [
+                'title' => 'JAMB Syllabus Coverage',
+                'description' => 'Complete coverage of all JAMB subjects and topics for UTME',
+                'icon' => '📚',
+                'color' => 'green'
+            ],
+            [
+                'title' => 'Mobile-Friendly Practice',
+                'description' => 'Study on any device, practice CBT questions anytime, anywhere',
+                'icon' => '📱',
+                'color' => 'indigo'
+            ],
+        ];
+
+        return Inertia::render('Frontpages/Landing/Jamb', [
+            'courses' => $courses,
+            'subscriptionPlans' => $subscriptionPlans,
+            'jambSubjects' => $jambSubjects,
+            'jambStats' => $jambStats,
+            'jambFeatures' => $jambFeatures,
+            'meta' => [
+                'title' => 'JAMB CBT Practice Online in Nigeria | OliLearn',
+                'description' => 'Prepare for JAMB with CBT practice, AI tutoring, and JAMB-aligned lessons. Built for Nigerian students. Start free on OliLearn.',
+                'image' => asset('images/jamb-landing.png'),
+                'url' => url()->current(),
+                'keywords' => 'JAMB CBT practice Nigeria, JAMB online preparation, UTME exam practice, JAMB mock exams, JAMB AI tutor, Nigerian university entrance exam',
+            ],
+            'seo' => [
+                'title' => 'JAMB CBT Practice Online in Nigeria | OliLearn',
+                'description' => 'Prepare for JAMB with CBT practice, AI tutoring, and JAMB-aligned lessons. Built for Nigerian students. Start free on OliLearn.',
+                'canonical' => url()->current(),
+                'og_type' => 'website',
+                'twitter_card' => 'summary_large_image',
+            ],
+            'page_data' => [
+                'cta_text' => 'Start Free JAMB CBT Practice',
+                'hero_title' => 'Score Higher in JAMB — With Smart CBT Practice & AI Guidance',
+                'hero_subtitle' => 'Prepare for JAMB the right way: understand concepts, practice real CBT questions, and master time management before exam day.',
+                'total_courses' => $courses->count(),
+                'has_free_courses' => $courses->where('is_free', true)->count() > 0,
+                'cbt_courses_count' => $courses->where('cbt_practice', true)->count(),
+            ]
         ]);
     }
 
