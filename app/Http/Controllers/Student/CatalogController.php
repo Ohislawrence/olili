@@ -14,93 +14,86 @@ class CatalogController extends Controller
 {
     public function index(Request $request)
 {
-    $student = auth()->user();
+    // Show available courses for enrollment
+        $query = Course::availableForEnrollment()
+            ->with(['examBoard', 'creator'])
+            ->withCount('enrollments','modules');
 
-    // Get all public courses available for enrollment
-    $query = Course::with(['examBoard', 'creator'])
-        ->where('is_public', true)
-        ->where('visibility', 'public')
-        ->where('status', 'active')
-        ->latest();
+        // Search
+        if ($request->has('search') && $request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('title', 'like', "%{$request->search}%")
+                  ->orWhere('subject', 'like', "%{$request->search}%")
+                  ->orWhere('description', 'like', "%{$request->search}%");
+            });
+        }
 
-    // Get IDs of courses the student is already enrolled in
-    $enrolledCourseIds = [$student->enrollments->course->toArray()];
+        // Filter by subject
+        if ($request->has('subject') && $request->subject) {
+            $query->where('subject', $request->subject);
+        }
 
-    //dd($enrolledCourseIds);
+        // Filter by level
+        if ($request->has('level') && $request->level) {
+            $query->where('level', $request->level);
+        }
 
-        //$student->enrollments->course->toArray();
+        // Filter by exam board
+        if ($request->has('exam_board_id') && $request->exam_board_id) {
+            $query->where('exam_board_id', $request->exam_board_id);
+        }
 
-    // Filter by subject
-    if ($request->has('subject') && $request->subject) {
-        $query->where('subject', $request->subject);
-    }
+        $courses = $query->latest()->paginate(12);
 
-    // Filter by level
-    if ($request->has('level') && $request->level) {
-        $query->where('level', $request->level);
-    }
+        // Get current student's enrollments (excluding dropped)
+        $student = auth()->user();
+        $enrolledCourseIds = $student->courseEnrollments()
+            ->where('status', '!=', 'dropped')
+            ->pluck('course_id')
+            ->toArray();
 
-    // Filter by exam board
-    if ($request->has('exam_board_id') && $request->exam_board_id) {
-        $query->where('exam_board_id', $request->exam_board_id);
-    }
+        // Get enrolled courses with progress for enrolled students
+        $enrolledCourses = [];
+        foreach ($student->courseEnrollments as $enrollment) {
+            // Skip dropped enrollments
+            if ($enrollment->status === 'dropped') {
+                continue;
+            }
 
-    // Search
-    if ($request->has('search') && $request->search) {
-        $query->where(function ($q) use ($request) {
-            $q->where('title', 'like', "%{$request->search}%")
-              ->orWhere('subject', 'like', "%{$request->search}%")
-              ->orWhere('description', 'like', "%{$request->search}%");
-        });
-    }
+            $lastViewedTopic = $this->progressService->lastViewedTopic($enrollment);
 
-    $courses = $query->paginate(12);
+            // Use ProgressTrackingService to get enrollment progress
+            $progress = $this->progressService->getEnrollmentProgress($enrollment);
 
-    // Get enrolled course details for each public course
-    $enrolledCourses = [];
-    if (!empty($enrolledCourseIds)) {
-        $enrolledCourses = $student->courses()
-            ->whereIn('original_course_id', $enrolledCourseIds)
-            ->get(['courses.id', 'courses.original_course_id', 'courses.progress_percentage', 'courses.status']) // Specify table name
-            ->keyBy('original_course_id');
-    }
+            $enrolledCourses[$enrollment->course_id] = [
+                'id' => $enrollment->id,
+                'progress_percentage' => $progress['overall_completion_percentage'],
+                'status' => $enrollment->status,
+                'lastTopic' => $lastViewedTopic,
+            ];
+        }
 
-    // Get unique subjects for filters
-    $subjects = Course::where('is_public', true)
-        ->where('visibility', 'public')
-        ->where('status', 'active')
-        ->distinct('subject')
-        ->pluck('subject')
-        ->sort()
-        ->values();
+        // Get available subjects for filter
+        $subjects = Course::distinct()->orderBy('subject')->pluck('subject');
 
-    // Get unique levels for filters
-    $levels = Course::where('is_public', true)
-        ->where('visibility', 'public')
-        ->where('status', 'active')
-        ->distinct('level')
-        ->pluck('level')
-        ->mapWithKeys(function ($level) {
-            return [$level => ucfirst($level)];
-        })
-        ->sort();
+        $examBoards = ExamBoard::active()->get();
 
-    // Get active exam boards
-    $examBoards = ExamBoard::active()->get();
+        $levels = [
+            'beginner' => 'Beginner',
+            'intermediate' => 'Intermediate',
+            'advanced' => 'Advanced',
+        ];
 
-    return Inertia::render('Student/Catalog/Index', [
-        'courses' => $courses,
-        'enrolled_course_ids' => $enrolledCourseIds,
-        'enrolled_courses' => $enrolledCourses, // Add enrolled course details
-        'filters' => $request->only(['search', 'subject', 'level', 'exam_board_id']),
-        'subjects' => $subjects,
-        'levels' => $levels,
-        'exam_boards' => $examBoards,
-        'total_courses' => Course::where('is_public', true)
-            ->where('visibility', 'public')
-            ->where('status', 'active')
-            ->count(),
-    ]);
+        return Inertia::render('Student/Catalog/Browse', [
+            'courses' => $courses,
+            'enrolled_course_ids' => $enrolledCourseIds,
+            'enrolled_courses' => $enrolledCourses,
+            'subjects' => $subjects,
+            'levels' => $levels,
+            'exam_boards' => $examBoards,
+            'total_courses' => $courses->total(),
+            'filters' => $request->only(['search', 'subject', 'level', 'exam_board_id']),
+        ]);
 }
 
     public function show(Course $course)

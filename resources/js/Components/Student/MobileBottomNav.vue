@@ -52,7 +52,7 @@
 
       <!-- catalog -->
       <Link
-        :href="route('student.catalog.index')"
+        :href="route('student.catalog.browse')"
         class="flex flex-col items-center justify-center w-16 h-16 transition-all duration-200 group relative"
         :class="route().current('student.catalog.*') ? 'text-emerald-600' : 'text-gray-600 hover:text-emerald-500'"
       >

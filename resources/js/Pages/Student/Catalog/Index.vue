@@ -344,8 +344,7 @@ const page = usePage()
 const props = defineProps({
   courses: Object,
   enrolled_course_ids: Array,
-  enrolled_courses: Object, // Add enrolled_courses prop
-  subjects: Array,
+  enrolled_courses: Object,
   levels: Object,
   exam_boards: Array,
   total_courses: Number,
