@@ -1061,8 +1061,8 @@ class FrontpageController extends Controller
                         : 'Self-paced',
                     'enrollment_status' => $course->isFull() ? 'Full' : 'Available',
                     // JAMB-specific fields
-                    'cbt_practice' => str_contains($course->tags ?? '', 'CBT') || str_contains($course->title ?? '', 'CBT'),
-                    'mock_exams' => str_contains($course->tags ?? '', 'mock') || str_contains($course->title ?? '', 'Mock'),
+                    //'cbt_practice' => str_contains($course->tags ?? '', 'CBT') || str_contains($course->title ?? '', 'CBT'),
+                    //'mock_exams' => str_contains($course->tags ?? '', 'mock') || str_contains($course->title ?? '', 'Mock'),
                 ];
             });
 
@@ -1109,8 +1109,8 @@ class FrontpageController extends Controller
                             ? $course->estimated_duration_hours . ' hrs'
                             : 'Self-paced',
                         'enrollment_status' => $course->isFull() ? 'Full' : 'Available',
-                        'cbt_practice' => str_contains($course->tags ?? '', 'CBT') || str_contains($course->title ?? '', 'CBT'),
-                        'mock_exams' => str_contains($course->tags ?? '', 'mock') || str_contains($course->title ?? '', 'Mock'),
+                        //'cbt_practice' => str_contains($course->tags ?? '', 'CBT') || str_contains($course->title ?? '', 'CBT'),
+                        //'mock_exams' => str_contains($course->tags ?? '', 'mock') || str_contains($course->title ?? '', 'Mock'),
                     ];
                 });
         }

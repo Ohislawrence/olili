@@ -26,7 +26,7 @@ class CatalogController extends Controller
     // Get IDs of courses the student is already enrolled in
     $enrolledCourseIds = [$student->enrollments->course->toArray()];
 
-    dd($enrolledCourseIds);
+    //dd($enrolledCourseIds);
 
         //$student->enrollments->course->toArray();
 
