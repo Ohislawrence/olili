@@ -261,33 +261,35 @@
             </div>
             <!-- Content Tabs -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <!-- Tab Headers -->
+              <!-- Tab Headers - Mobile friendly with horizontal scroll -->
               <div class="border-b border-gray-200">
-                <nav class="flex space-x-8 px-6" aria-label="Tabs">
-                  <button
-                    v-for="tab in filteredTabs"
-                    :key="tab.id"
-                    @click="switchTab(tab.id)"
-                    :class="[
-                      'py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
-                      activeTab === tab.id
-                        ? 'border-emerald-500 text-emerald-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    ]"
-                  >
-                    <div class="flex items-center">
-                      <component :is="tab.icon" class="h-4 w-4 mr-2" />
-                      {{ tab.name }}
-                      <span
-                        v-if="tab.badge"
-                        class="ml-2 py-0.5 px-2 text-xs rounded-full"
-                        :class="tab.badgeClass"
-                      >
-                        {{ tab.badge }}
-                      </span>
-                    </div>
-                  </button>
-                </nav>
+                <div class="overflow-x-auto scrollbar-hide">
+                  <nav class="flex min-w-max px-4 sm:px-6" aria-label="Tabs">
+                    <button
+                      v-for="tab in filteredTabs"
+                      :key="tab.id"
+                      @click="switchTab(tab.id)"
+                      :class="[
+                        'flex-shrink-0 py-4 px-4 sm:px-6 border-b-2 font-medium text-sm transition-colors duration-200 whitespace-nowrap',
+                        activeTab === tab.id
+                          ? 'border-emerald-500 text-emerald-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ]"
+                    >
+                      <div class="flex items-center">
+                        <component :is="tab.icon" class="h-4 w-4 mr-2" />
+                        {{ tab.name }}
+                        <span
+                          v-if="tab.badge && tab.id !== 'content'"
+                          class="ml-2 py-0.5 px-2 text-xs rounded-full"
+                          :class="tab.badgeClass"
+                        >
+                          {{ tab.badge }}
+                        </span>
+                      </div>
+                    </button>
+                  </nav>
+                </div>
               </div>
               <!-- Tab Content -->
               <div class="p-6">
@@ -1064,14 +1066,41 @@ const filteredTabs = computed(() => {
   const outlineType = props.current_topic.type || 'topic'
   const tabs = []
 
-  // Add tabs based on outline type
-  if (outlineType === 'topic') {
+  // Always show quiz tab for quiz type topics
+  if (outlineType === 'quiz') {
+    tabs.push({
+      id: 'quiz',
+      name: 'Quiz',
+      icon: ClipboardDocumentListIcon,
+      badge: 'Available',
+      badgeClass: 'bg-amber-100 text-amber-800'
+    })
+  }
+  else if (outlineType === 'project') {
+    // For project type, show project tab and learning guide
+    tabs.push({
+      id: 'project',
+      name: 'Project',
+      icon: BriefcaseIcon,
+      badge: props.current_topic.has_project ? 'Available' : 'None',
+      badgeClass: props.current_topic.has_project ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
+    })
+
+    tabs.push({
+      id: 'objectives',
+      name: 'Learning Guide',
+      icon: ListBulletIcon,
+      badge: (props.current_topic.learning_objectives?.length || 0) + (props.current_topic.key_concepts?.length || 0),
+      badgeClass: 'bg-purple-100 text-purple-800'
+    })
+  }
+  else {
+    // For regular topic type
     tabs.push({
       id: 'content',
       name: 'Content',
       icon: BookOpenIcon,
-      badge: props.current_topic.contents?.length || '0',
-      badgeClass: 'bg-emerald-100 text-emerald-800'
+      // Removed badge from content tab
     })
 
     tabs.push({
@@ -1104,37 +1133,22 @@ const filteredTabs = computed(() => {
       })
     }
   }
-  else if (outlineType === 'quiz') {
-    // For quiz type, only show quiz tab (no learning guide)
-    tabs.push({
-      id: 'quiz',
-      name: 'Quiz',
-      icon: ClipboardDocumentListIcon,
-      badge: 'Available',
-      badgeClass: props.current_topic.has_quiz ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-800'
-    })
-  }
-  else if (outlineType === 'project') {
-    // For project type, show project tab, learning guide, and requirements tab
-    tabs.push({
-      id: 'project',
-      name: 'Project',
-      icon: BriefcaseIcon,
-      badge: props.current_topic.has_project ? 'Available' : 'None',
-      badgeClass: props.current_topic.has_project ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
-    })
-
-    tabs.push({
-      id: 'objectives',
-      name: 'Learning Guide',
-      icon: ListBulletIcon,
-      badge: (props.current_topic.learning_objectives?.length || 0) + (props.current_topic.key_concepts?.length || 0),
-      badgeClass: 'bg-purple-100 text-purple-800'
-    })
-  }
 
   return tabs
 })
+
+// Watch for topic changes and reset active tab to first available
+watch(() => props.current_topic, (newTopic) => {
+  if (newTopic && filteredTabs.value.length > 0) {
+    // Check if the current active tab is available for the new topic
+    const isCurrentTabAvailable = filteredTabs.value.some(tab => tab.id === activeTab.value)
+
+    if (!isCurrentTabAvailable) {
+      // Reset to first available tab when current tab is not available
+      activeTab.value = filteredTabs.value[0].id
+    }
+  }
+}, { immediate: true })
 
 // Helper Functions
 const formatStudyTime = (minutes) => {
@@ -1849,6 +1863,16 @@ const loadChatSession = async () => {
 .prose blockquote {
   @apply border-l-4 border-emerald-500 pl-4 italic text-gray-600 my-4;
 }
+
+/* Hide scrollbar for mobile tab navigation */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Audio player animations */
 @keyframes pulse {
   0%, 100% { opacity: 1; }
