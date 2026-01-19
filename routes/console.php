@@ -35,11 +35,8 @@ Schedule::command('queue:work --queue=course_generation --stop-when-empty --slee
     ->everyFiveMinutes()
     ->withoutOverlapping();
 
-Schedule::command('queue:work --queue=emails --stop-when-empty --sleep=3')
-    ->everyFiveMinutes()
-    ->withoutOverlapping();
 
-Schedule::command('queue:work --queue=database --stop-when-empty --sleep=3')
+Schedule::command('queue:work --queue=emails,database,default --stop-when-empty --sleep=3')
     ->everyFiveMinutes()
     ->withoutOverlapping();
 
