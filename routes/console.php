@@ -31,6 +31,17 @@ Schedule::command('reminders:inactivity')
     ->onOneServer()
     ->description('Check for inactive students and send reminders');
 
+Schedule::command('queue:work --queue=course_generation --stop-when-empty --sleep=3')
+    ->everyFiveMinutes()
+    ->withoutOverlapping();
+
+Schedule::command('queue:work --queue=emails --stop-when-empty --sleep=3')
+    ->everyFiveMinutes()
+    ->withoutOverlapping();
+
+Schedule::command('queue:work --queue=database --stop-when-empty --sleep=3')
+    ->everyFiveMinutes()
+    ->withoutOverlapping();
 
 
 // ================= SYSTEM MAINTENANCE =================

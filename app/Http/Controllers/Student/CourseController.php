@@ -142,8 +142,8 @@ class CourseController extends Controller
 
         // Get current student's enrollments (excluding dropped)
         $student = auth()->user();
-        $enrolledCourseIds = $student->courseEnrollments()
-            ->where('status', '!=', 'dropped')
+
+        $enrolledCourseIds = $student->enrolledCourses()
             ->pluck('course_id')
             ->toArray();
 

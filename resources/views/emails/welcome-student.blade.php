@@ -10,41 +10,63 @@
 
     {{-- Body --}}
     @component('mail::message')
-# Welcome to OliLearn, {{ $user?->name ?? '' }}! 🎉
+# Welcome to OliLearn, {{ $user?->name ?? '' }} 👋
 
-We're excited to have you on board. Your learning journey begins now, and we’ve built OliLearn to help you learn smarter with AI-assisted courses, structured study paths, quizzes, and flashcards.
+We’re excited to have you here.
 
----
+OliLearn is an **AI-powered learning platform** designed to help you **understand concepts deeply, prepare confidently for exams, and build real knowledge that lasts**—not just cram and forget.
 
-## Getting Started
-
-- Complete your profile for better recommendations
-- Explore available courses or create your own
-- Use **Oli Tutor AI** to ask topic-related questions
-- Take quizzes to measure understanding
-- Use flashcards to master key concepts
+Whether you're studying for an upcoming exam, revising key topics, or learning something new, OliLearn adapts to **how you learn best**.
 
 ---
 
-## How to Create Your First Course
+## What You Can Do on OliLearn
 
-Creating a course on OliLearn is simple—whether it’s for WAEC, JAMB, NECO, university courses, professional exams, or any personal topic.
+- 📚 Learn with **structured courses** built around clear objectives
+- 🤖 Ask questions with **Oli Tutor AI**, which answers *only* from your course content
+- 📝 Test your understanding with **quizzes and practice assessments**
+- 🧠 Create and review **AI-powered flashcards** for faster retention
+- 🎯 Follow guided study paths designed for **exam preparation and mastery**
 
-1. Go to your **Dashboard** and click **“New Course”**.
-2. Enter a course title (e.g., *JAMB Chemistry*, *Python Basics*, *Financial Accounting*).
-3. Or choose from structured **Exam Boards**.
-4. Set Target Completion Date, Level, and Weekly Study Hours.
-5. *(Optional)* Add learning objectives and a description.
-6. Click **Create Course** to begin.
+Everything is built to help you move from **confusion → clarity → confidence**.
 
-Once submitted, OliLearn automatically generates all topics, modules, quizzes, and flashcards for you.
+---
+
+## Getting Started (Takes 2 Minutes)
+
+1. Complete your profile to improve recommendations
+2. Browse available courses
+3. Start learning and ask questions with Oli Tutor AI
+4. Use quizzes and flashcards to track progress
+5. Study consistently and watch your understanding grow
+
+---
+
+## Create a Course in One Click
+
+You can enroll for courses for:
+- Exam preparation
+- School or university subjects
+- Professional or skill-based learning
+- Personal study goals
+
+**How it works:**
+1. Go to your **Catalogs** and search for courses you like
+2. Enroll for the course to start
+3. Use the Oli tutor and ask questions that relates to topics in the course
+4. Enjoy learning and complete each topic before moving ahead.
+
+You acan instantly generate:
+- Flashcards and learning summaries
+
+So you can focus on learning—not setup.
 
 ---
 
 @if(isset($recommendations) && count($recommendations) > 0)
-## Personalized Course Suggestions
+## Recommended for You
 
-Based on your profile, you may enjoy:
+Based on your interests, you may like:
 
 @foreach($recommendations as $rec)
 - {{ $rec }}
@@ -54,18 +76,19 @@ Based on your profile, you may enjoy:
 
 ---
 
-## Quick Links
+## Start Learning Now
 
-@component('mail::button', ['url' => url('/dashboard'), 'color' => 'success'])
+@component('mail::button', ['url' => url('/student/dashboard'), 'color' => 'success'])
 Go to Dashboard
 @endcomponent
 
-@component('mail::button', ['url' => url('/courses'), 'color' => 'primary'])
-Browse Courses
+@component('mail::button', ['url' => url('/courses/browse'), 'color' => 'primary'])
+Explore Courses
 @endcomponent
 
+If you ever get stuck or need guidance, we’re here to help—every step of the way.
 
-If you ever need help, our support team is always available.
+Welcome to smarter learning 🚀
 
     @endcomponent
 
