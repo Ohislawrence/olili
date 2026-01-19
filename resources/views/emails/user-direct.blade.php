@@ -6,7 +6,23 @@
         @endcomponent
     @endslot
 
-# Hello {{ $user?->name ?? 'student' }}!
+@php
+    // Replace variables in subject
+    $subject = str_replace(
+        ['{{name}}', '{{email}}', '{{role}}', '{{app_name}}', '{{app_url}}', '{{year}}'],
+        [$user->name, $user->email, $user->roles->first()?->name ?? 'User', config('app.name'), config('app.url'), date('Y')],
+        $subject ?? 'Message from ' . config('app.name')
+    );
+
+    // Replace variables in body
+    $bodyText = str_replace(
+        ['{{name}}', '{{email}}', '{{role}}', '{{app_name}}', '{{app_url}}', '{{year}}'],
+        [$user->name, $user->email, $user->roles->first()?->name ?? 'User', config('app.name'), config('app.url'), date('Y')],
+        $bodyText
+    );
+@endphp
+
+# {!! $subject !!}
 
 {!! $bodyText !!}
 
@@ -14,7 +30,11 @@
 Visit Your Dashboard
 @endcomponent
 
-Thanks,<br>
+<p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+    This message was sent specifically to you, {{ $user->name }}.
+</p>
+
+Warm regards,<br>
 {{ config('app.name') }}
 
 @slot('footer')

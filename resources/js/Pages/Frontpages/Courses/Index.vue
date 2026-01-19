@@ -499,7 +499,7 @@
         <div class="flex items-center justify-between mb-6">
           <div>
             <h2 class="text-lg font-semibold text-gray-900">
-              <span class="text-emerald-600">{{ courses.data.length }}</span>
+              <span class="text-emerald-600">{{ courses.total }}</span>
               {{ courses.data.length === 1 ? 'Course' : 'Courses' }} Available
             </h2>
             <p v-if="hasActiveFilters" class="text-sm text-gray-600 mt-1">

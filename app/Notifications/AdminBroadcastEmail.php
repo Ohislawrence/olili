@@ -31,10 +31,24 @@ class AdminBroadcastEmail extends Notification implements ShouldQueue
 
     public function toMail($notifiable)
     {
+        // Replace variables in subject and message
+        $subject = str_replace(
+            ['{{app_name}}', '{{app_url}}', '{{year}}'],
+            [config('app.name'), config('app.url'), date('Y')],
+            $this->subject
+        );
+
+        $message = str_replace(
+            ['{{app_name}}', '{{app_url}}', '{{year}}'],
+            [config('app.name'), config('app.url'), date('Y')],
+            $this->message
+        );
+
         $mail = (new MailMessage)
-            ->subject($this->subject)
+            ->subject($subject)
             ->markdown('emails.admin-broadcast', [
-                'message' => $this->message,
+                'subject' => $subject,
+                'message' => $message,
                 'user' => $notifiable
             ]);
 

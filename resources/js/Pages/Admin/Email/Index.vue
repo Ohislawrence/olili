@@ -11,7 +11,7 @@
             <div>
               <h1 class="text-3xl font-bold text-gray-900">Email Management</h1>
               <p class="mt-2 text-gray-600">
-                Send emails to users based on roles or individually
+                Send personalized emails to users. Use <code class="bg-gray-100 px-1 rounded">{{ '{name}' }}</code> to include user's name.
               </p>
             </div>
           </div>
@@ -161,6 +161,7 @@
               <div>
                 <label for="subject" class="block text-sm font-medium text-gray-700 mb-2">
                   Subject
+                  <span class="text-gray-500 text-xs ml-2">Use {{ '{name}' }} for personalization</span>
                 </label>
                 <input
                   id="subject"
@@ -168,26 +169,70 @@
                   type="text"
                   required
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter email subject"
+                  placeholder="'Hello ' + '{name}' + ', important update!'"
                 />
               </div>
 
-              <!-- Message -->
+              <!-- Message Editor -->
               <div>
-                <label for="message" class="block text-sm font-medium text-gray-700 mb-2">
-                  Message
-                </label>
-                <textarea
-                  id="message"
+                <div class="flex justify-between items-center mb-2">
+                  <label class="block text-sm font-medium text-gray-700">
+                    Message
+                  </label>
+                  <div class="text-sm text-gray-500 flex items-center space-x-2">
+                    <div class="flex items-center">
+                      <SparklesIcon class="h-4 w-4 text-blue-500 mr-1" />
+                      <span>Personalization: Use <code class="bg-gray-100 px-1 rounded text-xs">{{ '{name}' }}</code></span>
+                    </div>
+                    <button
+                      type="button"
+                      @click="insertTemplate"
+                      class="text-blue-600 hover:text-blue-800 text-sm"
+                    >
+                      Insert Template
+                    </button>
+                  </div>
+                </div>
+
+                <RichTextEditor
                   v-model="form.message"
-                  rows="10"
-                  required
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter your email message... (HTML supported)"
-                ></textarea>
-                <p class="mt-1 text-sm text-gray-500">
-                  You can use HTML tags for formatting. Basic styling is supported.
-                </p>
+                  :error="errors.message"
+                  height="400px"
+                />
+
+                <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                  <h4 class="text-sm font-medium text-gray-700 mb-2">Available Variables:</h4>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <button
+                      type="button"
+                      @click="insertVariable('{name}')"
+                      class="text-xs px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50"
+                    >
+                      {{ '{name}' }}
+                    </button>
+                    <button
+                      type="button"
+                      @click="insertVariable('{email}')"
+                      class="text-xs px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50"
+                    >
+                      {{ '{email}' }}
+                    </button>
+                    <button
+                      type="button"
+                      @click="insertVariable('{{role}}')"
+                      class="text-xs px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50"
+                    >
+                      {{ '{role}' }}
+                    </button>
+                    <button
+                      type="button"
+                      @click="insertVariable('{{app_name}}')"
+                      class="text-xs px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50"
+                    >
+                      {{ '{app_name}' }}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -199,6 +244,13 @@
                 class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 Reset
+              </button>
+              <button
+                type="button"
+                @click="previewEmail"
+                class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Preview
               </button>
               <button
                 type="submit"
@@ -228,10 +280,12 @@ import {
   UsersIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
+  SparklesIcon,
 } from '@heroicons/vue/24/outline'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import UserSearch from '@/Components/Admin/UserSearch.vue'
 import UserMultiSelect from '@/Components/Admin/UserMultiSelect.vue'
+import RichTextEditor from '@/Components/Admin/RichTextEditorEmail.vue'
 
 const props = defineProps({
   roles: Array,
@@ -267,5 +321,114 @@ const sendEmail = () => {
 const resetForm = () => {
   form.reset()
   form.type = 'role'
+}
+
+const insertVariable = (variable) => {
+  const currentMessage = form.message || ''
+  // Insert at cursor position if we can determine it
+  const textarea = document.querySelector('.rich-text-editor-email textarea')
+  if (textarea && textarea === document.activeElement) {
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const newText = currentMessage.substring(0, start) + variable + currentMessage.substring(end)
+    form.message = newText
+
+    // Set cursor position after inserted variable
+    nextTick(() => {
+      textarea.focus()
+      textarea.setSelectionRange(start + variable.length, start + variable.length)
+    })
+  } else {
+    form.message = currentMessage + variable
+  }
+}
+
+const insertTemplate = () => {
+  const template = `
+<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+    <h1 style="color: white; margin: 0; font-size: 28px;">{{app_name}}</h1>
+  </div>
+
+  <div style="padding: 40px 30px; background-color: #ffffff; border: 1px solid #e5e7eb;">
+    <h2 style="color: #1f2937; margin-top: 0;">Hello {name},</h2>
+
+    <div style="color: #4b5563; line-height: 1.6; font-size: 16px;">
+      <!-- Your content here -->
+      <p>We have some exciting news to share with you!</p>
+
+      <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 25px 0;">
+        <p style="margin: 0;"> <strong>Special Update:</strong> Personalized content just for you!</p>
+      </div>
+
+      <p>We appreciate you being part of our community.</p>
+    </div>
+
+    <div style="text-align: center; margin: 40px 0;">
+      <a href="{{app_url}}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; letter-spacing: 0.5px;">
+        Visit Your Dashboard
+      </a>
+    </div>
+  </div>
+
+  <div style="background-color: #f9fafb; padding: 25px; text-align: center; border-top: 1px solid #e5e7eb;">
+    <p style="color: #6b7280; font-size: 14px; margin: 0;">
+      © {{year}} {{app_name}}. All rights reserved.<br>
+      <small>If you have any questions, please contact our support team.</small>
+    </p>
+  </div>
+</div>
+`
+  form.message = template.trim()
+}
+
+const previewEmail = () => {
+  if (!form.subject && !form.message) {
+    alert('Please enter subject and message first')
+    return
+  }
+
+  // Open preview in new tab
+  const previewData = {
+    subject: form.subject,
+    message: form.message,
+    from_name: form.from_name || 'AI Course Platform',
+    from_email: form.from_email || 'noreply@example.com'
+  }
+
+  const newWindow = window.open('', '_blank')
+  newWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Email Preview</title>
+      <style>
+        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .preview-container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .preview-header { background: #3b82f6; color: white; padding: 20px; text-align: center; }
+        .preview-content { padding: 30px; }
+        .preview-footer { background: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0; color: #64748b; }
+        .variable { background: #e0f2fe; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+      </style>
+    </head>
+    <body>
+      <div class="preview-container">
+        <div class="preview-header">
+          <h2>Email Preview</h2>
+          <p>From: ${previewData.from_name} &lt;${previewData.from_email}&gt;</p>
+        </div>
+        <div class="preview-content">
+          <h3>Subject: ${previewData.subject}</h3>
+          <hr style="margin: 20px 0;">
+          ${previewData.message.replace(/\{\{(\w+)\}\}/g, '<span class="variable">{{$1}}</span>')}
+        </div>
+        <div class="preview-footer">
+          <p>Note: Variables like <span class="variable">{name}</span> will be replaced with actual user data</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `)
+  newWindow.document.close()
 }
 </script>
