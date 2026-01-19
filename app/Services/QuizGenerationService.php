@@ -122,7 +122,7 @@ class QuizGenerationService
             $response = $this->aiService->chat($messages, [
                 'temperature' => 0.3,
                 'max_tokens' => 1500,
-                'timeout' => 30,
+                'timeout' => 300,
             ], 'quiz_plan_generation');
 
             $cleanedContent = $this->cleanJsonResponse($response);
