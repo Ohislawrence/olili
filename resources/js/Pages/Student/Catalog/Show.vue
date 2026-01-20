@@ -463,7 +463,7 @@ const enrollCourse = async () => {
 }
 
 const shareCourse = (platform) => {
-  const url = `${window.location.origin}/course/${props.course?.id}${props.course?.slug}`
+  const url = `${window.location.origin}/course/${props.course?.id}/${props.course?.slug}`
   const title = props.course?.title || 'Course Preview'
   const text = `Check out this course: ${title}`
 
