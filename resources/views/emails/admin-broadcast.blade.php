@@ -6,23 +6,7 @@
         @endcomponent
     @endslot
 
-@php
-    // Replace variables in subject
-    $subject = str_replace(
-        ['{{name}}', '{{email}}', '{{role}}', '{{app_name}}', '{{app_url}}', '{{year}}'],
-        [$user->name, $user->email, $user->roles->first()?->name ?? 'User', config('app.name'), config('app.url'), date('Y')],
-        $subject
-    );
 
-    // Replace variables in message
-    $message = str_replace(
-        ['{{name}}', '{{email}}', '{{role}}', '{{app_name}}', '{{app_url}}', '{{year}}'],
-        [$user->name, $user->email, $user->roles->first()?->name ?? 'User', config('app.name'), config('app.url'), date('Y')],
-        $message
-    );
-@endphp
-
-# {!! $subject !!}
 
 {!! $message !!}
 

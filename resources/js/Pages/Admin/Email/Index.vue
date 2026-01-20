@@ -11,7 +11,9 @@
             <div>
               <h1 class="text-3xl font-bold text-gray-900">Email Management</h1>
               <p class="mt-2 text-gray-600">
-                Send personalized emails to users. Use <code class="bg-gray-100 px-1 rounded">{{ '{name}' }}</code> to include user's name.
+                Send personalized emails to users. Use
+                <code class="bg-gray-100 px-1 rounded">&lbrace;&lbrace;name&rbrace;&rbrace;</code>
+                to include user's name.
               </p>
             </div>
           </div>
@@ -161,7 +163,9 @@
               <div>
                 <label for="subject" class="block text-sm font-medium text-gray-700 mb-2">
                   Subject
-                  <span class="text-gray-500 text-xs ml-2">Use {{ '{name}' }} for personalization</span>
+                  <span class="text-gray-500 text-xs ml-2">
+                    Use &lbrace;&lbrace;name&rbrace;&rbrace; for personalization
+                  </span>
                 </label>
                 <input
                   id="subject"
@@ -169,7 +173,7 @@
                   type="text"
                   required
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="'Hello ' + '{name}' + ', important update!'"
+                  placeholder="'Hello ' + {{ name }}}' + ', important update!'"
                 />
               </div>
 
@@ -182,7 +186,7 @@
                   <div class="text-sm text-gray-500 flex items-center space-x-2">
                     <div class="flex items-center">
                       <SparklesIcon class="h-4 w-4 text-blue-500 mr-1" />
-                      <span>Personalization: Use <code class="bg-gray-100 px-1 rounded text-xs">{{ '{name}' }}</code></span>
+                      <span>Personalization: Use <code class="bg-gray-100 px-1 rounded text-xs">&lbrace;&lbrace;name&rbrace;&rbrace;</code></span>
                     </div>
                     <button
                       type="button"
@@ -205,31 +209,31 @@
                   <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
                     <button
                       type="button"
-                      @click="insertVariable('{name}')"
+                      @click="insertVariable('{{name}}')"
                       class="text-xs px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50"
                     >
-                      {{ '{name}' }}
+                      &lbrace;&lbrace;name&rbrace;&rbrace;
                     </button>
                     <button
                       type="button"
-                      @click="insertVariable('{email}')"
+                      @click="insertVariable('{{email}}')"
                       class="text-xs px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50"
                     >
-                      {{ '{email}' }}
+                      &lbrace;&lbrace;email&rbrace;&rbrace;
                     </button>
                     <button
                       type="button"
                       @click="insertVariable('{{role}}')"
                       class="text-xs px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50"
                     >
-                      {{ '{role}' }}
+                      &lbrace;&lbrace;role&rbrace;&rbrace;
                     </button>
                     <button
                       type="button"
                       @click="insertVariable('{{app_name}}')"
                       class="text-xs px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50"
                     >
-                      {{ '{app_name}' }}
+                      &lbrace;&lbrace;app_name&rbrace;&rbrace;
                     </button>
                   </div>
                 </div>
@@ -285,7 +289,8 @@ import {
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import UserSearch from '@/Components/Admin/UserSearch.vue'
 import UserMultiSelect from '@/Components/Admin/UserMultiSelect.vue'
-import RichTextEditor from '@/Components/Admin/RichTextEditorEmail.vue'
+//import RichTextEditor from '@/Components/Admin/RichTextEditorEmail.vue'
+import RichTextEditor from '@/Components/RichTextEditor.vue'
 
 const props = defineProps({
   roles: Array,

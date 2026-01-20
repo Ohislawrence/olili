@@ -6,23 +6,8 @@
         @endcomponent
     @endslot
 
-@php
-    // Replace variables in subject
-    $subject = str_replace(
-        ['{{name}}', '{{email}}', '{{role}}', '{{app_name}}', '{{app_url}}', '{{year}}'],
-        [$user->name, $user->email, $user->roles->first()?->name ?? 'User', config('app.name'), config('app.url'), date('Y')],
-        $subject ?? 'Message from ' . config('app.name')
-    );
-
-    // Replace variables in body
-    $bodyText = str_replace(
-        ['{{name}}', '{{email}}', '{{role}}', '{{app_name}}', '{{app_url}}', '{{year}}'],
-        [$user->name, $user->email, $user->roles->first()?->name ?? 'User', config('app.name'), config('app.url'), date('Y')],
-        $bodyText
-    );
-@endphp
-
-# {!! $subject !!}
+{{-- Variables have already been replaced by the Notification class --}}
+# {{ $subject }}
 
 {!! $bodyText !!}
 

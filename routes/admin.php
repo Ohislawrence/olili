@@ -299,7 +299,7 @@ Route::middleware([
 
  */
     // user search route
-    Route::get('/users/search', function (Request $request) {
+    Route::get('/users/search/all', function (Request $request) {
         try {
             $search = $request->get('search', '');
             $limit = $request->get('limit', 20);
@@ -335,9 +335,9 @@ Route::middleware([
             \Log::error('User search error: ' . $e->getMessage());
             return response()->json([], 500);
         }
-    })->name('users.search');
+    })->name('users.search.all');
 
-    Route::get('/users/by-role/{role}', function ($role) {
+    Route::get('/users/by-role/all/{role}', function ($role) {
         try {
             $validRoles = ['admin', 'student', 'tutor', 'organization'];
 
