@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Admin\CoursesController;
 use App\Http\Controllers\Admin\EnrollmentController;
 use App\Http\Controllers\Admin\MassEnrollmentController;
+use App\Http\Controllers\Admin\ExamPrepController;
 use Inertia\Inertia;
 
 
@@ -266,6 +267,25 @@ Route::middleware([
     Route::post('catalog/courses/{course}/bulk-enroll', [CoursesController::class, 'bulkEnroll'])->name('catalog.bulk.enroll');
     Route::put('catalog/enrollments/{enrollment}', [CoursesController::class, 'update'])->name('catalog.update.enrollment');
     Route::post('/catelog/courses/{course}/regenerate', [CoursesController::class, 'regenerate'])->name('catalog.courses.regenerate');
+
+    // Exam Prep Routes
+    Route::prefix('exam-preps')->name('exam-preps.')->group(function () {
+        Route::get('/', [ExamPrepController::class, 'index'])->name('index');
+        Route::get('/create', [ExamPrepController::class, 'create'])->name('create');
+        Route::post('/', [ExamPrepController::class, 'store'])->name('store');
+        Route::get('/{examPrep}', [ExamPrepController::class, 'show'])->name('show');
+        Route::get('/{examPrep}/edit', [ExamPrepController::class, 'edit'])->name('edit');
+        Route::put('/{examPrep}', [ExamPrepController::class, 'update'])->name('update');
+        Route::delete('/{examPrep}', [ExamPrepController::class, 'destroy'])->name('destroy');
+
+        // Additional routes for exam prep management
+        Route::post('/{examPrep}/generate-questions', [ExamPrepController::class, 'generateQuestions'])->name('generate-questions');
+        Route::post('/{examPrep}/publish', [ExamPrepController::class, 'publish'])->name('publish');
+        Route::post('/{examPrep}/archive', [ExamPrepController::class, 'archive'])->name('archive');
+        Route::get('/{examPrep}/statistics', [ExamPrepController::class, 'statistics'])->name('statistics');
+        Route::get('/{examPrep}/attempts', [ExamPrepController::class, 'attempts'])->name('attempts');
+    });
+
 
 
     /**

@@ -637,7 +637,7 @@
                         </div>
                       </div>
                       <!-- Detailed Results -->
-                      <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                      <div v-if="quizResults.detailed_results_count > 0" class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                         <h4 class="text-lg font-semibold text-gray-900 mb-4">Question Review</h4>
                         <div class="space-y-4">
                           <div

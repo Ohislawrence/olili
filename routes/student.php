@@ -16,6 +16,7 @@ use App\Http\Controllers\Student\CourseTutorController;
 use App\Http\Controllers\Student\FlashcardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Student\CourseContentController;
+use App\Http\Controllers\Student\ExamPrepController;
 
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'role:student'])->prefix('student')->name('student.')->group(function () {
 
@@ -168,5 +169,19 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         // Generate quiz
         Route::post('topics/{topic}/generate-quiz', [CourseContentController::class, 'generateQuiz'])
             ->name('api.courses.topics.generate-quiz');
+    });
+
+    // Exam Prep Routes
+    Route::prefix('exam-preps')->name('exam-preps.')->group(function () {
+        Route::get('/', [ExamPrepController::class, 'index'])->name('index');
+        Route::get('/{examPrep}', [ExamPrepController::class, 'show'])->name('show');
+        Route::post('/{examPrep}/enroll', [ExamPrepController::class, 'enroll'])->name('enroll');
+        Route::get('/{examPrep}/instructions', [ExamPrepController::class, 'instructions'])->name('instructions');
+        Route::get('/{examPrep}/start', [ExamPrepController::class, 'start'])->name('start');
+        Route::post('/{examPrep}/attempt/{attempt}/answer', [ExamPrepController::class, 'saveAnswer'])->name('save-answer');
+        Route::post('/{examPrep}/attempt/{attempt}/submit', [ExamPrepController::class, 'submit'])->name('submit');
+        Route::get('/{examPrep}/attempt/{attempt}/results', [ExamPrepController::class, 'results'])->name('results');
+        Route::get('/attempts', [ExamPrepController::class, 'myAttempts'])->name('my-attempts');
+        Route::get('/attempts/{attempt}', [ExamPrepController::class, 'viewAttempt'])->name('view-attempt');
     });
 });

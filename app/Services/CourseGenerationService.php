@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Jobs\GenerateCourseContentJob;
 use App\Jobs\GenerateCourseQuizzesJob;
+use App\Models\Subject;
 use App\Models\User;
 
 class CourseGenerationService
@@ -37,13 +38,15 @@ class CourseGenerationService
             // Get the admin user
             $adminUser = User::where('email', 'lawrenceohis@gmail.com')->first();
             $createdByUserId = $courseData['created_by_user_id'] ?? ($adminUser->id ?? auth()->id());
+            $subject = Subject::where('id', $courseData['subject_id'])->first();
 
             // Create the base course
             $course = Course::create([
                 'exam_board_id' => $courseData['exam_board_id'] ?? null,
                 'title' => $courseData['title'],
                 'slug' => Str::slug($courseData['title']),
-                'subject' => $courseData['subject'],
+                'subject' => $subject,
+                'subject_id' => $courseData['subject_id'],
                 'description' => $courseData['description'] ?? '',
                 'level' => $courseData['level'] ?? 'intermediate',
                 'learning_objectives' => $courseData['learning_objectives'] ?? [],

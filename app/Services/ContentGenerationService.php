@@ -94,6 +94,7 @@ class ContentGenerationService
         - Subject: {$course->subject}
         - Level: {$course->level}
         - Course Description: " . ($course->description ?? 'No description') . "
+        - Exam Board: " . ($course->examBoard->name ?? 'no exam board') . "
 
         MODULE CONTEXT:
         - Module: {$module->title}
@@ -136,6 +137,7 @@ class ContentGenerationService
             - Connects to the broader module and course context
             - Includes clear instructions and learning objectives
             - Is suitable for {$course->level} level students
+            - Is inline with the syllabus of the Exam board if available
             ";
         } elseif ($contentType === 'video_script') {
             $prompt .= "
@@ -148,6 +150,7 @@ class ContentGenerationService
             - Suggests practical applications
             - Keeps the content dynamic and engaging (5-10 minute duration)
             - Includes timings for different sections
+            - Is inline with the syllabus of the Exam board if available
             ";
         } elseif ($contentType === 'exercise') {
             $prompt .= "
@@ -165,7 +168,7 @@ class ContentGenerationService
         $prompt .= "
 
         CONTENT CREATION GUIDELINES:
-        - Align content with topic, module, and course learning objectives
+        - Align content with topic, module, course learning objectives and Exam board's syllabus if available
         - Use language and examples appropriate for {$course->level} level
         - Ensure content builds on previous knowledge from the module and course
         - Include practical applications relevant to the course subject: {$course->subject}

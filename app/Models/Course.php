@@ -24,6 +24,7 @@ class Course extends Model
         'slug',
         'thumbnail_url',
         'subject',
+        'subject_id',
         'description',
         'syllabus',
         'level',
@@ -79,13 +80,13 @@ class Course extends Model
         'price' => 'decimal:2',
         'visibility' => 'string',
         'needs_content_generation' => 'boolean',
-    'content_generated_at' => 'datetime',
-    'quiz_generated_at' => 'datetime',
-    'content_generation_started_at' => 'datetime',
-    'quiz_generation_started_at' => 'datetime',
-    'content_generation_summary' => 'array',
-    'quiz_generation_summary' => 'array',
-    ];
+        'content_generated_at' => 'datetime',
+        'quiz_generated_at' => 'datetime',
+        'content_generation_started_at' => 'datetime',
+        'quiz_generation_started_at' => 'datetime',
+        'content_generation_summary' => 'array',
+        'quiz_generation_summary' => 'array',
+        ];
 
     // Relationships
     public function modules(): HasMany
@@ -110,6 +111,10 @@ class Course extends Model
         return $this->belongsTo(ExamBoard::class);
     }
 
+    public function subject(): BelongsTo
+    {
+        return $this->belongsTo(Subject::class, 'subject_id');
+    }
 
 
     public function creator(): BelongsTo

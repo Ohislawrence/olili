@@ -597,7 +597,7 @@ const navigation = [
   { name: 'My Courses', href: route('student.courses.index'), active: 'student.courses.*', icon: BookOpenIcon },
   { name: 'Catalogs', href: route('student.catalog.browse'), active: 'student.catalog.*', icon: ClipboardDocumentListIcon },
   { name: 'Flash Card', href: route('student.flashcards.index'), active: 'student.flashcards.*', icon: RectangleStackIcon },
-  { name: 'Profile', href: route('student.profile.show'), active: 'student.profile.*', icon: UserCircleIcon },
+  { name: 'Exam Prep', href: route('student.exam-preps.index'), active: 'student.exam-preps.*', icon: UserCircleIcon },
 ]
 
 const logout = () => {

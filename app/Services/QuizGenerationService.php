@@ -70,6 +70,7 @@ class QuizGenerationService
         - Subject: {$course->subject}
         - Difficulty Target: {$difficulty}
         - Total Questions Required: {$questionCount}
+        - Exam Board: " . ($course->examBoard->name ?? 'no exam board') . "
 
         TOPICS IN COURSE:
         {$formattedTopics}
@@ -81,9 +82,10 @@ class QuizGenerationService
         1. Each topic must receive at least 1 question.
         2. Distribute questions proportionally if there are many topics.
         3. Difficulty levels must be balanced across the whole quiz.
-        4. Supported question types: multiple_choice, true_false, fill_in_blank.
-        5. Do NOT generate actual questions.
-        6. Return ONLY the JSON structure below.
+        4. Pass questions style from the exam board should be included if exam board is specified.
+        5. Supported question types: multiple_choice, true_false, fill_in_blank.
+        6. Do NOT generate actual questions.
+        7. Return ONLY the JSON structure below.
 
         REQUIRED JSON STRUCTURE:
         {

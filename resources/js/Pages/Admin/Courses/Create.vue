@@ -131,21 +131,24 @@
                     Subject *
                   </label>
                   <div class="mt-1">
-                    <input
-                      id="subject"
-                      v-model="form.subject"
-                      type="text"
-                      required
-                      list="subjects"
-                      class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
-                      placeholder="e.g., Computer Science, Mathematics"
-                    />
-                    <datalist id="subjects">
-                      <option v-for="subject in subjects" :key="subject" :value="subject" />
-                    </datalist>
+                    <select
+                        v-model="form.subject_id"
+                        required
+                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
+                        >
+                        <option value="" disabled>Select a subject</option>
+
+                        <option
+                            v-for="(name, id) in subjects"
+                            :key="id"
+                            :value="id"
+                        >
+                            {{ name }}
+                        </option>
+                    </select>
                   </div>
                   <p v-if="form.errors.subject" class="mt-1 text-sm text-red-600">
-                    {{ form.errors.subject }}
+                    {{ form.errors.subject_id }}
                   </p>
                 </div>
 
@@ -791,7 +794,7 @@ const props = defineProps({
 
 const form = reactive({
   title: '',
-  subject: '',
+  subject_id: '1',
   description: '',
   exam_board_id: null,
   level: 'intermediate',
