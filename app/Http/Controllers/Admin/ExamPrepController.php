@@ -326,14 +326,21 @@ class ExamPrepController extends Controller
                     'quiz_id' => $quiz->id,
                     'course_outline_id' => $quiz->course_outline_id,
                     'question_text' => $question['question'],
-                    'options' => json_encode($question['options'] ?? []), // Encode as JSON
-                    'correct_answer' => is_array($question['correct_answer'] ?? null)
-                        ? json_encode($question['correct_answer'])
-                        : ($question['correct_answer'] ?? null),
+                    'options' => $question['options'] ?? [],
+                    'correct_answer' => $question['correct_answer'] ?? null,
                     'question_type' => $question['type'] ?? 'multiple_choice',
                     'points' => $question['points'] ?? 1,
                     'difficulty' => $question['difficulty'] ?? 'medium',
-                    'metadata' => json_encode($question['metadata'] ?? []), // Encode as JSON
+                    // Store topic_id and explanation in metadata
+                    'metadata' => json_encode([
+                        'topic_id' => $question['topic_id'] ?? null,
+                        'explanation' => $question['explanation'] ?? null,
+                        'course_id' => $quiz->courseOutline->course_id ?? null,
+                        'module_id' => $quiz->courseOutline->module_id ?? null,
+                        'quiz_id' => $quiz->id,
+                        'topic_name' => $question['topic'] ?? null,
+                        'course_title' => $quiz->courseOutline->course->title ?? null,
+                    ]),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];

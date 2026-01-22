@@ -288,26 +288,31 @@ class ExamPrepController extends Controller
         foreach ($questions as $index => $question) {
             $userAnswer = $answers[$index] ?? null;
             $correctAnswer = $question['correct_answer'] ?? null;
+            $questionType = $question['question_type'] ?? 'multiple_choice';
 
             $isCorrect = false;
             if ($userAnswer !== null) {
-                $isCorrect = $this->isAnswerCorrect(
-                    $userAnswer,
-                    $correctAnswer,
-                    $question['question_type'] ?? 'multiple_choice'
-                );
+                $isCorrect = $this->isAnswerCorrect($userAnswer, $correctAnswer, $questionType);
             }
+
+            $metadata = $question['metadata'] ?? [];
 
             $results[] = [
                 'question_index' => $index,
                 'question_text' => $question['question_text'],
                 'options' => $question['options'] ?? [],
-                'question_type' => $question['question_type'] ?? 'multiple_choice',
+                'question_type' => $questionType,
                 'user_answer' => $userAnswer,
                 'correct_answer' => $correctAnswer,
                 'is_correct' => $isCorrect,
                 'points' => $question['points'] ?? 1,
-                'explanation' => $question['metadata']['explanation'] ?? null,
+                'points_earned' => $isCorrect ? ($question['points'] ?? 1) : 0,
+                'explanation' => $metadata['explanation'] ?? null,
+                'topic_id' => $metadata['topic_id'] ?? null,
+                'topic_name' => $metadata['topic_name'] ?? null,
+                'course_id' => $metadata['course_id'] ?? null,
+                'course_title' => $metadata['course_title'] ?? null,
+                'course_slug' => \App\Models\Course::find($metadata['course_id'] ?? null)?->slug ?? null,
             ];
         }
 

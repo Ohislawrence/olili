@@ -73,4 +73,19 @@ class ExamPrepQuestion extends Model
 
         $this->save();
     }
+
+    public function getTopicIdAttribute()
+    {
+        return $this->metadata['topic_id'] ?? null;
+    }
+
+    public function getExplanationAttribute()
+    {
+        return $this->metadata['explanation'] ?? null;
+    }
+
+    public function getCourseIdAttribute()
+    {
+        return $this->metadata['course_id'] ?? null;
+    }
 }

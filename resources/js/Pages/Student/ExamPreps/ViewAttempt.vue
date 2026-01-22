@@ -357,12 +357,46 @@
                   </div>
 
                   <!-- Explanation -->
-                  <div v-if="result.explanation" class="mt-6">
+                  <div v-if="result.explanation" class="mt-4">
                     <h4 class="text-sm font-medium text-gray-700 mb-2">Explanation:</h4>
                     <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p class="text-blue-700">{{ result.explanation }}</p>
+                        <p class="text-blue-700">{{ result.explanation }}</p>
                     </div>
-                  </div>
+                    </div>
+
+                    <!-- Course/Topic Link -->
+                    <div v-if="result.course_id && result.course_title" class="mt-4">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">Related Learning:</h4>
+                    <div class="flex items-center p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                        <AcademicCapIcon class="h-4 w-4 text-emerald-600 mr-2" />
+                        <div class="flex-1">
+                        <p class="text-sm text-emerald-800">
+                            This question relates to
+                            <span v-if="result.topic_name" class="font-semibold">{{ result.topic_name }}</span>
+                            in
+                            <Link
+                            v-if="result.course_slug"
+                            :href="route('student.courses.show', result.course_slug)"
+                            class="font-semibold text-emerald-700 hover:text-emerald-800 underline"
+                            >
+                            {{ result.course_title }}
+                            </Link>
+                            <span v-else class="font-semibold">{{ result.course_title }}</span>
+                        </p>
+                        <p v-if="result.topic_name" class="text-xs text-emerald-600 mt-1">
+                            Review this topic to strengthen your understanding
+                        </p>
+                        </div>
+                        <Link
+                        v-if="result.course_slug"
+                        :href="route('student.courses.show', result.course_slug)"
+                        class="inline-flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700"
+                        >
+                        View Course
+                        <ArrowRightIcon class="h-3 w-3 ml-1" />
+                        </Link>
+                    </div>
+                </div>
                 </div>
 
                 <!-- Right Column: Stats & Notes -->
