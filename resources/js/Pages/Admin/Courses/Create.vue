@@ -794,7 +794,7 @@ const props = defineProps({
 
 const form = reactive({
   title: '',
-  subject_id: '1',
+  subject_id: '',
   description: '',
   exam_board_id: null,
   level: 'intermediate',

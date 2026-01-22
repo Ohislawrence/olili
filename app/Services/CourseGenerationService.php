@@ -180,7 +180,7 @@ class CourseGenerationService
 
     protected function validateCourseData(array $courseData): void
     {
-        if (empty($courseData['title']) || empty($courseData['subject'])) {
+        if (empty($courseData['title']) || empty($courseData['subject_id'])) {
             throw new \InvalidArgumentException('Course title and subject are required.');
         }
     }
