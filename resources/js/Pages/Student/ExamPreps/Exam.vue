@@ -196,6 +196,21 @@
                 <CheckIcon class="h-4 w-4 mr-2" />
                 {{ submitting ? 'Submitting...' : 'Submit Exam' }}
               </button>
+              <div v-if="submitError" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div class="flex items-center">
+                    <ExclamationTriangleIcon class="h-5 w-5 text-red-600 mr-3" />
+                    <div class="flex-1">
+                    <h4 class="text-sm font-semibold text-red-800">Submission Failed</h4>
+                    <p class="text-sm text-red-700 mt-1">{{ submitError }}</p>
+                    </div>
+                    <button
+                    @click="retrySubmit"
+                    class="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                    Retry Submit
+                    </button>
+                </div>
+                </div>
             </div>
           </div>
 
@@ -502,6 +517,8 @@ const submitExam = async () => {
   submitting.value = true
 
   try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+
     const response = await fetch(route('student.exam-preps.submit', {
       examPrep: props.examPrep.id,
       attempt: props.attempt.id
@@ -509,24 +526,47 @@ const submitExam = async () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-        'Accept': 'application/json'
+        'X-CSRF-TOKEN': csrfToken,
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
       },
       body: JSON.stringify({
-        answers: userAnswers.value
+        answers: userAnswers.value,
+        _token: csrfToken
       })
     })
 
     const data = await response.json()
 
     if (data.success) {
-      router.visit(data.redirect)
+      // Redirect to results page
+      window.location.href = route('student.exam-preps.results', {
+        examPrep: props.examPrep.id,
+        attempt: props.attempt.id
+      })
     } else {
-      throw new Error(data.error || 'Failed to submit exam')
+      throw new Error(data.message || data.error || 'Failed to submit exam')
     }
   } catch (error) {
     console.error('Exam submission failed:', error)
+
+    // Show user-friendly error message
+    alert('Failed to submit exam: ' + error.message + '\nPlease try again or contact support.')
+
+    // Re-enable submit button
     submitting.value = false
+
+    // Restart timer if it was stopped
+    if (timerInterval.value) {
+      startTimer()
+    }
+  }
+}
+
+// Also add a retry function
+const retrySubmit = async () => {
+  if (confirm('Submit exam again?')) {
+    await submitExam()
   }
 }
 

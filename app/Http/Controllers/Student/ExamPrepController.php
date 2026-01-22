@@ -219,8 +219,9 @@ class ExamPrepController extends Controller
 
             DB::commit();
 
-            return response()->json([
+             return response()->json([
                 'success' => true,
+                'message' => 'Exam submitted successfully',
                 'redirect' => route('student.exam-preps.results', [$examPrep, $attempt])
             ]);
 

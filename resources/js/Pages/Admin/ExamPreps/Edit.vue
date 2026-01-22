@@ -734,7 +734,7 @@
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-sm text-gray-600">Average Score</span>
-                <span class="text-sm font-semibold text-gray-900">{{ examPrep.average_score?.toFixed(1) || 0 }}%</span>
+                <span class="text-sm font-semibold text-gray-900">{{ parseFloat(examPrep.average_score || 0).toFixed(1) }}%</span>
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-sm text-gray-600">Pass Rate</span>
