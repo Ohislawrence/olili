@@ -176,9 +176,7 @@ class ExamPrepController extends Controller
      */
     public function saveAnswer(ExamPrep $examPrep, ExamPrepAttempt $attempt, Request $request)
     {
-        if ($attempt->user_id !== auth()->id()) {
-            abort(403);
-        }
+
 
         if ($attempt->completed_at) {
             return response()->json(['error' => 'Exam already submitted'], 400);
@@ -270,9 +268,7 @@ class ExamPrepController extends Controller
      */
     public function viewAttempt(ExamPrepAttempt $attempt)
     {
-        if ($attempt->user_id !== auth()->id()) {
-            abort(403);
-        }
+
 
         return Inertia::render('Student/ExamPreps/ViewAttempt', [
             'attempt' => $attempt->load(['examPrep.examBoard', 'examPrep.subject']),
