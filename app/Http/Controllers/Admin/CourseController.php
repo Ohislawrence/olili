@@ -198,10 +198,13 @@ class CourseController extends Controller
             'has_certificate' => 'boolean',
         ]);
 
+        $subject = Subject::where('id', $validated['subject_id'])->first();
+
         // Prepare course data for generation
         $courseData = [
             'title' => $validated['title'],
             'slug' => Str::slug($validated['title']),
+            'subject' => $subject->name,
             'subject_id' => $validated['subject_id'],
             'description' => $validated['description'],
             'level' => $validated['level'],
