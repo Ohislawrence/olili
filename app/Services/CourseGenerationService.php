@@ -45,7 +45,7 @@ class CourseGenerationService
                 'exam_board_id' => $courseData['exam_board_id'] ?? null,
                 'title' => $courseData['title'],
                 'slug' => Str::slug($courseData['title']),
-                'subject' => $subject,
+                'subject' => $subject->name,
                 'subject_id' => $courseData['subject_id'],
                 'description' => $courseData['description'] ?? '',
                 'level' => $courseData['level'] ?? 'intermediate',
@@ -61,7 +61,7 @@ class CourseGenerationService
                 'visibility' => $courseData['visibility'] ?? 'private',
                 'created_by_user_id' => $createdByUserId,
                 'created_by' => $courseData['created_by'] ?? 'admin',
-                'needs_content_generation' => true, // Flag to indicate content needs to be generated
+                'needs_content_generation' => true,
                 'has_certificate' => $courseData['has_certificate'] ?? false,
                 'tags' => $courseData['tags'],
             ]);
