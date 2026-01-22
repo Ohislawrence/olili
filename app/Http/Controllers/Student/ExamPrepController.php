@@ -234,9 +234,7 @@ class ExamPrepController extends Controller
      */
     public function results(ExamPrep $examPrep, ExamPrepAttempt $attempt)
     {
-        if ($attempt->user_id !== auth()->id()) {
-            abort(403);
-        }
+
 
         if (!$attempt->completed_at) {
             return redirect()->route('student.exam-preps.show', $examPrep);
