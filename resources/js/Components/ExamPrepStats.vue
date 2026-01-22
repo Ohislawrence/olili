@@ -79,7 +79,7 @@
               'ml-2 font-semibold',
               stats.average_score >= examPrep.passing_score ? 'text-emerald-600' : 'text-red-600'
             ]">
-              {{ (stats.average_score - examPrep.passing_score).toFixed(1) }}%
+              {{ parseFloat(stats.average_score - examPrep.passing_score).toFixed(1) }}%
             </span>
           </div>
         </div>
@@ -161,7 +161,7 @@
                 <span class="ml-2 text-sm text-gray-600">{{ diff.total }} questions</span>
               </div>
               <span class="text-sm font-semibold text-gray-900">
-                {{ diff.success_rate.toFixed(1) }}%
+                {{ parseFloat(diff.success_rate).toFixed(1) }}%
               </span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-2">
@@ -304,7 +304,7 @@
             </div>
             <div class="text-right">
               <div class="text-sm font-bold text-gray-900">
-                {{ student.best_score.toFixed(1) }}%
+                {{ parseFloat(student.best_score).toFixed(1) }}%
               </div>
               <div class="text-xs text-gray-500">
                 {{ student.attempt_count }} attempts
@@ -328,7 +328,7 @@
                 {{ weakness.topic || 'Unknown Topic' }}
               </span>
               <span class="text-xs text-red-600">
-                {{ weakness.success_rate.toFixed(1) }}% success
+                {{ parseFloat(weakness.success_rate).toFixed(1) }}% success
               </span>
             </div>
             <div class="text-xs text-red-600">

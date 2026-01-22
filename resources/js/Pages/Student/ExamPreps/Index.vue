@@ -149,7 +149,7 @@
               <div class="flex items-center justify-between">
                 <div class="text-sm">
                   <span class="text-gray-600">Score:</span>
-                  <span class="ml-2 font-bold text-gray-900">{{ attempt.percentage.toFixed(1) }}%</span>
+                  <span class="ml-2 font-bold text-gray-900">{{ parseFloat(attempt.percentage).toFixed(1) }}%</span>
                 </div>
                 <Link
                   :href="route('student.exam-preps.view-attempt', attempt.id)"
@@ -216,7 +216,7 @@
                 <div v-if="examPrep.average_score > 0" class="mb-4">
                   <div class="flex justify-between text-sm text-gray-600 mb-1">
                     <span>Average Score</span>
-                    <span class="font-semibold">{{ examPrep.average_score.toFixed(1) }}%</span>
+                    <span class="font-semibold">{{ parseFloat(examPrep.average_score).toFixed(1) }}%</span>
                   </div>
                   <div class="w-full bg-gray-200 rounded-full h-2">
                     <div
