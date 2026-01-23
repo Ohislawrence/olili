@@ -586,7 +586,7 @@
                 <!-- Actions for Enrolled Students -->
                 <template v-else>
                   <Link
-                    v-if="enrollment?.status === 'active' && next_topic"
+                    v-if="enrollment?.status === 'active' || enrollment?.status === 'enrolled' && next_topic"
                     :href="route('student.courses.learn', { course: course.id, topic: next_topic.id })"
                     class="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                   >
@@ -594,7 +594,7 @@
                     Continue Learning
                   </Link>
                   <Link
-                    v-else-if="enrollment?.status === 'active'"
+                    v-else-if="enrollment?.status === 'active' || enrollment?.status === 'enrolled'"
                     :href="route('student.courses.learn', course.id)"
                     class="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                   >
@@ -623,7 +623,7 @@
                   <!-- Course Status Actions -->
                   <div class="pt-3 border-t border-gray-200">
                     <button
-                      v-if="enrollment?.status === 'active'"
+                      v-if="enrollment?.status === 'active' || enrollment?.status === 'enrolled'"
                       @click="pauseCourse"
                       :disabled="pauseLoading"
                       class="w-full flex items-center justify-center px-4 py-2.5 border border-emerald-300 text-sm font-semibold rounded-lg text-emerald-700 bg-white hover:bg-emerald-50 transition-colors disabled:opacity-50"

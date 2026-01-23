@@ -14,6 +14,13 @@ use Illuminate\Support\Facades\Auth;
 
 class FrontpageController extends Controller
 {
+    protected $progressService;
+
+    public function __construct(ProgressTrackingService $progressService)
+    {
+        $this->progressService = $progressService;
+    }
+
     public function features()
     {
         return Inertia::render('Frontpages/Features', [
@@ -502,18 +509,19 @@ class FrontpageController extends Controller
         // Check user enrollment if authenticated
         $userEnrollment = null;
         $userProgress = null;
+
+
         if (Auth::check()) {
             $userEnrollment = CourseEnrollment::where('user_id', Auth::id())
                 ->where('course_id', $id)
-                ->with(['progressTrackings' => function ($q) {
-                    $q->latest()->limit(10);
-                }])
-                ->first();
+                ->first()->id;
 
-            if ($userEnrollment) {
-                $userProgress = app(ProgressTrackingService::class)->calculateCourseProgress($userEnrollment);
-            }
+            $progress = $this->progressService->calculateCourseProgress($course, Auth::id());
+
+            $progress = $progress['overall_completion_percentage'];
+
         }
+
 
         // Generate structured data for SEO (Schema.org)
         $structuredData = $this->generateCourseStructuredData($course, $averageRating, $reviewCount);
@@ -590,6 +598,7 @@ class FrontpageController extends Controller
                         })
                     ];
                 }),
+                'progress_percentage' => $progress,
                 'modules_count' => $course->modules_count,
                 'status' => $course->status,
                 'slug' => $course->slug,

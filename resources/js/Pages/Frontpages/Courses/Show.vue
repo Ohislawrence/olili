@@ -755,7 +755,8 @@ import MetaTags from '@/Components/MetaTags.vue';
 
 const props = defineProps({
     course: Object,
-    relatedCourses: Array
+    relatedCourses: Array,
+    userEnrollment: Boolean,
 });
 
 const page = usePage();
@@ -766,7 +767,7 @@ const shareContainer = ref(null);
 const activeTab = ref('curriculum');
 const isWishlisted = ref(false);
 
-const isEnrolled = computed(() => props.course.user_enrollment_count > 0);
+const isEnrolled = computed(() => props.userEnrollment);
 
 // Share functionality
 const courseUrl = typeof window !== 'undefined' ? window.location.href : '';
@@ -837,7 +838,7 @@ const enrollInCourse = () => {
     } else {
         router.post(route('student.catalog.enroll', props.course.id), {}, {
             onSuccess: () => {
-                router.visit(route('student.courses.show', { id: props.course.id, slug: props.course.slug }));
+                router.visit(route('student.courses.learn', { id: props.course.id, slug: props.course.slug }));
             },
             onError: (errors) => {
                 if (errors.message) {

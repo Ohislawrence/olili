@@ -196,9 +196,9 @@ class CourseController extends Controller
         $student = auth()->user();
 
         // Check if student is enrolled
-        $enrollment = $student->courseEnrollments()
-            ->where('course_id', $course->id)
-            ->first();
+        $enrollment = CourseEnrollment::where('user_id', $student->id)
+                ->where('course_id', $course->id)
+                ->first();
 
         // If enrolled, redirect to course show page
 
@@ -246,12 +246,13 @@ class CourseController extends Controller
         $student = auth()->user();
 
         // Check if student is enrolled (excluding dropped enrollments)
-        $enrollment = $student->courseEnrollments()
-            ->where('course_id', $course->id)
-            ->where('status', '!=', 'dropped')
-            ->first();
+        $enrollment = CourseEnrollment::where('user_id', $student->id)
+                ->where('course_id', $course->id)
+                ->first();
+
 
         $lastViewedTopic = $this->progressService->lastViewedTopic($enrollment);
+
 
         // If student has dropped this course, we should allow them to see it
         $droppedEnrollment = $student->courseEnrollments()
@@ -260,6 +261,7 @@ class CourseController extends Controller
             ->first();
 
         $isEnrolled = $enrollment !== null;
+
         $wasDropped = $droppedEnrollment !== null;
 
         // Load basic course info for both enrolled and non-enrolled students
@@ -306,6 +308,8 @@ class CourseController extends Controller
         // Check if the student can enroll (considering course capacity, etc.)
         $canEnroll = $course->canEnroll($student);
 
+        $progress = $courseProgress['overall_completion_percentage'];
+
         return Inertia::render('Student/Courses/Show', [
             'course' => $course,
             'can_enroll' => $canEnroll,
@@ -324,11 +328,11 @@ class CourseController extends Controller
                 'estimated_duration_minutes' => $nextTopic->estimated_duration_minutes,
                 'module_id' => $nextTopic->module_id,
             ] : null,
-            'course_stats' => $courseProgress, // Always pass valid course stats
+            'course_stats' => $courseProgress,
             'enrollment' => $isEnrolled ? [
                 'id' => $enrollment->id,
                 'status' => $enrollment->status,
-                'progress_percentage' => $enrollment->progress_percentage,
+                'progress_percentage' => $progress,
                 'enrolled_at' => $enrollment->enrolled_at,
                 'started_at' => $enrollment->started_at,
                 'completed_at' => $enrollment->completed_at,
