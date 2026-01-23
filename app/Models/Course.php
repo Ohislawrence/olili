@@ -139,6 +139,11 @@ class Course extends Model
         return $this->enrollments()->whereIn('status', ['enrolled']);
     }
 
+    public function enrolledCount()
+    {
+        return $this->enrollments()->whereIn('status', ['enrolled','active'])->count();
+    }
+
     public function activeEnrollments()
     {
         return $this->enrollments()->whereIn('status', [ 'active']);
@@ -206,7 +211,7 @@ class Course extends Model
         }
 
         // Check if user is already enrolled
-        if ($this->enrollments()->where('user_id', $user->id)->exists()) {
+        if ($this->enrollments()->where('status', '!=', 'dropped')->where('user_id', $user->id)->exists()) {
             return false;
         }
 

@@ -262,7 +262,7 @@ class CourseController extends Controller
         }else{
             $lastViewedTopic = $this->progressService->lastViewedTopic($enrollment);
         }
-
+        //$isFull = $course->enrollment_limit == $course->enrolledCount();
         $isEnrolled = $enrollment !== null;
 
         $wasDropped = $droppedEnrollment !== null;
@@ -317,6 +317,7 @@ class CourseController extends Controller
             'course' => $course,
             'can_enroll' => $canEnroll,
             'is_enrolled' => $isEnrolled,
+            'isFull' => $course->isFull(),
             'was_dropped' => $wasDropped,
             'lastViewedTopic' => $lastViewedTopic,
             'dropped_enrollment' => $wasDropped ? [
