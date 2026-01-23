@@ -813,10 +813,11 @@ const getEnrollmentProgressClass = (course) => {
   return 'bg-emerald-500'
 }
 
-const isEnrolled = (courseId) => {
-  return props.enrolled_course_ids.includes(courseId)
-}
+const enrolledSet = computed(() => new Set(props.enrolled_course_ids))
 
+const isEnrolled = (courseId) => {
+  return enrolledSet.value.has(courseId)
+}
 const getSortLabel = () => {
   const option = sortOptions.find(opt => opt.value === filters.value.sort)
   return option ? option.label : 'Sort By'

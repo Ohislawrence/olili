@@ -147,6 +147,7 @@ class CourseController extends Controller
             ->pluck('course_id')
             ->toArray();
 
+
         // Get enrolled courses with progress for enrolled students
         $enrolledCourses = [];
         foreach ($student->courseEnrollments as $enrollment) {
