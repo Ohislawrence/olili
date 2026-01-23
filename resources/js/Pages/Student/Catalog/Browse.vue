@@ -529,7 +529,7 @@
                 <!-- Not Enrolled State -->
                 <div v-else class="space-y-2">
                   <Link
-                    :href="route('student.courses.preview', course.id)"
+                    :href="route('student.courses.show', course.id)"
                     class="w-full block text-center border border-gray-300 text-gray-700 hover:text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50 py-3 rounded-xl font-medium transition-all duration-300"
                   >
                     Preview Course

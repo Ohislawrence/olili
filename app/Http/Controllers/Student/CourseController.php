@@ -248,12 +248,8 @@ class CourseController extends Controller
 
         // Check if student is enrolled (excluding dropped enrollments)
         $enrollment = CourseEnrollment::where('user_id', $student->id)
-                ->where('course_id', $course->id)
+                ->where('course_id', $course->id)->where('status', '!=', 'dropped')
                 ->first();
-
-
-        $lastViewedTopic = $this->progressService->lastViewedTopic($enrollment);
-
 
         // If student has dropped this course, we should allow them to see it
         $droppedEnrollment = $student->courseEnrollments()
@@ -261,12 +257,18 @@ class CourseController extends Controller
             ->where('status', 'dropped')
             ->first();
 
+        if($enrollment == null){
+            $lastViewedTopic = $this->progressService->lastViewedTopic($droppedEnrollment);
+        }else{
+            $lastViewedTopic = $this->progressService->lastViewedTopic($enrollment);
+        }
+
         $isEnrolled = $enrollment !== null;
 
         $wasDropped = $droppedEnrollment !== null;
 
         // Load basic course info for both enrolled and non-enrolled students
-        $course->load(['examBoard', 'creator', 'modules.topics']);
+        $course->load(['examBoard', 'creator', 'modules.topics', 'enrollments']);
 
         // Get course progress for both enrolled and non-enrolled students
         // For non-enrolled, we'll show empty stats or basic course info

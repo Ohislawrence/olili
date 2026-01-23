@@ -9,7 +9,7 @@
           <div class="flex justify-between items-start">
             <div class="flex-1">
               <div class="flex items-center gap-2 mb-3">
-                <span v-if="enrollment" :class="['inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold', getStatusClass(enrollment.status)]">
+                <span v-if="isEnrolled" :class="['inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold', getStatusClass(enrollment.status)]">
                   {{ enrollment.status }}
                 </span>
                 <span v-else :class="['inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold', getStatusClass(course.status)]">
@@ -22,7 +22,7 @@
                   {{ course.exam_board.name }}
                 </span>
                 <span class="text-sm text-gray-500">
-                  <template v-if="enrollment?.started_at">
+                  <template v-if="isEnrolled && enrollment?.started_at">
                     Started {{ formatRelativeDate(enrollment.started_at) }}
                   </template>
                   <template v-else>
@@ -38,7 +38,7 @@
                 </span>
               </p>
 
-              <!-- Enrollment Status Banner -->
+              <!-- Enrollment Status Banner - ONLY FOR NON-ENROLLED STUDENTS -->
               <div v-if="!isEnrolled" class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-4 border border-blue-100">
                 <div class="flex items-center justify-between">
                   <div>
@@ -91,7 +91,7 @@
                       </span>
                     </button>
 
-                    <div v-if="!can_enroll && !isEnrolled" class="mt-2 text-sm text-amber-600">
+                    <div v-if="!can_enroll" class="mt-2 text-sm text-amber-600">
                       <span v-if="course.isFull">Course is full</span>
                       <span v-else-if="course.status !== 'active'">Course is not available for enrollment</span>
                       <span v-else>Cannot enroll at this time</span>
@@ -100,7 +100,7 @@
                 </div>
               </div>
 
-              <!-- Enhanced Progress Overview (Only for enrolled students) -->
+              <!-- Enhanced Progress Overview - ONLY FOR ENROLLED STUDENTS -->
               <div v-else class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-6 mb-4 border border-emerald-100">
                 <div class="flex items-center justify-between mb-4">
                   <div>
@@ -146,7 +146,7 @@
           </div>
         </div>
 
-        <!-- Course Information for Non-Enrolled Students -->
+        <!-- Course Information Cards - FOR NON-ENROLLED STUDENTS ONLY -->
         <div v-if="!isEnrolled" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <!-- Course Details Card -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -166,11 +166,11 @@
               </div>
               <div class="flex items-center text-sm text-gray-600">
                 <CheckCircleIcon class="h-4 w-4 text-emerald-500 mr-2" />
-                <span>{{ course.modules?.length || 0 }} modules</span>
+                <span>{{ totalModules }} modules</span>
               </div>
               <div class="flex items-center text-sm text-gray-600">
                 <CheckCircleIcon class="h-4 w-4 text-emerald-500 mr-2" />
-                <span>{{ getTotalTopics() }} topics</span>
+                <span>{{ totalTopics }} topics</span>
               </div>
               <div class="flex items-center text-sm text-gray-600">
                 <CheckCircleIcon class="h-4 w-4 text-emerald-500 mr-2" />
@@ -224,7 +224,7 @@
           </div>
         </div>
 
-        <!-- Enhanced Course Stats (Only for enrolled students) -->
+        <!-- Enhanced Course Stats - ONLY FOR ENROLLED STUDENTS -->
         <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <!-- Progress Card -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
@@ -309,7 +309,7 @@
           </div>
         </div>
 
-        <!-- Completion Timeline (Only for enrolled students) -->
+        <!-- Completion Timeline - ONLY FOR ENROLLED STUDENTS -->
         <div v-if="isEnrolled" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
           <h3 class="text-lg font-bold text-gray-900 mb-4">Completion Timeline</h3>
           <div class="flex items-center justify-between mb-4">
@@ -342,22 +342,22 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <!-- Course Content -->
-          <div :class="['lg:col-span-2', !isEnrolled ? 'opacity-50' : '']">
+          <div :class="['lg:col-span-2 relative', !isEnrolled ? 'opacity-50' : '']">
             <div class="bg-white shadow-sm rounded-xl border border-gray-100">
               <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-xl">
                 <div class="flex items-center justify-between">
                   <div>
                     <h2 class="text-lg font-bold text-gray-900">Course Content</h2>
                     <p class="text-sm text-gray-500 mt-1">
-                      {{ course.modules?.length || 0 }} modules • {{ getTotalTopics() }} topics
+                      {{ totalModules }} modules • {{ totalTopics }} topics
                     </p>
                   </div>
                   <div class="text-right" v-if="isEnrolled">
                     <div class="text-sm text-gray-600">
-                      {{ completedTopics }}/{{ getTotalTopics() }} completed
+                      {{ completedTopics }}/{{ totalTopics }} completed
                     </div>
                     <div class="text-xs text-gray-400">
-                      {{ Math.round((completedTopics / getTotalTopics() * 100) || 0) }}% complete
+                      {{ overallCompletionPercentage }}% complete
                     </div>
                   </div>
                 </div>
@@ -394,10 +394,10 @@
                     </p>
                     <button
                       @click="enrollInCourse"
-                      :disabled="enrollLoading"
+                      :disabled="enrollLoading || !can_enroll"
                       :class="[
                         'px-8 py-3 rounded-lg font-semibold text-white transition-all duration-200',
-                        enrollLoading
+                        enrollLoading || !can_enroll
                           ? 'bg-blue-400 cursor-not-allowed'
                           : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg'
                       ]"
@@ -428,7 +428,7 @@
                                 {{ module.order }}
                               </div>
                               <div
-                                v-if="module.is_completed"
+                                v-if="isModuleCompleted(module)"
                                 class="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center"
                               >
                                 <CheckCircleIcon class="h-3 w-3 text-white" />
@@ -440,7 +440,7 @@
                                   {{ module.title }}
                                 </h4>
                                 <span
-                                  v-if="module.is_completed"
+                                  v-if="isModuleCompleted(module)"
                                   class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800"
                                 >
                                   Completed
@@ -462,6 +462,7 @@
                             </div>
                             <button
                               class="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                              @click.stop="toggleModule(module.id)"
                             >
                               <ChevronDownIcon
                                 class="h-4 w-4 text-gray-500 transition-transform duration-200"
@@ -494,12 +495,12 @@
                               <div
                                 :class="[
                                   'w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold mr-3 flex-shrink-0 border-2 transition-colors',
-                                  topic.is_completed
+                                  isTopicCompleted(topic)
                                     ? 'bg-emerald-500 border-emerald-500 text-white'
                                     : 'bg-white border-gray-300 text-gray-400 group-hover:border-emerald-300'
                                 ]"
                               >
-                                <CheckCircleIcon v-if="topic.is_completed" class="h-3 w-3" />
+                                <CheckCircleIcon v-if="isTopicCompleted(topic)" class="h-3 w-3" />
                                 <span v-else>{{ topic.order }}</span>
                               </div>
                               <div class="flex-1">
@@ -522,7 +523,7 @@
                             </div>
                             <div class="flex items-center gap-2 ml-4">
                               <CheckCircleIcon
-                                v-if="topic.is_completed"
+                                v-if="isTopicCompleted(topic)"
                                 class="h-5 w-5 text-emerald-600 flex-shrink-0"
                               />
                               <Link
@@ -586,7 +587,7 @@
                 <!-- Actions for Enrolled Students -->
                 <template v-else>
                   <Link
-                    v-if="enrollment?.status === 'active' || enrollment?.status === 'enrolled' && next_topic"
+                    v-if="(enrollment?.status === 'active' || enrollment?.status === 'enrolled') && next_topic"
                     :href="route('student.courses.learn', { course: course.id, topic: next_topic.id })"
                     class="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                   >
@@ -781,11 +782,7 @@ const expandedModules = ref({})
 const showShareModal = ref(false)
 
 // Computed property for enrollment status
-const isEnrolled = computed(() => props.is_enrolled || false)
-
-const canReenroll = computed(() => {
-  return props.was_dropped && props.can_enroll
-})
+const isEnrolled = computed(() => props.is_enrolled)
 
 // Computed properties for safe access
 const overallCompletionPercentage = computed(() => {
@@ -826,7 +823,7 @@ const progressByModule = computed(() => {
 
 // Initialize expanded modules
 onMounted(() => {
-  if (props.course.modules?.length) {
+  if (props.course.modules?.length && isEnrolled.value) {
     expandedModules.value[props.course.modules[0].id] = true
   }
 })
@@ -838,6 +835,7 @@ const getStatusClass = (status) => {
     active: 'bg-emerald-100 text-emerald-800',
     paused: 'bg-amber-100 text-amber-800',
     completed: 'bg-teal-100 text-teal-800',
+    enrolled: 'bg-blue-100 text-blue-800',
   }
   return classes[status] || 'bg-gray-100 text-gray-800'
 }
@@ -848,6 +846,7 @@ const getStatusTextClass = (status) => {
     active: 'text-emerald-600',
     paused: 'text-amber-600',
     completed: 'text-teal-600',
+    enrolled: 'text-blue-600',
   }
   return classes[status] || 'text-gray-600'
 }
@@ -924,9 +923,19 @@ const calculateModuleCompletion = (module) => {
   }
 
   // Fallback to topic completion checking
-  const completedTopics = module.topics?.filter(topic => topic.is_completed).length || 0
+  const completedTopics = module.topics?.filter(topic => isTopicCompleted(topic)).length || 0
   const totalTopics = module.topics?.length || 0
   return totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0
+}
+
+const isModuleCompleted = (module) => {
+  return calculateModuleCompletion(module) >= 100
+}
+
+const isTopicCompleted = (topic) => {
+  // This should check the actual topic completion status from the backend
+  // For now, we'll check if the topic has a completion flag
+  return topic.is_completed || false
 }
 
 const getModuleNumber = (moduleId) => {
@@ -954,14 +963,11 @@ const toggleModule = (moduleId) => {
   }
 }
 
-const getTotalTopics = () => {
-  return props.course.modules?.reduce((total, module) => total + (module.topics?.length || 0), 0) || 0
-}
-
 const getTotalQuizzes = () => {
-  return props.course.modules?.reduce((total, module) => {
+  if (!props.course.modules) return 0
+  return props.course.modules.reduce((total, module) => {
     return total + (module.topics?.filter(topic => topic.has_quiz).length || 0)
-  }, 0) || 0
+  }, 0)
 }
 
 // Enrollment action

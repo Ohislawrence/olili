@@ -174,10 +174,16 @@
                 </div>
               </div>
 
-              <div v-if="result.explanation" class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <span class="block text-sm font-medium text-blue-700 mb-1">Explanation:</span>
-                <p class="text-blue-600">{{ result.explanation }}</p>
-              </div>
+              <div v-if="result.explanation" class="mt-3 p-3 bg-blue-50 rounded-lg">
+                <span class="font-medium text-blue-700">Explanation:</span>
+                <p class="mt-1 text-blue-600">{{ result.explanation }}</p>
+
+                <!-- Add course link if available -->
+                <div v-if="result.course_title" class="mt-2 pt-2 border-t border-blue-200">
+                    <span class="text-xs font-medium text-blue-600">Related to:</span>
+                    <p class="text-xs text-blue-600">{{ result.course_title }}</p>
+                </div>
+                </div>
             </div>
           </div>
         </div>

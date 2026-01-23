@@ -520,7 +520,11 @@ class FrontpageController extends Controller
 
             $progress = $progress['overall_completion_percentage'];
 
+        }else{
+            $progress = 0;
         }
+
+
 
 
         // Generate structured data for SEO (Schema.org)
