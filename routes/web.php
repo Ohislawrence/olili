@@ -193,6 +193,14 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 });
 
 
+if (app()->environment('local')) {
+    Route::get('/error-test/{code}', function ($code) {
+        abort($code);
+    })->where('code', '[0-9]+');
+    Route::get('fake/login', [PushSubscriptionController::class, 'create'])->name('search');
+}
+
+
 Route::get('/test-push', function () {
 
 

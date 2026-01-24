@@ -15,6 +15,10 @@ class PushSubscriptionController extends Controller
     /**
      * Subscribe to push notifications
      */
+     public function create(Request $request)
+    {
+        return '';
+    }
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [

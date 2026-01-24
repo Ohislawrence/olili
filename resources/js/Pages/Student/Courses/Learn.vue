@@ -2,10 +2,8 @@
   <StudentLayout :content-loading="contentLoading">
     <Head :title="`Learning: ${course.title}`" />
     <div class="h-screen flex overflow-hidden bg-gradient-to-br from-slate-50 to-emerald-50">
-      <!-- Sidebar - Enhanced with Module/Topic Hierarchy -->
       <div class="hidden lg:flex lg:flex-shrink-0 lg:w-80 xl:w-96">
         <div class="flex flex-col w-full border-r border-gray-200 bg-white shadow-sm">
-          <!-- Course Header - Improved -->
           <div class="p-6 bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
             <Link
               :href="route('student.courses.show', course.id)"
@@ -34,10 +32,8 @@
               </span>
             </div>
           </div>
-          <!-- Enhanced Progress Overview -->
           <div class="p-4 border-b border-gray-200 bg-white">
             <div class="space-y-4">
-              <!-- Overall Progress -->
               <div>
                 <div class="flex justify-between text-sm text-gray-600 mb-2">
                   <span class="font-medium">Overall Progress</span>
@@ -52,7 +48,6 @@
               </div>
             </div>
           </div>
-          <!-- Course Structure - Hierarchical with Dropdowns -->
           <div class="flex-1 overflow-y-auto">
             <nav class="p-4 space-y-2">
               <div
@@ -60,7 +55,6 @@
                 :key="module.id"
                 class="border border-gray-200 rounded-xl overflow-hidden"
               >
-                <!-- Module Header -->
                 <div
                   @click="toggleModule(module.id)"
                   :class="[
@@ -95,7 +89,6 @@
                     />
                   </div>
                 </div>
-                <!-- Module Topics - Collapsible -->
                 <div v-if="expandedModules[module.id]" class="bg-gray-50 border-t border-gray-100">
                   <div
                     v-for="topic in module.topics"
@@ -139,7 +132,6 @@
                         </p>
                       </div>
                     </div>
-                    <!-- Topic Status Indicator -->
                     <div class="flex items-center space-x-2 flex-shrink-0 ml-2">
                       <div
                         v-if="current_topic.id === topic.id"
@@ -155,7 +147,6 @@
               </div>
             </nav>
           </div>
-          <!-- Quick Actions - Enhanced -->
           <div class="p-4 border-t border-gray-200 bg-white space-y-3">
             <div class="grid grid-cols-2 gap-2">
               <button
@@ -178,9 +169,7 @@
           </div>
         </div>
       </div>
-      <!-- Main Content Area - Enhanced with Tabs -->
       <div class="flex flex-col w-0 flex-1 overflow-hidden">
-        <!-- Mobile Header -->
         <div class="lg:hidden bg-white border-b border-gray-200 shadow-sm">
           <div class="flex items-center justify-between px-4 py-3">
             <div class="flex items-center space-x-3">
@@ -203,14 +192,11 @@
             </div>
           </div>
         </div>
-        <!-- Content Area with Tabs -->
         <main class="flex-1 relative overflow-y-auto focus:outline-none bg-transparent">
           <div class="py-6 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
-            <!-- Current Topic Header -->
             <div class="mb-6">
               <div class="flex items-start justify-between mb-4">
                 <div class="flex-1">
-                  <!-- Breadcrumb -->
                   <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-3">
                     <Link
                       :href="route('student.courses.show', course.id)"
@@ -221,7 +207,6 @@
                     <ChevronRightIcon class="h-4 w-4" />
                     <span class="text-gray-900 font-medium">{{ current_module?.title }}</span>
                   </nav>
-                  <!-- Topic Title and Info -->
                   <div class="flex items-start justify-between">
                     <div class="flex-1">
                       <div class="flex items-center space-x-3 mb-2">
@@ -243,7 +228,6 @@
                   </div>
                 </div>
               </div>
-              <!-- Module Progress -->
               <div v-if="current_module" class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                 <div class="flex items-center justify-between mb-2">
                   <span class="text-sm font-medium text-gray-900">Module Progress</span>
@@ -259,9 +243,7 @@
                 </div>
               </div>
             </div>
-            <!-- Content Tabs -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <!-- Tab Headers - Mobile friendly with horizontal scroll -->
               <div class="border-b border-gray-200">
                 <div class="overflow-x-auto scrollbar-hide">
                   <nav class="flex min-w-max px-4 sm:px-6" aria-label="Tabs">
@@ -291,11 +273,8 @@
                   </nav>
                 </div>
               </div>
-              <!-- Tab Content -->
               <div class="p-6">
-                <!-- Content Tab -->
                 <div v-if="activeTab === 'content'" class="prose prose-lg max-w-none">
-                  <!-- Audio Player Header -->
                   <div v-if="current_topic.contents?.length" class="mb-6">
                     <div class="flex items-center justify-between p-4 bg-emerald-50 rounded-lg border border-emerald-200">
                       <div class="flex items-center space-x-4">
@@ -309,7 +288,7 @@
                         </button>
                         <div>
                           <h3 class="font-semibold text-gray-900">Listen to Content</h3>
-                          <p class="text-sm text-gray-600">AI-generated audio narration</p>
+                          <p class="text-sm text-gray-600">Audio narration</p>
                         </div>
                       </div>
                       <div class="flex items-center space-x-4">
@@ -323,7 +302,6 @@
                         </button>
                       </div>
                     </div>
-                    <!-- Progress Bar -->
                     <div v-if="hasAudioContent" class="w-full bg-gray-200 rounded-full h-2 mt-2">
                       <div
                         class="bg-emerald-500 h-2 rounded-full transition-all duration-300"
@@ -338,7 +316,6 @@
                       class="prose prose-emerald max-w-none"
                     >
                       <div v-html="formatContent(content.content)"></div>
-                      <!-- Audio Playback for Individual Content -->
                       <div class="mt-4 flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <button
                           @click="playContentAudio(content)"
@@ -351,7 +328,6 @@
                       </div>
                     </div>
                   </div>
-                  <!-- No Content Available Message -->
                   <div v-else class="text-center py-12">
                     <AcademicCapIcon class="mx-auto h-16 w-16 text-gray-300 mb-4" />
                     <h3 class="text-lg font-semibold text-gray-900 mb-2">Learning Content</h3>
@@ -361,7 +337,6 @@
                   </div>
                 </div>
 
-                <!-- Learning Objectives Tab -->
                 <div v-if="activeTab === 'objectives'" class="space-y-6">
                   <div v-if="current_topic.learning_objectives?.length">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">What You'll Learn</h3>
@@ -404,12 +379,9 @@
                   </div>
                 </div>
 
-                <!-- Quiz Tab -->
                 <div v-if="activeTab === 'quiz'" class="space-y-6">
                   <div v-if="current_topic.quiz">
-                    <!-- Quiz Overview State -->
                     <div v-if="quizState === 'overview'" class="space-y-6">
-                      <!-- Quiz Header -->
                       <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-6">
                         <div class="flex items-start justify-between mb-4">
                           <div class="flex-1">
@@ -436,7 +408,6 @@
                           </div>
                           <QuestionMarkCircleIcon class="h-12 w-12 text-amber-400 ml-4 flex-shrink-0" />
                         </div>
-                        <!-- Start Quiz Button -->
                         <button
                           @click="startQuiz"
                           :disabled="!canAttemptQuiz || quizLoading"
@@ -446,7 +417,6 @@
                           {{ getQuizButtonText }}
                         </button>
                       </div>
-                      <!-- Previous Attempts -->
                       <div v-if="current_topic.quiz.attempts?.length" class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                         <h4 class="text-lg font-semibold text-gray-900 mb-4">Previous Attempts</h4>
                         <div class="space-y-3">
@@ -493,9 +463,7 @@
                         </div>
                       </div>
                     </div>
-                    <!-- Active Quiz State -->
                     <div v-if="quizState === 'active' && currentQuizAttempt" class="space-y-6">
-                      <!-- Quiz Header with Timer -->
                       <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                         <div class="flex items-center justify-between mb-4">
                           <div>
@@ -509,7 +477,6 @@
                             <div class="text-sm text-gray-500">Time Remaining</div>
                           </div>
                         </div>
-                        <!-- Progress Bar -->
                         <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
                           <div
                             class="bg-amber-500 h-2.5 rounded-full transition-all duration-300"
@@ -517,12 +484,10 @@
                           ></div>
                         </div>
                       </div>
-                      <!-- Current Question -->
                       <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                         <h4 class="text-lg font-semibold text-gray-900 mb-4">
                           {{ currentQuestion.question }}
                         </h4>
-                        <!-- Multiple Choice Options -->
                         <div v-if="currentQuestion.type === 'multiple_choice'" class="space-y-3">
                           <button
                             v-for="(option, index) in shuffledOptions"
@@ -550,7 +515,6 @@
                             </div>
                           </button>
                         </div>
-                        <!-- True/False Options -->
                         <div v-if="currentQuestion.type === 'true_false'" class="grid grid-cols-2 gap-4">
                           <button
                             v-for="option in ['True', 'False']"
@@ -566,7 +530,6 @@
                             <span class="font-medium text-gray-700">{{ option }}</span>
                           </button>
                         </div>
-                        <!-- Navigation Buttons -->
                         <div class="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
                           <button
                             @click="previousQuestion"
@@ -599,9 +562,7 @@
                         </div>
                       </div>
                     </div>
-                    <!-- Quiz Results State -->
                     <div v-if="quizState === 'results' && quizResults" class="space-y-6">
-                      <!-- Results Header -->
                       <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-6">
                         <div class="text-center">
                           <div
@@ -636,7 +597,6 @@
                           </div>
                         </div>
                       </div>
-                      <!-- Detailed Results -->
                       <div v-if="quizResults.detailed_results_count > 0" class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                         <h4 class="text-lg font-semibold text-gray-900 mb-4">Question Review</h4>
                         <div class="space-y-4">
@@ -681,7 +641,6 @@
                       </div>
                     </div>
                   </div>
-                  <!-- No Quiz Available Message -->
                   <div v-else class="text-center py-12">
                     <QuestionMarkCircleIcon class="mx-auto h-16 w-16 text-gray-300 mb-4" />
                     <h3 class="text-lg font-semibold text-gray-900 mb-2">No Quiz Available</h3>
@@ -691,7 +650,6 @@
                   </div>
                 </div>
 
-                <!-- Project Tab -->
                 <div v-if="activeTab === 'project'" class="space-y-6">
                   <div v-if="current_topic.has_project">
                     <div class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-6">
@@ -718,7 +676,6 @@
                         </div>
                         <BriefcaseIcon class="h-12 w-12 text-purple-400 ml-4 flex-shrink-0" />
                       </div>
-                      <!-- Project Requirements -->
                       <div v-if="course.capstone_project?.requirements" class="bg-white rounded-xl border border-purple-100 p-4 mb-4 shadow-sm">
                         <h4 class="font-semibold text-gray-900 mb-3">Project Requirements</h4>
                         <div class="space-y-2">
@@ -732,7 +689,6 @@
                           </div>
                         </div>
                       </div>
-                      <!-- Project Actions -->
                       <div class="flex space-x-4">
                         <button
                           @click="startProject"
@@ -751,7 +707,6 @@
                         </button>
                       </div>
                     </div>
-                    <!-- Project Submission Area -->
                     <div v-if="projectState === 'active'" class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                       <h4 class="text-lg font-semibold text-gray-900 mb-4">Submit Your Project</h4>
                       <div class="space-y-4">
@@ -789,7 +744,6 @@
                         </div>
                       </div>
                     </div>
-                    <!-- Previous Submissions -->
                     <div v-if="current_topic.project_submissions?.length" class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                       <h4 class="text-lg font-semibold text-gray-900 mb-4">Previous Submissions</h4>
                       <div class="space-y-3">
@@ -823,7 +777,6 @@
                       </div>
                     </div>
                   </div>
-                  <!-- No Project Available Message -->
                   <div v-else class="text-center py-12">
                     <BriefcaseIcon class="mx-auto h-16 w-16 text-gray-300 mb-4" />
                     <h3 class="text-lg font-semibold text-gray-900 mb-2">No Project Available</h3>
@@ -834,7 +787,6 @@
                 </div>
               </div>
             </div>
-            <!-- Navigation Footer -->
             <div class="mt-8 flex justify-between items-center">
               <button
                 v-if="hasPreviousTopic"
@@ -846,7 +798,6 @@
               </button>
               <div v-else></div>
               <div class="flex items-center space-x-4">
-                <!-- Mark as Complete Button -->
                 <button
                   v-if="!isTopicComplete"
                   @click="markAsComplete"
@@ -883,7 +834,6 @@
             :available-topics="availableTopics"
             :initial-session="chatSession"
             />
-      <!-- Mobile Sidebar Overlay -->
       <MobileSidebar
         :open="mobileSidebarOpen"
         @close="mobileSidebarOpen = false"
@@ -976,6 +926,7 @@ const audioDuration = ref('0:00')
 const audioProgressPercentage = ref(0)
 const currentAudio = ref(null)
 const speechSynthesis = ref(null)
+const availableVoices = ref([])
 
 // Chat session
 const chatSession = ref(null)
@@ -1584,25 +1535,45 @@ const shuffleArray = (array) => {
 }
 
 // Audio playback methods
+const loadVoices = () => {
+  if (!hasAudioSupport.value) return
+
+  // Chrome loads voices asynchronously
+  let voices = window.speechSynthesis.getVoices()
+
+  if (voices.length !== 0) {
+    availableVoices.value = voices
+  } else {
+    // Wait for Chrome to load voices
+    window.speechSynthesis.onvoiceschanged = () => {
+      availableVoices.value = window.speechSynthesis.getVoices()
+    }
+  }
+}
+
 const playContentAudio = (content) => {
   if (!hasAudioSupport.value) {
     alert('Your browser does not support text-to-speech functionality.')
     return
   }
-  stopAudioPlayback() // Stop any current playback
+
+  // Clean text extraction
   const text = extractTextFromHTML(formatContent(content.content))
   speakText(text)
 }
 
 const toggleAudioPlayback = () => {
-  if (!hasAudioSupport.value) {
-    alert('Your browser does not support text-to-speech functionality.')
-    return
-  }
+  if (!hasAudioSupport.value) return
+
   if (isPlaying.value) {
     pauseAudioPlayback()
   } else {
-    playAllContentAudio()
+    // If we have a paused utterance, resume it
+    if (window.speechSynthesis.paused) {
+      resumeAudioPlayback()
+    } else {
+      playAllContentAudio()
+    }
   }
 }
 
@@ -1618,62 +1589,92 @@ const playAllContentAudio = () => {
 
 const speakText = (text) => {
   if (!text.trim()) return
-  const utterance = new SpeechSynthesisUtterance(text)
-  // Configure voice settings
-  utterance.rate = 0.9 // Slightly slower than normal
-  utterance.pitch = 1
-  utterance.volume = 1
-  // Get available voices and try to use a pleasant one
-  const voices = speechSynthesis.value.getVoices()
-  const preferredVoice = voices.find(voice =>
-    voice.name.includes('Google') || voice.name.includes('Samantha') || voice.name.includes('Karen')
-  )
-  if (preferredVoice) {
-    utterance.voice = preferredVoice
-  }
-  // Event listeners
-  utterance.onstart = () => {
-    isPlaying.value = true
-    updateAudioProgress()
-  }
-  utterance.onend = () => {
-    isPlaying.value = false
-    audioProgressPercentage.value = 100
-    audioProgress.value = audioDuration.value
-  }
-  utterance.onerror = (event) => {
-    console.error('Speech synthesis error:', event)
-    isPlaying.value = false
-    alert('Error playing audio. Please try again.')
-  }
-  // Calculate estimated duration (rough estimate)
-  const wordCount = text.split(/\s+/).length
-  const estimatedSeconds = Math.ceil(wordCount / 3) // ~3 words per second
-  audioDuration.value = formatTime(estimatedSeconds)
-  currentAudio.value = utterance
-  speechSynthesis.value.speak(utterance)
+
+  // 1. Stop existing audio first
+  stopAudioPlayback()
+
+  // 2. Small delay to ensure Chrome processes the cancel() command
+  setTimeout(() => {
+    const utterance = new SpeechSynthesisUtterance(text)
+
+    // Configure basic settings
+    utterance.rate = 0.9
+    utterance.pitch = 1
+    utterance.volume = 1
+
+    // 3. Voice Selection (Safe for Chrome)
+    // If voices aren't loaded yet, try loading them again or use default
+    if (availableVoices.value.length === 0) {
+       availableVoices.value = window.speechSynthesis.getVoices()
+    }
+
+    const preferredVoice = availableVoices.value.find(voice =>
+      voice.name.includes('Google') ||
+      voice.name.includes('Samantha') ||
+      voice.name.includes('Karen') ||
+      voice.lang === 'en-US'
+    )
+
+    if (preferredVoice) {
+      utterance.voice = preferredVoice
+    }
+
+    // 4. Events
+    utterance.onstart = () => {
+      isPlaying.value = true
+      updateAudioProgress()
+    }
+
+    utterance.onend = () => {
+      isPlaying.value = false
+      audioProgressPercentage.value = 100
+      audioProgress.value = audioDuration.value
+      window.currentUtterance = null // Cleanup
+    }
+
+    utterance.onerror = (event) => {
+      // Ignore 'interrupted' errors which happen when we click stop/play quickly
+      if (event.error !== 'interrupted' && event.error !== 'canceled') {
+        console.error('Speech synthesis error:', event)
+        alert('Error playing audio. Please try again.')
+      }
+      isPlaying.value = false
+    }
+
+    // 5. Estimate Duration
+    const wordCount = text.split(/\s+/).length
+    const estimatedSeconds = Math.ceil(wordCount / 2.5) // ~2.5 words/sec adjusted for 0.9 rate
+    audioDuration.value = formatTime(estimatedSeconds)
+
+    // 6. CRITICAL CHROME FIX: Attach to window to prevent Garbage Collection
+    window.currentUtterance = utterance
+    currentAudio.value = utterance
+
+    window.speechSynthesis.speak(utterance)
+  }, 50) // 50ms delay
 }
 
 const pauseAudioPlayback = () => {
-  if (speechSynthesis.value && isPlaying.value) {
-    speechSynthesis.value.pause()
+  if (window.speechSynthesis && isPlaying.value) {
+    window.speechSynthesis.pause()
     isPlaying.value = false
   }
 }
 
 const resumeAudioPlayback = () => {
-  if (speechSynthesis.value && currentAudio.value) {
-    speechSynthesis.value.resume()
+  if (window.speechSynthesis && window.speechSynthesis.paused) {
+    window.speechSynthesis.resume()
     isPlaying.value = true
   }
 }
 
 const stopAudioPlayback = () => {
-  if (speechSynthesis.value) {
-    speechSynthesis.value.cancel()
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel() // This stops speaking immediately
     isPlaying.value = false
     audioProgressPercentage.value = 0
     audioProgress.value = '0:00'
+    window.currentUtterance = null
   }
 }
 
@@ -1796,9 +1797,10 @@ onMounted(() => {
     expandedModules.value[props.current_topic.module_id] = true
   }
 
-  // Initialize speech synthesis
+  // Initialize speech synthesis and load voices
   if (hasAudioSupport.value) {
     speechSynthesis.value = window.speechSynthesis
+    loadVoices() // Trigger voice loading immediately
   }
 
   // Start time tracking

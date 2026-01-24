@@ -51,6 +51,7 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
                 'status' => fn () => $request->session()->get('status'),
+                'info' => fn () => $request->session()->get('info'),
             ],
             'stats' => [
                 'total_tutors' => User::role('tutor')->count(),
@@ -58,6 +59,9 @@ class HandleInertiaRequests extends Middleware
                 'total_students' => User::role('student')->count(),
                 'ai_cost_today' => fn () => $request->session()->get('message'),
             ],
+            'errors' => fn () => $request->session()->get('errors')
+                ? $request->session()->get('errors')->getBag('default')->getMessages()
+                : (object) [],
         ]);
     }
 }
