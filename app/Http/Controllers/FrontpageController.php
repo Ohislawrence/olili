@@ -511,21 +511,19 @@ class FrontpageController extends Controller
         $userProgress = null;
 
 
-        if (Auth::check()) {
-            $userEnrollment = CourseEnrollment::where('user_id', Auth::id())
-                ->where('course_id', $id)
-                ->first()->id;
+        if (Auth::check() && auth()->user()->hasRole('student')) {
+        $userEnrollment = CourseEnrollment::where('user_id', Auth::id())
+            ->where('course_id', $id)
+            ->first();
 
-            $progress = $this->progressService->calculateCourseProgress($course, Auth::id());
-
-            $progress = $progress['overall_completion_percentage'];
-
-        }else{
-            $progress = 0;
+            // Check if enrollment exists before accessing id
+            if ($userEnrollment) {
+                $progress = $this->progressService->calculateCourseProgress($course, Auth::id());
+                $progress = $progress['overall_completion_percentage'];
+            } else {
+                $progress = 0;
+            }
         }
-
-
-
 
         // Generate structured data for SEO (Schema.org)
         $structuredData = $this->generateCourseStructuredData($course, $averageRating, $reviewCount);
