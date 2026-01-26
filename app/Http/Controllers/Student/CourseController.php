@@ -109,17 +109,20 @@ class CourseController extends Controller
 
     public function browse(Request $request)
     {
+        // Get current student
+        $student = auth()->user();
+
         // Show available courses for enrollment
         $query = Course::availableForEnrollment()
             ->with(['examBoard', 'creator'])
-            ->withCount('enrollments','modules');
+            ->withCount(['enrollments', 'modules']);
 
         // Search
         if ($request->has('search') && $request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('title', 'like', "%{$request->search}%")
-                  ->orWhere('subject', 'like', "%{$request->search}%")
-                  ->orWhere('description', 'like', "%{$request->search}%");
+                ->orWhere('subject', 'like', "%{$request->search}%")
+                ->orWhere('description', 'like', "%{$request->search}%");
             });
         }
 
@@ -140,30 +143,21 @@ class CourseController extends Controller
 
         $courses = $query->latest()->paginate(12);
 
-        // Get current student's enrollments (excluding dropped)
-        $student = auth()->user();
-
-        $enrolledCourseIds = $student->enrolledCourses()
+        // Get enrolled course IDs (excluding dropped)
+        $enrolledCourseIds = $student->enrollments()
+            ->where('status', '!=', 'dropped')
             ->pluck('course_id')
             ->toArray();
 
-
-        // Get enrolled courses with progress for enrolled students
+        // Get enrolled courses with progress
         $enrolledCourses = [];
-        foreach ($student->courseEnrollments as $enrollment) {
-            // Skip dropped enrollments
-            if ($enrollment->status === 'dropped') {
-                continue;
-            }
-
+        foreach ($student->enrollments()->where('status', '!=', 'dropped')->get() as $enrollment) {
             $lastViewedTopic = $this->progressService->lastViewedTopic($enrollment);
-
-            // Use ProgressTrackingService to get enrollment progress
             $progress = $this->progressService->getEnrollmentProgress($enrollment);
 
             $enrolledCourses[$enrollment->course_id] = [
                 'id' => $enrollment->id,
-                'progress_percentage' => $progress['overall_completion_percentage'],
+                'progress_percentage' => $progress['overall_completion_percentage'] ?? 0,
                 'status' => $enrollment->status,
                 'lastTopic' => $lastViewedTopic,
             ];
@@ -171,7 +165,6 @@ class CourseController extends Controller
 
         // Get available subjects for filter
         $subjects = Course::distinct()->orderBy('subject')->pluck('subject');
-
         $examBoards = ExamBoard::active()->get();
 
         $levels = [

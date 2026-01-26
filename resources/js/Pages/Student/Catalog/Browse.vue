@@ -1,6 +1,6 @@
 <template>
   <StudentLayout>
-    <Head title="Course Catalog" />
+    <Head title="Course Courses" />
 
     <!-- Main Content -->
     <section class="py-8 md:py-12 bg-white">
@@ -16,7 +16,7 @@
                 </span>
               </h1>
               <p class="text-gray-600 max-w-2xl">
-                Browse and enroll in public courses created by expert instructors. Transform your skills with intelligent learning.
+                Browse and enroll in courses created by expert instructors. Transform your skills with intelligent learning.
               </p>
             </div>
 

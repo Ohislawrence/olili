@@ -520,9 +520,12 @@ class FrontpageController extends Controller
             if ($userEnrollment) {
                 $progress = $this->progressService->calculateCourseProgress($course, Auth::id());
                 $progress = $progress['overall_completion_percentage'];
-            } else {
+
+            }else {
                 $progress = 0;
             }
+        }else {
+            $progress = 0;
         }
 
         // Generate structured data for SEO (Schema.org)
