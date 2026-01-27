@@ -95,7 +95,7 @@
                                 Go to Dashboard
                             </a>
                         @else
-                            <a href="{{ route('search') }}" class="block w-full py-3 px-6 btn-gradient text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition duration-200">
+                            <a href="{{ route('login') }}" class="block w-full py-3 px-6 btn-gradient text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition duration-200">
                                 Go to Login
                             </a>
                         @endauth
@@ -107,7 +107,7 @@
                     <!-- Search Form -->
                     <div class="mt-8">
                         <p class="text-sm text-gray-500 mb-3">Looking for something specific?</p>
-                        <form action="{{ route('search') }}" method="GET" class="flex gap-2">
+                        <form action="{{ route('courses.index') }}" method="GET" class="flex gap-2">
                             <input type="text" name="q" placeholder="Search courses..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
                             <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">
                                 Search
@@ -122,6 +122,7 @@
                 <p class="text-white/80 text-sm">
                     &copy; {{ date('Y') }} Olilearn. All rights reserved.
                 </p>
+
             </div>
         </div>
     </div>
