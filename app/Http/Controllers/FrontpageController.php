@@ -10,7 +10,9 @@ use App\Models\SubscriptionPlan;
 use App\Services\ProgressTrackingService;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
+use App\Models\Specialization;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Category;
 
 class FrontpageController extends Controller
 {
@@ -1301,4 +1303,214 @@ class FrontpageController extends Controller
         ]);
     }
 
+
+    public function specializations()
+    {
+        // Get all active specializations with their courses
+        $specializations = Specialization::with(['courses' => function($query) {
+            $query->where('visibility', 'public')
+                  ->select('id', 'title', 'slug', 'subject', 'level');
+        }])
+            ->active()
+            // Sort by enrollment count instead of popularity
+            ->orderBy('enrollment_count', 'desc')
+            ->get()
+            ->map(function ($specialization) {
+                return [
+                    'id' => $specialization->id,
+                    'title' => $specialization->name, // Note: model uses 'name', not 'title'
+                    'slug' => $specialization->slug,
+                    'description' => $specialization->description,
+                    'short_description' => $specialization->short_description,
+                    'icon' => $specialization->thumbnail_url ? '🖼️' : '🎓', // Use thumbnail if available
+                    'category' => $specialization->target_career, // Using target_career as category
+                    'duration' => $specialization->estimated_duration_hours,
+                    'totalHours' => $specialization->estimated_duration_hours,
+                    'courseCount' => $specialization->courses->count(),
+                    'total_courses' => $specialization->courses->count(),
+                    'skills' => $specialization->target_skills ?? [],
+                    'target_skills' => $specialization->target_skills ?? [],
+                    'career_opportunities' => $specialization->career_opportunities ?? [],
+                    'career_roles' => $specialization->career_opportunities ?? [],
+                    'is_popular' => $specialization->enrollment_count > 50, // Define popularity based on enrollment
+                    'is_featured' => $specialization->is_featured,
+                    'level' => $specialization->level,
+                    'price' => $specialization->price,
+                    'discount_price' => $specialization->discount_price,
+                    'has_discount' => $specialization->has_discount,
+                    'enrollment_count' => $specialization->enrollment_count,
+                    'completion_count' => $specialization->completion_count,
+                    'completion_rate' => $specialization->completion_count > 0
+                        ? round(($specialization->completion_count / $specialization->enrollment_count) * 100, 1)
+                        : 0,
+                    'target_exam' => $specialization->target_exam,
+                    'target_career' => $specialization->target_career,
+                    'created_at' => $specialization->created_at?->toDateString(),
+                    'published_at' => $specialization->published_at?->toDateString(),
+                ];
+            });
+
+        // Get categories from target_career field
+        $careers = collect($specializations)
+            ->pluck('target_career')
+            ->filter()
+            ->unique()
+            ->values()
+            ->map(function ($career, $index) use ($specializations) {
+                return [
+                    'id' => $index + 1,
+                    'name' => $career,
+                    'slug' => strtolower(str_replace(' ', '-', $career)),
+                    'count' => $specializations->where('target_career', $career)->count(),
+                ];
+            });
+
+        // Add "All" category
+        $categories = collect([[
+            'id' => 'all',
+            'name' => 'All Specializations',
+            'slug' => 'all',
+            'count' => $specializations->count(),
+        ]])->merge($careers);
+
+        return Inertia::render('Frontpages/Specializations/Index', [
+            'specializations' => $specializations,
+            'categories' => $categories,
+            'meta' => [
+                'title' => 'Career-Focused Learning Paths & Specializations | OliLearn Nigeria',
+                'description' => 'Master in-demand skills with structured learning paths. Choose from career-focused specializations in tech, business, creative arts, and more.',
+                'image' => asset('images/specializations-landing.png'),
+                'url' => route('specializations.index'),
+            ]
+        ]);
+    }
+
+    public function show(Specialization $specialization)
+    {
+        // Check if specialization is published
+        if (!$specialization->isPublished() && !auth()->user()?->isAdmin()) {
+            abort(404);
+        }
+
+        $specialization->load(['courses' => function($query) {
+            $query->where('visibility', 'public')
+                  ->with(['modules', 'instructor'])
+                  ->orderBy('sort_order');
+        }, 'creator']);
+
+        // Get required and elective courses
+        $requiredCourses = $specialization->courses()
+            ->wherePivot('is_required', true)
+            ->get();
+
+        $electiveCourses = $specialization->courses()
+            ->wherePivot('is_required', false)
+            ->get();
+
+        return Inertia::render('Specializations/Show', [
+            'specialization' => [
+                'id' => $specialization->id,
+                'title' => $specialization->name,
+                'slug' => $specialization->slug,
+                'description' => $specialization->description,
+                'short_description' => $specialization->short_description,
+                'full_description' => $specialization->description, // You might want to add a full_description field
+                'icon' => $specialization->thumbnail_url,
+                'banner_image' => $specialization->banner_url,
+                'category' => $specialization->target_career,
+                'duration' => $specialization->estimated_duration_hours,
+                'total_hours' => $specialization->estimated_duration_hours,
+                'level' => $specialization->level,
+                'prerequisites' => $specialization->prerequisites,
+                'target_skills' => $specialization->target_skills,
+                'career_opportunities' => $specialization->career_opportunities,
+                'learning_objectives' => $specialization->learning_objectives,
+                'price' => $specialization->price,
+                'discount_price' => $specialization->discount_price,
+                'has_discount' => $specialization->has_discount,
+                'enrollment_count' => $specialization->enrollment_count,
+                'completion_count' => $specialization->completion_count,
+                'completion_rate' => $specialization->completion_count > 0
+                    ? round(($specialization->completion_count / $specialization->enrollment_count) * 100, 1)
+                    : 0,
+                'is_featured' => $specialization->is_featured,
+                'target_exam' => $specialization->target_exam,
+                'target_career' => $specialization->target_career,
+                'min_electives' => $specialization->min_electives,
+                'max_electives' => $specialization->max_electives,
+                'courses' => [
+                    'required' => $requiredCourses->map(function ($course) {
+                        return [
+                            'id' => $course->id,
+                            'title' => $course->title,
+                            'slug' => $course->slug,
+                            'description' => $course->description,
+                            'subject' => $course->subject,
+                            'level' => $course->level,
+                            'estimated_duration_hours' => $course->estimated_duration_hours,
+                            'modules_count' => $course->modules->count(),
+                            'thumbnail_url' => $course->thumbnail_url,
+                            'instructor' => $course->instructor ? [
+                                'name' => $course->instructor->name,
+                                'avatar' => $course->instructor->avatar_url,
+                            ] : null,
+                            'pivot' => [
+                                'is_required' => true,
+                                'category' => $course->pivot->category,
+                                'order' => $course->pivot->order,
+                            ]
+                        ];
+                    }),
+                    'elective' => $electiveCourses->map(function ($course) {
+                        return [
+                            'id' => $course->id,
+                            'title' => $course->title,
+                            'slug' => $course->slug,
+                            'description' => $course->description,
+                            'subject' => $course->subject,
+                            'level' => $course->level,
+                            'estimated_duration_hours' => $course->estimated_duration_hours,
+                            'modules_count' => $course->modules->count(),
+                            'thumbnail_url' => $course->thumbnail_url,
+                            'instructor' => $course->instructor ? [
+                                'name' => $course->instructor->name,
+                                'avatar' => $course->instructor->avatar_url,
+                            ] : null,
+                            'pivot' => [
+                                'is_required' => false,
+                                'category' => $course->pivot->category,
+                                'order' => $course->pivot->order,
+                            ]
+                        ];
+                    }),
+                ],
+                'creator' => $specialization->creator ? [
+                    'name' => $specialization->creator->name,
+                    'avatar' => $specialization->creator->avatar_url,
+                    'bio' => $specialization->creator->bio,
+                ] : null,
+                'related_specializations' => Specialization::where('target_career', $specialization->target_career)
+                    ->where('id', '!=', $specialization->id)
+                    ->active()
+                    ->limit(3)
+                    ->get()
+                    ->map(function ($related) {
+                        return [
+                            'id' => $related->id,
+                            'title' => $related->name,
+                            'slug' => $related->slug,
+                            'description' => $related->description,
+                            'icon' => $related->thumbnail_url,
+                            'course_count' => $related->courses()->count(),
+                        ];
+                    }),
+            ],
+            'meta' => [
+                'title' => $specialization->name . ' | OliLearn Specialization',
+                'description' => $specialization->short_description ?: $specialization->description,
+                'image' => $specialization->banner_url ?: $specialization->thumbnail_url ?: asset('images/specializations-landing.png'),
+                'url' => route('specializations.show', $specialization),
+            ]
+        ]);
+    }
 }

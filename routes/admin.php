@@ -18,6 +18,8 @@ use App\Http\Controllers\Admin\EmailController;
 use App\Http\Controllers\Admin\NotificationController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Admin\CoursesController;
+use App\Http\Controllers\Admin\SpecializationController;
+use App\Http\Controllers\Admin\CourseSearchController;
 use App\Http\Controllers\Admin\EnrollmentController;
 use App\Http\Controllers\Admin\MassEnrollmentController;
 use App\Http\Controllers\Admin\ExamPrepController;
@@ -285,6 +287,39 @@ Route::middleware([
         Route::get('/{examPrep}/statistics', [ExamPrepController::class, 'statistics'])->name('statistics');
         Route::get('/{examPrep}/attempts', [ExamPrepController::class, 'attempts'])->name('attempts');
     });
+
+    // Specializations CRUD
+    Route::get('/specializations', [SpecializationController::class, 'index'])->name('specializations.index');
+    Route::get('/specializations/create', [SpecializationController::class, 'create'])->name('specializations.create');
+    Route::post('/specializations', [SpecializationController::class, 'store'])->name('specializations.store');
+    Route::get('/specializations/{specialization}', [SpecializationController::class, 'show'])->name('specializations.show');
+    Route::get('/specializations/{specialization}/edit', [SpecializationController::class, 'edit'])->name('specializations.edit');
+    Route::put('/specializations/{specialization}', [SpecializationController::class, 'update'])->name('specializations.update');
+    Route::delete('/specializations/{specialization}', [SpecializationController::class, 'destroy'])->name('specializations.destroy');
+
+    // Specialization Actions
+    Route::post('/specializations/{specialization}/publish', [SpecializationController::class, 'publish'])->name('specializations.publish');
+    Route::post('/specializations/{specialization}/unpublish', [SpecializationController::class, 'unpublish'])->name('specializations.unpublish');
+    Route::post('/specializations/{specialization}/toggle-featured', [SpecializationController::class, 'toggleFeatured'])->name('specializations.toggle-featured');
+
+    // Course Management
+    Route::post('/specializations/{specialization}/courses', [SpecializationController::class, 'addCourse'])->name('specializations.add-course');
+    Route::delete('/specializations/{specialization}/courses/{course}', [SpecializationController::class, 'removeCourse'])->name('specializations.remove-course');
+    Route::put('/specializations/{specialization}/courses/{course}', [SpecializationController::class, 'updateCourseSettings'])->name('specializations.update-course-settings');
+    Route::put('/specializations/{specialization}/courses-order', [SpecializationController::class, 'updateCourseOrder'])->name('specializations.update-course-order');
+
+    // Resource Management
+    Route::post('/specializations/{specialization}/resources', [SpecializationController::class, 'addResource'])->name('specializations.add-resource');
+    Route::put('/specializations/{specialization}/resources/{resource}', [SpecializationController::class, 'updateResource'])->name('specializations.update-resource');
+    Route::delete('/specializations/{specialization}/resources/{resource}', [SpecializationController::class, 'deleteResource'])->name('specializations.delete-resource');
+    Route::put('/specializations/{specialization}/resources-order', [SpecializationController::class, 'reorderResources'])->name('specializations.reorder-resources');
+
+    // Enrollment Management
+    Route::get('/specializations/{specialization}/enrollments', [SpecializationController::class, 'enrollments'])->name('specializations.enrollments');
+    Route::post('/specializations/{specialization}/bulk-enroll', [SpecializationController::class, 'bulkEnroll'])->name('specializations.bulk-enroll');
+
+    // Course Search (for adding courses to specializations)
+    Route::get('/courses/search/specialize', [CourseSearchController::class, 'search'])->name('courses.search');
 
 
 

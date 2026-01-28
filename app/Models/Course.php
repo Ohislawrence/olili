@@ -17,6 +17,7 @@ class Course extends Model
 {
     use HasFactory;
 
+    protected $with = ['specializations'];
     protected $fillable = [
         'code',
         'exam_board_id',
@@ -391,5 +392,10 @@ class Course extends Model
         return $this->hasMany(ProgressTracking::class);
     }
 
-
+    public function specializations()
+    {
+        return $this->belongsToMany(Specialization::class, 'specialization_courses')
+            ->withPivot(['order', 'is_required', 'category', 'recommended_weeks', 'notes'])
+            ->orderByPivot('order');
+    }
 }

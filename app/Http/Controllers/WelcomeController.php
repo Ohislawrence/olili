@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use App\Models\BlogPost;
 use App\Models\SubscriptionPlan;
+use App\Models\Specialization; // Add this import
 use Inertia\Inertia;
 
 class WelcomeController extends Controller
@@ -31,6 +32,26 @@ class WelcomeController extends Controller
                     'modules_count' => $course->modules->count(),
                     'status' => $course->status,
                     'slug' => $course->slug,
+                ];
+            });
+
+        // Get popular specializations
+        $specializations = Specialization::with(['courses' => function($query) {
+            $query->where('visibility', 'public')->limit(5);
+        }])
+            ->active()
+            ->limit(3)
+            ->get()
+            ->map(function ($specialization) {
+                return [
+                    'id' => $specialization->id,
+                    'title' => $specialization->title,
+                    'description' => $specialization->description,
+                    'icon' => $specialization->icon ?? '🎓',
+                    'duration' => $specialization->duration,
+                    'totalHours' => $specialization->total_hours,
+                    'courseCount' => $specialization->courses->count(),
+                    'courses' => $specialization->courses->pluck('title')->toArray(),
                 ];
             });
 
@@ -88,6 +109,7 @@ class WelcomeController extends Controller
 
         return Inertia::render('Frontpages/Welcome', [
             'courses' => $courses,
+            'specializations' => $specializations, // Add this line
             'blogPosts' => $blogPosts,
             'subscriptionPlans' => $subscriptionPlans,
             'meta' => [
@@ -99,4 +121,3 @@ class WelcomeController extends Controller
         ]);
     }
 }
-

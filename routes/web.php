@@ -43,6 +43,7 @@ Route::get('/gdpr', [FrontpageController::class, 'pricing'])->name('gdpr');
 //landing pages
 Route::get('/pass/weac', [FrontpageController::class, 'waeclanding'])->name('waeclanding');
 Route::get('/pass/jamb', [FrontpageController::class, 'jamblanding'])->name('jamblanding');
+Route::get('/specializations', [FrontpageController::class, 'specializations'])->name('specializations.index');
 
 // Courses routes
 Route::get('/course', [FrontpageController::class, 'coursesIndex'])->name('courses.index');
