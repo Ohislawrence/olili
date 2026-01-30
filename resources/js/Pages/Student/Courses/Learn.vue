@@ -192,7 +192,10 @@
             </div>
           </div>
         </div>
-        <main class="flex-1 relative overflow-y-auto focus:outline-none bg-transparent">
+        <main
+          ref="mainScrollContainer"
+          class="flex-1 relative overflow-y-auto focus:outline-none bg-transparent"
+        >
           <div class="py-6 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
             <div class="mb-6">
               <div class="flex items-start justify-between mb-4">
@@ -787,22 +790,23 @@
                 </div>
               </div>
             </div>
-            <div class="mt-8 flex justify-between items-center">
+            <div class="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
               <button
                 v-if="hasPreviousTopic"
                 @click="goToPreviousTopic"
-                class="inline-flex items-center px-6 py-3 border border-emerald-300 text-emerald-700 font-medium rounded-lg hover:bg-emerald-50 transition-colors"
+                class="w-full sm:w-auto flex items-center justify-center px-6 py-3 border border-emerald-300 text-emerald-700 font-medium rounded-lg hover:bg-emerald-50 transition-colors"
               >
                 <ChevronLeftIcon class="h-4 w-4 mr-2" />
                 Previous Topic
               </button>
-              <div v-else></div>
-              <div class="flex items-center space-x-4">
+              <div v-else class="hidden sm:block"></div>
+
+              <div class="flex flex-col gap-3 w-full sm:flex-row sm:items-center sm:space-x-4 sm:w-auto">
                 <button
                   v-if="!isTopicComplete"
                   @click="markAsComplete"
                   :disabled="!canMarkAsComplete || markCompleteLoading"
-                  class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed relative group"
+                  class="w-full sm:w-auto flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed relative group"
                   :title="!canMarkAsComplete ? getDisabledReason : ''"
                 >
                   <CheckCircleIcon class="h-4 w-4 mr-2" />
@@ -811,15 +815,16 @@
                 <button
                   v-else
                   disabled
-                  class="inline-flex items-center px-6 py-3 bg-gray-400 text-white font-medium rounded-lg cursor-not-allowed"
+                  class="w-full sm:w-auto flex items-center justify-center px-6 py-3 bg-gray-400 text-white font-medium rounded-lg cursor-not-allowed"
                 >
                   <CheckCircleIcon class="h-4 w-4 mr-2" />
                   Completed
                 </button>
+
                 <button
                   v-if="hasNextTopic"
                   @click="goToNextTopic"
-                  class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+                  class="w-full sm:w-auto flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
                 >
                   Next Topic
                   <ChevronRightIcon class="h-4 w-4 ml-2" />
@@ -899,6 +904,7 @@ const quizLoading = ref(false)
 const contentLoading = ref(false)
 const expandedModules = ref({})
 const activeTab = ref(props.active_tab || 'content')
+const mainScrollContainer = ref(null) // New ref for scrolling
 
 // Quiz state
 const quizState = ref('overview') // 'overview', 'active', 'results'
@@ -1216,6 +1222,13 @@ function formatContent(content) {
   return DOMPurify.sanitize(html)
 }
 
+// SCROLL TO TOP HELPER
+const scrollToTop = () => {
+  if (mainScrollContainer.value) {
+    mainScrollContainer.value.scrollTop = 0
+  }
+}
+
 // Topic selection and navigation
 const selectTopic = async (topic) => {
   // Record time spent on current topic before navigating
@@ -1224,14 +1237,20 @@ const selectTopic = async (topic) => {
   // Close mobile sidebar
   mobileSidebarOpen.value = false
 
+  // Scroll to top using ref
+  scrollToTop()
+
   // Navigate to the selected topic
   router.visit(route('student.courses.learn', {
     course: props.course.id,
     topic: topic.id,
     tab: activeTab.value !== 'content' ? activeTab.value : undefined
   }), {
-    preserveScroll: true,
-    preserveState: true
+    preserveScroll: true, // We handle scroll manually on the container
+    preserveState: true,
+    onSuccess: () => {
+      scrollToTop()
+    }
   })
 }
 
@@ -1252,6 +1271,7 @@ const switchTab = (tabId) => {
 const goToPreviousTopic = async () => {
   if (hasPreviousTopic.value) {
     const previousTopic = allTopics.value[currentTopicIndex.value - 1]
+    scrollToTop()
     await selectTopic(previousTopic)
   }
 }
@@ -1259,6 +1279,7 @@ const goToPreviousTopic = async () => {
 const goToNextTopic = async () => {
   if (hasNextTopic.value) {
     const nextTopic = allTopics.value[currentTopicIndex.value + 1]
+    scrollToTop()
     await selectTopic(nextTopic)
   }
 }

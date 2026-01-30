@@ -31,11 +31,12 @@ class AdminBroadcastEmail extends Notification implements ShouldQueue
 
     public function toMail($notifiable)
     {
+        $lastName = trim(strrchr(trim($notifiable->name), ' ')) ?: $notifiable->name;
         // Replace double brace variables
         $subject = str_replace(
             ['{{name}}', '{{email}}', '{{role}}', '{{app_name}}', '{{app_url}}', '{{year}}'],
             [
-                $notifiable->name,
+                $lastName,
                 $notifiable->email,
                 $notifiable->roles->first()?->name ?? 'User',
                 config('app.name'),
@@ -48,14 +49,14 @@ class AdminBroadcastEmail extends Notification implements ShouldQueue
         $message = str_replace(
             ['{{name}}', '{{email}}', '{{role}}', '{{app_name}}', '{{app_url}}', '{{year}}'],
             [
-                $notifiable->name,
+                $lastName,
                 $notifiable->email,
                 $notifiable->roles->first()?->name ?? 'User',
                 config('app.name'),
                 config('app.url'),
                 date('Y')
             ],
-            $this->message // Use $this->bodyText for UserDirectEmail
+            $this->message //
         );
 
         $mail = (new MailMessage)
