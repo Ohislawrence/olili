@@ -246,7 +246,11 @@
               <ul class="space-y-3 mb-8">
                 <li class="flex items-start">
                   <span class="text-emerald-500 mr-3 text-xl">✓</span>
-                  <span><strong>Contextual Learning:</strong> Courses designed with Nigerian and African examples</span>
+                  <span><strong>Contextual Learning:</strong> Courses designed with Nigerian and African examples.</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-emerald-500 mr-3 text-xl">✓</span>
+                  <span><strong>Exam Prep:</strong> Exam question to test your readness for any exam.</span>
                 </li>
                 <li class="flex items-start">
                   <span class="text-emerald-500 mr-3 text-xl">✓</span>

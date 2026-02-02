@@ -1,2 +1,21 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /admin/
+Disallow: /student/
+Disallow: /organisation/
+Disallow: /dashboard
+Disallow: /profile/
+Disallow: /settings/
+Disallow: /login
+Disallow: /register
+Disallow: /logout
+Disallow: /*?*
+Disallow: /*.pdf$
+Disallow: /*.doc$
+Disallow: /*.docx$
+Disallow: /*.xls$
+Disallow: /*.xlsx$
+
+# Crawl-delay: 10
+
+Sitemap: https://olilearn.com/sitemap.xml

@@ -19,6 +19,7 @@ use App\Mail\WelcomeStudentMail;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Student\CertificateController;
+use App\Http\Controllers\SitemapController;
 
 // Public routes
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
@@ -236,4 +237,8 @@ Route::get('/test-push', function () {
 // Another routes
 require __DIR__.'/admin.php';
 require __DIR__.'/student.php';
+require __DIR__.'/organisation.php';
 require __DIR__.'/api.php';
+
+//sitemap
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');

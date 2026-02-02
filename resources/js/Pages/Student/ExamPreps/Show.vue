@@ -99,13 +99,13 @@
                   <div class="text-emerald-700">
                     <p v-if="attemptsCount > 0">
                       You've completed {{ attemptsCount }} attempt{{ attemptsCount > 1 ? 's' : '' }}.
-                      <span v-if="bestScore > 0">Best score: {{ bestScore.toFixed(1) }}%</span>
+                      <span v-if="bestScore > 0">Best score: {{ parseFloat(bestScore || 0).toFixed(1) }}%</span>
                     </p>
                     <p v-else>You haven't attempted this exam yet.</p>
                   </div>
                 </div>
                 <div v-if="attemptsCount > 0" class="text-right">
-                  <div class="text-3xl font-bold text-emerald-700">{{ bestScore.toFixed(1) }}%</div>
+                  <div class="text-3xl font-bold text-emerald-700">{{ parseFloat(bestScore || 0).toFixed(1) }}%</div>
                   <div class="text-sm text-emerald-600">Best Score</div>
                 </div>
               </div>
@@ -210,7 +210,7 @@
                     attempt.is_passed ? 'bg-emerald-500' : 'bg-red-500'
                   ]"
                 >
-                  {{ attempt.percentage.toFixed(0) }}%
+                  {{ parseFloat(attempt.percentage || 0).toFixed(1) }}%
                 </div>
                 <div>
                   <div class="font-medium text-gray-900">

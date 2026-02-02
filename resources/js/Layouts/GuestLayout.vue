@@ -749,7 +749,7 @@
                 <span>Trusted by 10,000+ learners across Africa</span>
               </div>
               <div class="flex items-center space-x-2">
-                <img src="/images/secure-payment.svg" alt="Secure Payment" class="h-6" />
+                <img src="/images/secure-payment.png" alt="Secure Payment" class="h-6" />
                 <span class="text-xs text-gray-500">Secure Payment</span>
               </div>
             </div>
