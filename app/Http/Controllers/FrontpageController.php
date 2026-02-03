@@ -329,6 +329,9 @@ class FrontpageController extends Controller
             ];
         });
 
+        if ($request->wantsJson()) {
+            return response()->json($courses);
+        }
         // Get all unique tags from public courses for filter dropdown
         $allTags = Course::where('visibility', 'public')
             ->whereNotNull('tags')

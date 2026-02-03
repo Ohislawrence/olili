@@ -2,7 +2,7 @@
   <MetaTags
     title="AI-Powered Courses | Learn Smarter with OliLearn"
     description="Browse our catalog of intelligent, AI-enhanced courses designed by experts. Master any subject with personalized learning paths and real-time guidance."
-    image="/images/olingolearn.png"
+    image="/images/olilearn.png"
     type="website"
   />
   <AppLayout>
@@ -510,13 +510,12 @@
         </div>
 
         <!-- Courses Grid -->
-        <div v-if="courses.data.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div v-if="allCourses.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <div
-            v-for="course in courses.data"
+            v-for="course in allCourses"
             :key="course.id"
             class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 group"
           >
-            <!-- Course Image/Header -->
             <div class="h-48 relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600">
               <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
               <div class="absolute inset-0 flex items-end p-6">
@@ -550,8 +549,6 @@
                 <span class="text-emerald-700 font-medium capitalize-first">{{ course.level}}</span>
               </div>
 
-
-
               <Link
                 :href="route('courses.show', { id: course.id, slug: course.slug })"
                 class="w-full block text-center bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-3 rounded-xl font-medium transition-all duration-300 group-hover:shadow-lg"
@@ -562,10 +559,9 @@
           </div>
         </div>
 
-        <!-- Empty State -->
         <div v-else class="text-center py-12 bg-gray-50 rounded-xl border border-gray-200">
           <div class="w-16 h-16 mx-auto mb-4 text-gray-400">
-            <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+             <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
           </div>
@@ -585,26 +581,19 @@
           </button>
         </div>
 
-        <!-- Pagination -->
-        <div v-if="courses.data.length > 0 && courses.links.length > 3" class="mt-8">
-          <nav class="flex items-center justify-center space-x-2">
-            <button
-              v-for="(link, index) in courses.links"
-              :key="index"
-              @click="loadPage(link.url)"
-              v-html="link.label"
-              :disabled="!link.url || link.active"
-              :class="[
-                'px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
-                link.active
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow'
-                  : link.url
-                  ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
-                  : 'bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed'
-              ]"
-            ></button>
-          </nav>
+        <div ref="scrollSentinel" class="mt-12 py-4 flex justify-center items-center">
+            <div v-if="isLoadingMore" class="flex items-center space-x-2 text-emerald-600">
+                <svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="font-medium">Loading more courses...</span>
+            </div>
+            <div v-else-if="!nextPageUrl && allCourses.length > 0" class="text-gray-400 text-sm">
+                You've reached the end of the list.
+            </div>
         </div>
+
       </div>
     </section>
 
@@ -636,10 +625,11 @@
 
 <script setup>
 import { Link, router, Head } from '@inertiajs/vue3';
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { debounce } from 'lodash-es';
 import AppLayout from '@/Layouts/GuestLayout.vue';
 import MetaTags from '@/Components/MetaTags.vue';
+import axios from 'axios';
 
 const props = defineProps({
   courses: Object,
@@ -648,6 +638,64 @@ const props = defineProps({
   tags: Array,
   filters: Object
 });
+
+// --- Infinite Scroll Logic ---
+const allCourses = ref([...props.courses.data]);
+const nextPageUrl = ref(props.courses.next_page_url);
+const isLoadingMore = ref(false);
+const scrollSentinel = ref(null);
+let observer = null;
+
+const loadMoreCourses = async () => {
+    if (isLoadingMore.value || !nextPageUrl.value) return;
+
+    isLoadingMore.value = true;
+    try {
+        const response = await axios.get(nextPageUrl.value, {
+            headers: { 'Accept': 'application/json' }
+        });
+
+        // FIX: Prevent duplicate keys by filtering out items already in the list
+        const newCourses = response.data.data.filter(newCourse =>
+            !allCourses.value.some(existing => existing.id === newCourse.id)
+        );
+
+        allCourses.value.push(...newCourses);
+        nextPageUrl.value = response.data.next_page_url;
+    } catch (error) {
+        console.error("Failed to load more courses", error);
+    } finally {
+        isLoadingMore.value = false;
+    }
+};
+
+onMounted(() => {
+    observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+            loadMoreCourses();
+        }
+    }, {
+        root: null,
+        threshold: 0.1,
+        rootMargin: '100px' // Start loading 100px before reaching the bottom
+    });
+
+    if (scrollSentinel.value) {
+        observer.observe(scrollSentinel.value);
+    }
+});
+
+onUnmounted(() => {
+    if (observer) observer.disconnect();
+});
+
+// Watch for prop changes (e.g. when filters apply and Inertia reloads the page)
+watch(() => props.courses, (newCourses) => {
+    // Reset the infinite scroll list completely
+    allCourses.value = [...newCourses.data];
+    nextPageUrl.value = newCourses.next_page_url;
+}, { deep: true });
+// --- End Infinite Scroll Logic ---
 
 // Reactive state
 const search = ref(props.filters.search || '');
@@ -663,24 +711,14 @@ const tagsSearch = ref('');
 
 // Popular search tags
 const popularTags = [
-  'AI',
-  'WAEC',
-  'NECO',
-  'Machine Learning',
-  'Data Science',
-  'Python',
-  'Web Development',
-  'Exam Prep',
-  'JAMB',
-  'Design'
+  'AI', 'WAEC', 'NECO', 'Machine Learning', 'Data Science',
+  'Python', 'Web Development', 'Exam Prep', 'JAMB', 'Design'
 ];
 
 const filteredTags = computed(() => {
   if (!tagsSearch.value.trim()) return props.tags;
   const searchTerm = tagsSearch.value.toLowerCase();
-  return props.tags.filter(tag =>
-    tag.toLowerCase().includes(searchTerm)
-  );
+  return props.tags.filter(tag => tag.toLowerCase().includes(searchTerm));
 });
 
 // Dropdown states
@@ -690,7 +728,7 @@ const showFeaturesDropdown = ref(false);
 const showSortDropdown = ref(false);
 const subjectSearch = ref('');
 
-// Close dropdowns when clicking outside
+// Close dropdowns
 const closeAllDropdowns = () => {
   showSubjectDropdown.value = false;
   showLevelDropdown.value = false;
@@ -699,53 +737,27 @@ const closeAllDropdowns = () => {
   showTagsDropdown.value = false;
 };
 
-// Toggle methods
-const toggleSubjectDropdown = () => {
-  showSubjectDropdown.value = !showSubjectDropdown.value;
-  showLevelDropdown.value = false;
-  showFeaturesDropdown.value = false;
-  showSortDropdown.value = false;
-};
+// Toggle methods (Simplified)
+const toggleDropdown = (stateRef) => {
+    // Close others first
+    const wasOpen = stateRef.value;
+    closeAllDropdowns();
+    // Toggle requested one
+    stateRef.value = !wasOpen;
+}
 
-const toggleLevelDropdown = () => {
-  showLevelDropdown.value = !showLevelDropdown.value;
-  showSubjectDropdown.value = false;
-  showFeaturesDropdown.value = false;
-  showSortDropdown.value = false;
-};
+const toggleSubjectDropdown = () => toggleDropdown(showSubjectDropdown);
+const toggleLevelDropdown = () => toggleDropdown(showLevelDropdown);
+const toggleFeaturesDropdown = () => toggleDropdown(showFeaturesDropdown);
+const toggleSortDropdown = () => toggleDropdown(showSortDropdown);
+const toggleTagsDropdown = () => toggleDropdown(showTagsDropdown);
 
-const toggleFeaturesDropdown = () => {
-  showFeaturesDropdown.value = !showFeaturesDropdown.value;
-  showSubjectDropdown.value = false;
-  showLevelDropdown.value = false;
-  showSortDropdown.value = false;
-};
-
-const toggleSortDropdown = () => {
-  showSortDropdown.value = !showSortDropdown.value;
-  showSubjectDropdown.value = false;
-  showLevelDropdown.value = false;
-  showFeaturesDropdown.value = false;
-};
-
-const toggleTagsDropdown = () => {
-  showTagsDropdown.value = !showTagsDropdown.value;
-  showSubjectDropdown.value = false;
-  showLevelDropdown.value = false;
-  showFeaturesDropdown.value = false;
-  showSortDropdown.value = false;
-};
-
-// Filter subjects based on search
 const filteredSubjects = computed(() => {
   if (!subjectSearch.value.trim()) return props.subjects;
   const searchTerm = subjectSearch.value.toLowerCase();
-  return props.subjects.filter(subject =>
-    subject.toLowerCase().includes(searchTerm)
-  );
+  return props.subjects.filter(subject => subject.toLowerCase().includes(searchTerm));
 });
 
-// Get features label
 const getFeaturesLabel = () => {
   const features = [];
   if (hasCertificate.value) features.push('Certificate');
@@ -754,14 +766,11 @@ const getFeaturesLabel = () => {
   return features.length > 0 ? features.join(', ') : 'All features';
 };
 
-
-
-// Computed properties
 const hasActiveFilters = computed(() => {
   return search.value ||
          selectedSubjects.value.length > 0 ||
          selectedLevels.value.length > 0 ||
-         selectedTags.value.length > 0 || // Add this
+         selectedTags.value.length > 0 ||
          hasCertificate.value ||
          hasProjects.value ||
          hasQuizzes.value;
@@ -772,32 +781,19 @@ const getTotalFilters = () => {
   if (search.value) count++;
   count += selectedSubjects.value.length;
   count += selectedLevels.value.length;
-  count += selectedTags.value.length; // Add this
+  count += selectedTags.value.length;
   if (hasCertificate.value) count++;
   if (hasProjects.value) count++;
   if (hasQuizzes.value) count++;
   return count;
 };
 
+// Removed unused toggleSubject/toggleLevel methods as v-model handles this
 
-const toggleSubject = (subject) => {
-  const index = selectedSubjects.value.indexOf(subject);
-  if (index === -1) {
-    selectedSubjects.value.push(subject);
-  } else {
-    selectedSubjects.value.splice(index, 1);
-  }
-  applyFilters();
-};
-
-
-
-// Debounced search
 const debouncedSearch = debounce(() => {
   applyFilters();
 }, 500);
 
-// Remove filter method
 const removeFilter = (type, value) => {
   if (type === 'subject') {
     const index = selectedSubjects.value.indexOf(value);
@@ -805,7 +801,7 @@ const removeFilter = (type, value) => {
   } else if (type === 'level') {
     const index = selectedLevels.value.indexOf(value);
     if (index !== -1) selectedLevels.value.splice(index, 1);
-  } else if (type === 'tag') { // Add this
+  } else if (type === 'tag') {
     const index = selectedTags.value.indexOf(value);
     if (index !== -1) selectedTags.value.splice(index, 1);
   } else if (type === 'search') {
@@ -824,42 +820,25 @@ const activeFiltersText = computed(() => {
   return parts.join(' • ');
 });
 
-const totalCourses = computed(() => props.courses.total || props.courses.data.length);
-const totalLearningHours = computed(() => {
-  return props.courses.data.reduce((sum, course) => sum + (course.estimated_duration_hours || 0), 0);
-});
-
-// Methods
 const performSearch = () => applyFilters();
 const applyTagSearch = (tag) => {
   search.value = tag;
   applyFilters();
 };
 
-const toggleLevel = (level) => {
-  const index = selectedLevels.value.indexOf(level);
-  if (index === -1) {
-    selectedLevels.value.push(level);
-  } else {
-    selectedLevels.value.splice(index, 1);
-  }
-  applyFilters();
-};
-
-
-
 const applyFilters = () => {
+  // FIX: Reset scroll to top when filtering, so users don't get stuck at the bottom
   router.get(route('courses.index'), {
     search: search.value || null,
     subjects: selectedSubjects.value.length ? selectedSubjects.value.join(',') : null,
     levels: selectedLevels.value.length ? selectedLevels.value.join(',') : null,
-    tags: selectedTags.value.length ? selectedTags.value.join(',') : null, // Add this
+    tags: selectedTags.value.length ? selectedTags.value.join(',') : null,
     certificate: hasCertificate.value ? 'true' : null,
     projects: hasProjects.value ? 'true' : null,
     sort: sortBy.value
   }, {
     preserveState: true,
-    preserveScroll: true,
+    preserveScroll: false, // Changed to false for better UX on filter change
     replace: true
   });
 };
@@ -870,23 +849,15 @@ const clearFilters = () => {
   search.value = '';
   selectedSubjects.value = [];
   selectedLevels.value = [];
-  selectedTags.value = []; // Add this
+  selectedTags.value = [];
   hasCertificate.value = false;
   hasProjects.value = false;
   sortBy.value = 'latest';
   applyFilters();
 };
 
-const loadPage = (url) => {
-  if (url) {
-    router.visit(url, {
-      preserveState: true,
-      preserveScroll: true
-    });
-  }
-};
+// Removed loadPage method (unused in infinite scroll)
 
-// Debounced search
 let searchTimeout;
 watch(search, () => {
   clearTimeout(searchTimeout);
