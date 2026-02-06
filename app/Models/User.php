@@ -1152,4 +1152,8 @@ class User extends Authenticatable
             ->get();
     }
 
+    public function flashcardSets(): HasMany
+    {
+        return $this->hasMany(FlashcardSet::class);
+    }
 }
