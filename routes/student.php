@@ -27,7 +27,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     // Courses
     Route::get('/courses/browse', [CourseController::class, 'browse'])->name('catalog.browse');
     Route::get('/courses/enrolled/browse', [CourseController::class, 'index'])->name('courses.index');
-    Route::post('/courses/{course}/enroll', [CourseController::class, 'enroll'])->name('courses.enroll');
+    Route::middleware(['subscription:enroll_in_courses'])->post('/courses/{course}/enroll', [CourseController::class, 'enroll'])->name('courses.enroll');
     Route::post('/courses/{course}/drop', [CourseController::class, 'dropCourse'])->name('courses.drop');
 
     //Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
@@ -97,7 +97,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     // Flashcard Routes - Fixed route parameter names
     Route::get('/flashcards', [FlashcardController::class, 'index'])->name('flashcards.index');
     Route::get('/flashcards/create', [FlashcardController::class, 'create'])->name('flashcards.create');
-    Route::post('/flashcards', [FlashcardController::class, 'store'])->name('flashcards.store');
+    Route::middleware(['subscription:create_flashcard'])->post('/flashcards', [FlashcardController::class, 'store'])->name('flashcards.store');
     Route::get('/flashcards/{flashcardSet}', [FlashcardController::class, 'show'])->name('flashcards.show');
     Route::get('/flashcards/{flashcardSet}/study', [FlashcardController::class, 'study'])->name('flashcards.study');
     Route::post('/flashcard-items/{flashcard}/progress', [FlashcardController::class, 'updateProgress'])->name('flashcards.update-progress');
@@ -175,7 +175,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::prefix('exam-preps')->name('exam-preps.')->group(function () {
         Route::get('/', [ExamPrepController::class, 'index'])->name('index');
         Route::get('/{examPrep}', [ExamPrepController::class, 'show'])->name('show');
-        Route::post('/{examPrep}/enroll', [ExamPrepController::class, 'enroll'])->name('enroll');
+        Route::middleware(['subscription:take_exam_prep'])->post('/{examPrep}/enroll', [ExamPrepController::class, 'enroll'])->name('enroll');
         Route::get('/{examPrep}/instructions', [ExamPrepController::class, 'instructions'])->name('instructions');
         Route::get('/{examPrep}/start', [ExamPrepController::class, 'start'])->name('start');
         Route::post('/{examPrep}/attempt/{attempt}/answer', [ExamPrepController::class, 'saveAnswer'])->name('save-answer');

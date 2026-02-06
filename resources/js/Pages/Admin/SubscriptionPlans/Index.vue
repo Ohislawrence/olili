@@ -79,6 +79,18 @@
                                 </span>
                             </div>
                             <div class="flex justify-between">
+                                <span class="text-gray-600">Max flashcard:</span>
+                                <span class="font-medium">
+                                    {{ plan.max_flashcard === -1 ? 'Unlimited' : plan.max_flashcard }}
+                                </span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Max Exam Prep:</span>
+                                <span class="font-medium">
+                                    {{ plan.max_exam_prep === -1 ? 'Unlimited' : plan.max_exam_prep }}
+                                </span>
+                            </div>
+                            <div class="flex justify-between">
                                 <span class="text-gray-600">AI Requests/Month:</span>
                                 <span class="font-medium">
                                     {{ plan.max_ai_requests_per_month === -1 ? 'Unlimited' : plan.max_ai_requests_per_month.toLocaleString() }}

@@ -231,6 +231,48 @@
                                         Use -1 for unlimited requests
                                     </p>
                                 </div>
+
+                                <!-- Max Flashcard -->
+                                <div>
+                                    <label for="max_flashcard" class="block text-sm font-medium text-gray-700">
+                                        Maximum flashcard
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="max_flashcard"
+                                        v-model="form.max_flashcard"
+                                        min="-1"
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        :class="{ 'border-red-300': form.errors.max_flashcard }"
+                                    />
+                                    <p v-if="form.errors.max_flashcard" class="mt-1 text-sm text-red-600">
+                                        {{ form.errors.max_flashcard }}
+                                    </p>
+                                    <p class="mt-1 text-sm text-gray-500">
+                                        Use -1 for unlimited Flashcard
+                                    </p>
+                                </div>
+
+                                <!-- Max exam_prep -->
+                                <div>
+                                    <label for="max_exam_prep" class="block text-sm font-medium text-gray-700">
+                                        Maximum Exam Prep
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="max_exam_prep"
+                                        v-model="form.max_exam_prep"
+                                        min="-1"
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        :class="{ 'border-red-300': form.errors.max_exam_prep }"
+                                    />
+                                    <p v-if="form.errors.max_exam_prep" class="mt-1 text-sm text-red-600">
+                                        {{ form.errors.max_exam_prep }}
+                                    </p>
+                                    <p class="mt-1 text-sm text-gray-500">
+                                        Use -1 for unlimited Exam Prep
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
@@ -320,6 +362,8 @@ const form = useForm({
     priority_support: false,
     is_active: true,
     sort_order: 0,
+    max_flashcard: 1,
+    max_exam_prep: 1,
 })
 
 const submit = () => {

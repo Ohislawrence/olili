@@ -61,6 +61,9 @@ class CheckSubscription
             return array_merge($baseFeatures, [
                 'take_quizzes',
                 'view_progress',
+                'enroll_in_courses',
+                'create_flashcard',
+                'take_exam_prep',
             ]);
         }
 
@@ -115,7 +118,7 @@ class CheckSubscription
     protected function validateStudentFeature($plan, string $feature): bool
     {
         $studentFeatures = [
-            'create_course' => ['premium'],
+            //'create_course' => ['premium'],
             'unlimited_ai_learning' => ['basic','pro', 'premium'],
             'full_course_library' => ['pro', 'premium'],
             'advanced_explanations' => ['pro', 'premium'],
@@ -125,6 +128,9 @@ class CheckSubscription
             'personalized_study_plan' => ['premium'],
             'offline_downloads' => ['premium'],
             'priority_support' => ['premium'],
+            'enroll_in_courses' => ['basic','pro', 'premium'],
+            'create_flashcard' => ['basic','pro', 'premium'],
+            'take_exam_prep' => ['basic','pro', 'premium'],
         ];
 
         return $this->checkFeatureInPlan($feature, $studentFeatures, $plan->code);
@@ -228,9 +234,9 @@ class CheckSubscription
                     ->count();
                 return $monthlyUsage < $plan->max_ai_requests_per_month;
 
-            case 'create_course':
+            case 'enroll_in_courses':
                 if ($plan->max_courses === -1) return true;
-                $currentCourses = $user->courses()->count();
+                $currentCourses = $user->courseEnrollments()->count();
                 return $currentCourses < $plan->max_courses;
 
             case 'offline_downloads':

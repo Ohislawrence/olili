@@ -222,6 +222,42 @@
                                         {{ form.errors.max_ai_requests_per_month }}
                                     </p>
                                 </div>
+
+                                <!-- Max flashcard -->
+                                <div>
+                                    <label for="max_ai_requests_per_month" class="block text-sm font-medium text-gray-700">
+                                        Maximum flashcard*
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="max_flashcard"
+                                        v-model="form.max_flashcard"
+                                        min="-1"
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        :class="{ 'border-red-300': form.errors.max_flashcard }"
+                                    />
+                                    <p v-if="form.errors.max_flashcard" class="mt-1 text-sm text-red-600">
+                                        {{ form.errors.max_flashcard }}
+                                    </p>
+                                </div>
+
+                                <!-- Max exam_prep -->
+                                <div>
+                                    <label for="max_ai_requests_per_month" class="block text-sm font-medium text-gray-700">
+                                        Maximum Exam Prep*
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="max_exam_prep"
+                                        v-model="form.max_exam_prep"
+                                        min="-1"
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        :class="{ 'border-red-300': form.errors.max_exam_prep }"
+                                    />
+                                    <p v-if="form.errors.max_exam_prep" class="mt-1 text-sm text-red-600">
+                                        {{ form.errors.max_exam_prep }}
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
@@ -322,6 +358,8 @@ const form = useForm({
     priority_support: props.plan.priority_support,
     is_active: props.plan.is_active,
     sort_order: props.plan.sort_order,
+    max_flashcard: props.plan.max_flashcard,
+    max_exam_prep: props.plan.max_exam_prep,
 })
 
 const submit = () => {

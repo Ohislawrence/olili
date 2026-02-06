@@ -52,7 +52,7 @@
 
           <div class="text-center">
             <p v-if="attemptCount > 0" class="opacity-90">
-              Your best score so far: <span class="font-bold">{{ bestScore.toFixed(1) }}%</span>
+              Your best score so far: <span class="font-bold">{{ parseFloat(bestScore).toFixed(1) }}%</span>
             </p>
             <p v-else class="opacity-90">This is your first attempt</p>
           </div>
