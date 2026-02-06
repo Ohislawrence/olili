@@ -257,7 +257,7 @@ class FlashcardController extends Controller
     {
         $student = auth()->user();
 
-        if ($flashcardSet->user_id !== auth()->id()) {
+        if ($flashcardSet->user->id !== $student->id) {
             abort(403, 'Unauthorized access to this flashcard set.');
         }
 
