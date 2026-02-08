@@ -286,7 +286,7 @@
             <!-- Quick Actions -->
             <div class="bg-white shadow-sm rounded-xl border border-gray-100">
               <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-bold text-gray-900">Quick Actions</h2>
+                <h2 class="text-lg font-bold text-gray-900">Quick Links</h2>
               </div>
               <div class="p-6 space-y-3">
                 <Link

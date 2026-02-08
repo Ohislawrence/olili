@@ -1,4 +1,4 @@
-<!-- resources/js/Pages/Admin/Users/Certificates.vue -->
+<!-- resources/js/Pages/Admin/Users/Certificates.vue - UPDATED -->
 <template>
   <AdminLayout>
     <Head :title="`Certificates - ${user.name}`" />
@@ -30,11 +30,11 @@
                 Back to Profile
               </Link>
               <Link
-                :href="route('admin.certificates.create', { user_id: user.id })"
+                :href="route('admin.certificates.generate', { user_id: user.id })"
                 class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700"
               >
                 <PlusIcon class="h-4 w-4 mr-2" />
-                Issue Certificate
+                Generate Certificate
               </Link>
             </div>
           </div>
@@ -94,6 +94,141 @@
               <div class="ml-4">
                 <p class="text-sm font-medium text-gray-500">Downloads</p>
                 <p class="text-2xl font-semibold text-gray-900">{{ stats.total_downloads }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-500">Certificate Rate</p>
+                <p class="text-2xl font-semibold text-gray-900">{{ stats.certificate_rate }}%</p>
+              </div>
+              <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <PercentBadgeIcon class="h-6 w-6 text-purple-600" />
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">
+              {{ stats.courses_with_certificates }} of {{ stats.completed_courses }} completed courses
+            </p>
+          </div>
+
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-500">Recent (30d)</p>
+                <p class="text-2xl font-semibold text-gray-900">{{ stats.recent_30d }}</p>
+              </div>
+              <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <CalendarDaysIcon class="h-6 w-6 text-orange-600" />
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">Certificates issued in last 30 days</p>
+          </div>
+
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-500">Expiring Soon</p>
+                <p class="text-2xl font-semibold text-gray-900">{{ stats.expiry_distribution.expiring_soon || 0 }}</p>
+              </div>
+              <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                <ExclamationTriangleIcon class="h-6 w-6 text-red-600" />
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">Certificates expiring within 30 days</p>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white shadow rounded-lg mb-8">
+          <div class="px-6 py-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <button
+                @click="generateAllEligibleCertificates"
+                class="flex items-center justify-center px-4 py-3 border border-emerald-300 rounded-lg bg-emerald-50 hover:bg-emerald-100"
+              >
+                <PlusCircleIcon class="h-5 w-5 text-emerald-600 mr-2" />
+                <span class="text-sm font-medium text-emerald-700">Generate All Eligible</span>
+              </button>
+              <button
+                @click="exportCertificates"
+                class="flex items-center justify-center px-4 py-3 border border-blue-300 rounded-lg bg-blue-50 hover:bg-blue-100"
+              >
+                <ArrowDownTrayIcon class="h-5 w-5 text-blue-600 mr-2" />
+                <span class="text-sm font-medium text-blue-700">Export Data</span>
+              </button>
+              <button
+                @click="showBulkActions = !showBulkActions"
+                class="flex items-center justify-center px-4 py-3 border border-purple-300 rounded-lg bg-purple-50 hover:bg-purple-100"
+              >
+                <ArchiveBoxIcon class="h-5 w-5 text-purple-600 mr-2" />
+                <span class="text-sm font-medium text-purple-700">Bulk Actions</span>
+              </button>
+              <button
+                @click="showStats = !showStats"
+                class="flex items-center justify-center px-4 py-3 border border-amber-300 rounded-lg bg-amber-50 hover:bg-amber-100"
+              >
+                <ChartBarIcon class="h-5 w-5 text-amber-600 mr-2" />
+                <span class="text-sm font-medium text-amber-700">View Analytics</span>
+              </button>
+            </div>
+
+            <!-- Bulk Actions Dropdown -->
+            <div v-if="showBulkActions" class="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+              <h4 class="text-sm font-medium text-gray-900 mb-3">Bulk Actions</h4>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <button
+                  @click="bulkRegenerateImages"
+                  class="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  Regenerate Images
+                </button>
+                <button
+                  @click="bulkSendCertificates"
+                  class="px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-purple-600 hover:bg-purple-700"
+                >
+                  Send to User
+                </button>
+                <button
+                  @click="bulkExportPDF"
+                  class="px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                >
+                  Export as PDFs
+                </button>
+              </div>
+            </div>
+
+            <!-- Stats Panel -->
+            <div v-if="showStats" class="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+              <h4 class="text-sm font-medium text-gray-900 mb-3">Certificate Analytics</h4>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <p class="text-xs text-gray-500">Avg. Downloads</p>
+                  <p class="text-lg font-semibold text-gray-900">
+                    {{ Math.round(stats.total_downloads / (stats.total || 1)) }}
+                  </p>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500">Expiry Rate</p>
+                  <p class="text-lg font-semibold text-gray-900">
+                    {{ Math.round((stats.expired / (stats.total || 1)) * 100) }}%
+                  </p>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500">Active Rate</p>
+                  <p class="text-lg font-semibold text-gray-900">
+                    {{ Math.round((stats.active / (stats.total || 1)) * 100) }}%
+                  </p>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-500">Validity Period</p>
+                  <p class="text-lg font-semibold text-gray-900">2 Years</p>
+                </div>
               </div>
             </div>
           </div>
@@ -181,6 +316,51 @@
               <span class="text-sm text-gray-500">
                 {{ certificates.total }} certificate(s)
               </span>
+              <div class="relative" v-if="selectedCertificates.length > 0">
+                <button
+                  @click="showBulkActionMenu = !showBulkActionMenu"
+                  class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  <CheckBadgeIcon class="h-4 w-4 mr-2" />
+                  {{ selectedCertificates.length }} selected
+                  <ChevronDownIcon class="h-4 w-4 ml-2" />
+                </button>
+                <div
+                  v-if="showBulkActionMenu"
+                  class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-200"
+                >
+                  <button
+                    @click="bulkDownloadPDFs"
+                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Download PDFs
+                  </button>
+                  <button
+                    @click="bulkDownloadImages"
+                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Download Images
+                  </button>
+                  <button
+                    @click="bulkSendSelected"
+                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Send to User
+                  </button>
+                  <button
+                    @click="bulkRegenerateSelected"
+                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Regenerate Images
+                  </button>
+                  <button
+                    @click="bulkUpdateStatus"
+                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Update Status
+                  </button>
+                </div>
+              </div>
               <button
                 @click="exportCertificates"
                 class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
@@ -195,6 +375,14 @@
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
                 <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8">
+                    <input
+                      type="checkbox"
+                      v-model="selectAll"
+                      @change="toggleSelectAll"
+                      class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                  </th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Certificate
                   </th>
@@ -218,6 +406,14 @@
               <tbody class="bg-white divide-y divide-gray-200">
                 <tr v-for="certificate in certificates.data" :key="certificate.id">
                   <td class="px-6 py-4 whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      :value="certificate.id"
+                      v-model="selectedCertificates"
+                      class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
                       <div class="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center text-white font-bold mr-3">
                         C
@@ -225,6 +421,26 @@
                       <div>
                         <div class="text-sm font-medium text-gray-900">{{ certificate.certificate_number }}</div>
                         <div class="text-sm text-gray-500">{{ certificate.title }}</div>
+                        <div class="flex items-center mt-1 space-x-2">
+                          <a
+                            v-if="certificate.image_url"
+                            :href="certificate.image_url"
+                            target="_blank"
+                            class="text-xs text-blue-600 hover:text-blue-800"
+                            title="View Image"
+                          >
+                            <PhotoIcon class="h-3 w-3 inline" />
+                          </a>
+                          <a
+                            v-if="certificate.pdf_url"
+                            :href="certificate.pdf_url"
+                            target="_blank"
+                            class="text-xs text-red-600 hover:text-red-800"
+                            title="View PDF"
+                          >
+                            <DocumentIcon class="h-3 w-3 inline" />
+                          </a>
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -241,39 +457,65 @@
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span
-                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                      :class="getStatusClass(certificate.status)"
-                    >
-                      {{ certificate.status }}
-                    </span>
+                    <div class="flex items-center">
+                      <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                        :class="getStatusClass(certificate.status)"
+                      >
+                        {{ certificate.status }}
+                      </span>
+                      <button
+                        v-if="certificate.is_expired"
+                        @click="renewCertificate(certificate)"
+                        class="ml-2 text-xs text-emerald-600 hover:text-emerald-900"
+                        title="Renew Certificate"
+                      >
+                        Renew
+                      </button>
+                    </div>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {{ certificate.download_count }}
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <span class="text-sm text-gray-900 mr-2">{{ certificate.download_count }}</span>
+                      <button
+                        @click="downloadCertificate(certificate)"
+                        class="text-blue-600 hover:text-blue-900"
+                        title="Download"
+                      >
+                        <ArrowDownTrayIcon class="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div class="flex items-center space-x-2">
                       <Link
                         :href="route('admin.certificates.show', certificate.id)"
                         class="text-blue-600 hover:text-blue-900"
-                        title="View"
+                        title="View Details"
                       >
                         <EyeIcon class="h-5 w-5" />
                       </Link>
-                      <Link
+                      <a
                         :href="certificate.verification_url"
                         target="_blank"
                         class="text-emerald-600 hover:text-emerald-900"
-                        title="Verify"
+                        title="Verify Certificate"
                       >
                         <CheckCircleIcon class="h-5 w-5" />
-                      </Link>
+                      </a>
                       <button
                         @click="sendCertificate(certificate)"
                         class="text-purple-600 hover:text-purple-900"
                         title="Send to User"
                       >
                         <PaperAirplaneIcon class="h-5 w-5" />
+                      </button>
+                      <button
+                        @click="regenerateImage(certificate)"
+                        class="text-orange-600 hover:text-orange-900"
+                        title="Regenerate Image"
+                      >
+                        <ArrowPathIcon class="h-5 w-5" />
                       </button>
                       <button
                         @click="updateStatus(certificate)"
@@ -305,11 +547,11 @@
             </p>
             <div class="mt-6">
               <Link
-                :href="route('admin.certificates.create', { user_id: user.id })"
+                :href="route('admin.certificates.generate', { user_id: user.id })"
                 class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700"
               >
                 <PlusIcon class="h-4 w-4 mr-2" />
-                Issue First Certificate
+                Generate First Certificate
               </Link>
             </div>
           </div>
@@ -322,6 +564,7 @@
       </div>
     </div>
 
+    <!-- All Modals Below -->
     <!-- Status Update Modal -->
     <Modal :show="showStatusModal" @close="showStatusModal = false">
       <div class="p-6">
@@ -343,6 +586,7 @@
               <option value="active">Active</option>
               <option value="expired">Expired</option>
               <option value="revoked">Revoked</option>
+              <option value="pending">Pending</option>
             </select>
           </div>
           <div>
@@ -426,6 +670,124 @@
         </div>
       </div>
     </Modal>
+
+    <!-- Generate All Eligible Modal -->
+    <Modal :show="showGenerateAllModal" @close="showGenerateAllModal = false">
+      <div class="p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+          Generate All Eligible Certificates
+        </h3>
+        <div class="space-y-4">
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p class="text-sm text-blue-800">
+              This will generate certificates for all completed courses where the user is eligible but hasn't received a certificate yet.
+            </p>
+          </div>
+          <div v-if="eligibleCourses && eligibleCourses.length > 0">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Select Courses</label>
+            <div class="max-h-60 overflow-y-auto border border-gray-300 rounded-lg p-3">
+              <label class="flex items-center mb-2">
+                <input
+                  type="checkbox"
+                  v-model="selectAllCourses"
+                  @change="toggleSelectAllCourses"
+                  class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span class="ml-2 text-sm font-medium text-gray-900">Select All</span>
+              </label>
+              <div v-for="course in eligibleCourses" :key="course.id" class="flex items-center mb-2">
+                <input
+                  type="checkbox"
+                  :value="course.id"
+                  v-model="selectedCourses"
+                  class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <div class="ml-3">
+                  <p class="text-sm font-medium text-gray-900">{{ course.title }}</p>
+                  <p class="text-xs text-gray-500">Completed: {{ formatDate(course.completed_date) }}</p>
+                </div>
+              </div>
+            </div>
+            <p class="text-sm text-gray-500 mt-2">
+              {{ selectedCourses.length }} of {{ eligibleCourses.length }} courses selected
+            </p>
+          </div>
+          <div v-else class="text-center py-6">
+            <CheckCircleIcon class="mx-auto h-12 w-12 text-gray-400" />
+            <p class="mt-2 text-sm text-gray-500">No eligible courses found.</p>
+          </div>
+          <div class="flex justify-end space-x-3">
+            <button
+              @click="showGenerateAllModal = false"
+              class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              @click="submitGenerateAll"
+              :disabled="selectedCourses.length === 0"
+              :class="[
+                'px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white',
+                selectedCourses.length === 0
+                  ? 'bg-emerald-400 cursor-not-allowed'
+                  : 'bg-emerald-600 hover:bg-emerald-700'
+              ]"
+            >
+              Generate Certificates
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+
+    <!-- Renew Certificate Modal -->
+    <Modal :show="showRenewModal" @close="showRenewModal = false">
+      <div class="p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+          Renew Certificate
+        </h3>
+        <div v-if="selectedCertificate" class="space-y-4">
+          <div class="p-3 bg-gray-50 rounded-lg">
+            <p class="text-sm font-medium text-gray-900">{{ selectedCertificate.certificate_number }}</p>
+            <p class="text-sm text-gray-500">{{ selectedCertificate.course?.title }}</p>
+            <p class="text-xs text-gray-500">Expired on: {{ formatDate(selectedCertificate.expiry_date) }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">New Expiry Date</label>
+            <input
+              v-model="renewForm.expiry_date"
+              type="date"
+              :min="new Date().toISOString().split('T')[0]"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            />
+            <p class="text-xs text-gray-500 mt-1">Default: 2 years from today</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Reason for Renewal</label>
+            <textarea
+              v-model="renewForm.reason"
+              rows="2"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Optional..."
+            ></textarea>
+          </div>
+          <div class="flex justify-end space-x-3">
+            <button
+              @click="showRenewModal = false"
+              class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              @click="submitRenewCertificate"
+              class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700"
+            >
+              Renew Certificate
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
   </AdminLayout>
 </template>
 
@@ -444,8 +806,19 @@ import {
   PencilIcon,
   TrashIcon,
   PlusIcon,
+  PhotoIcon,
+  DocumentIcon,
+  ArrowPathIcon,
+  PlusCircleIcon,
+  CalendarDaysIcon,
+  ExclamationTriangleIcon,
+  ArchiveBoxIcon,
+  ChartBarIcon,
+  CheckBadgeIcon,
+  ChevronDownIcon,
+  PercentBadgeIcon,
 } from '@heroicons/vue/24/outline'
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, computed } from 'vue'
 
 const props = defineProps({
   user: Object,
@@ -454,6 +827,14 @@ const props = defineProps({
   stats: Object,
   courses: Array,
   statuses: Array,
+  eligibleCourses: {
+    type: Array,
+    default: () => []
+  },
+  organizations: {
+    type: Array,
+    default: () => []
+  },
 })
 
 // Filter form
@@ -479,6 +860,27 @@ const sendForm = reactive({
   method: 'both',
   message: '',
 })
+
+// Generate All modal
+const showGenerateAllModal = ref(false)
+const selectedCourses = ref([])
+const selectAllCourses = ref(false)
+
+// Renew modal
+const showRenewModal = ref(false)
+const renewForm = reactive({
+  expiry_date: new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString().split('T')[0],
+  reason: '',
+})
+
+// Bulk selection
+const selectedCertificates = ref([])
+const selectAll = ref(false)
+const showBulkActionMenu = ref(false)
+
+// Toggles
+const showBulkActions = ref(false)
+const showStats = ref(false)
 
 // Apply filters
 const applyFilters = () => {
@@ -526,6 +928,44 @@ const getStatusClass = (status) => {
   return classes[status] || 'bg-gray-100 text-gray-800'
 }
 
+// Toggle select all
+const toggleSelectAll = () => {
+  if (selectAll.value) {
+    selectedCertificates.value = props.certificates.data.map(cert => cert.id)
+  } else {
+    selectedCertificates.value = []
+  }
+}
+
+// Toggle select all courses
+const toggleSelectAllCourses = () => {
+  if (selectAllCourses.value) {
+    selectedCourses.value = props.eligibleCourses.map(course => course.id)
+  } else {
+    selectedCourses.value = []
+  }
+}
+
+// Watch selected certificates
+watch(selectedCertificates, (newVal) => {
+  selectAll.value = newVal.length === props.certificates.data.length && props.certificates.data.length > 0
+})
+
+// Watch selected courses
+watch(selectedCourses, (newVal) => {
+  selectAllCourses.value = newVal.length === props.eligibleCourses.length && props.eligibleCourses.length > 0
+})
+
+// Download certificate
+const downloadCertificate = (certificate) => {
+  window.open(route('admin.certificates.download', certificate.id), '_blank')
+}
+
+// Download certificate image
+const downloadCertificateImage = (certificate) => {
+  window.open(route('admin.certificates.download-image', certificate.id), '_blank')
+}
+
 // Export certificates
 const exportCertificates = () => {
   router.post(route('admin.certificates.export', props.user.id))
@@ -541,7 +981,7 @@ const updateStatus = (certificate) => {
 
 const submitStatusUpdate = () => {
   if (!selectedCertificate.value) return
-  
+
   router.patch(
     route('admin.certificates.update-status', selectedCertificate.value.id),
     statusForm,
@@ -566,7 +1006,7 @@ const sendCertificate = (certificate) => {
 
 const submitSendCertificate = () => {
   if (!selectedCertificate.value) return
-  
+
   router.post(
     route('admin.certificates.send', selectedCertificate.value.id),
     sendForm,
@@ -580,15 +1020,170 @@ const submitSendCertificate = () => {
   )
 }
 
+// Generate all eligible certificates
+const generateAllEligibleCertificates = async () => {
+  try {
+    const response = await fetch(route('admin.certificates.check-eligible', props.user.id))
+    const data = await response.json()
+
+    if (data.eligible_courses && data.eligible_courses.length > 0) {
+      selectedCourses.value = data.eligible_courses.map(course => course.id)
+      showGenerateAllModal.value = true
+    } else {
+      alert('No eligible courses found for certificate generation.')
+    }
+  } catch (error) {
+    console.error('Error checking eligible courses:', error)
+    alert('Failed to check eligible courses.')
+  }
+}
+
+const submitGenerateAll = () => {
+  if (selectedCourses.value.length === 0) return
+
+  router.post(
+    route('admin.certificates.batch-generate'),
+    {
+      user_id: props.user.id,
+      course_ids: selectedCourses.value,
+    },
+    {
+      preserveScroll: true,
+      onSuccess: () => {
+        showGenerateAllModal.value = false
+        selectedCourses.value = []
+      }
+    }
+  )
+}
+
+// Renew certificate
+const renewCertificate = (certificate) => {
+  selectedCertificate.value = certificate
+  renewForm.expiry_date = new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString().split('T')[0]
+  renewForm.reason = ''
+  showRenewModal.value = true
+}
+
+const submitRenewCertificate = () => {
+  if (!selectedCertificate.value) return
+
+  router.patch(
+    route('admin.certificates.renew', selectedCertificate.value.id),
+    renewForm,
+    {
+      preserveScroll: true,
+      onSuccess: () => {
+        showRenewModal.value = false
+        selectedCertificate.value = null
+      }
+    }
+  )
+}
+
+// Regenerate image
+const regenerateImage = (certificate) => {
+  if (confirm('Regenerate certificate image? This will create a new image based on current template.')) {
+    router.post(
+      route('admin.certificates.regenerate-image', certificate.id),
+      {},
+      {
+        preserveScroll: true,
+      }
+    )
+  }
+}
+
 // Delete certificate
 const deleteCertificate = (certificate) => {
   if (confirm(`Are you sure you want to delete certificate ${certificate.certificate_number}? This action cannot be undone.`)) {
     router.delete(route('admin.certificates.delete', certificate.id), {
       preserveScroll: true,
-      onSuccess: () => {
-        // Success message will come from the controller
-      }
     })
   }
+}
+
+// Bulk actions
+const bulkDownloadPDFs = () => {
+  if (selectedCertificates.value.length === 0) return
+
+  const params = new URLSearchParams()
+  selectedCertificates.value.forEach(id => params.append('ids[]', id))
+
+  window.open(route('admin.certificates.bulk-download-pdf') + '?' + params.toString(), '_blank')
+  selectedCertificates.value = []
+  showBulkActionMenu.value = false
+}
+
+const bulkDownloadImages = () => {
+  if (selectedCertificates.value.length === 0) return
+
+  const params = new URLSearchParams()
+  selectedCertificates.value.forEach(id => params.append('ids[]', id))
+
+  window.open(route('admin.certificates.bulk-download-images') + '?' + params.toString(), '_blank')
+  selectedCertificates.value = []
+  showBulkActionMenu.value = false
+}
+
+const bulkSendSelected = () => {
+  if (selectedCertificates.value.length === 0) return
+
+  router.post(
+    route('admin.certificates.bulk-send'),
+    { certificate_ids: selectedCertificates.value },
+    {
+      preserveScroll: true,
+      onSuccess: () => {
+        selectedCertificates.value = []
+        showBulkActionMenu.value = false
+      }
+    }
+  )
+}
+
+const bulkRegenerateSelected = () => {
+  if (selectedCertificates.value.length === 0) return
+
+  if (confirm(`Regenerate images for ${selectedCertificates.value.length} certificates?`)) {
+    router.post(
+      route('admin.certificates.bulk-regenerate'),
+      { certificate_ids: selectedCertificates.value },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          selectedCertificates.value = []
+          showBulkActionMenu.value = false
+        }
+      }
+    )
+  }
+}
+
+const bulkUpdateStatus = () => {
+  // Similar to single status update but for multiple
+  showBulkActionMenu.value = false
+  alert('Bulk status update would go here')
+}
+
+// Other bulk actions
+const bulkRegenerateImages = () => {
+  router.post(
+    route('admin.certificates.bulk-regenerate-all', props.user.id),
+    {},
+    { preserveScroll: true }
+  )
+}
+
+const bulkSendCertificates = () => {
+  router.post(
+    route('admin.certificates.bulk-send-all', props.user.id),
+    { method: 'both' },
+    { preserveScroll: true }
+  )
+}
+
+const bulkExportPDF = () => {
+  window.open(route('admin.certificates.bulk-export-pdf', props.user.id), '_blank')
 }
 </script>

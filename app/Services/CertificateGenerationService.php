@@ -7,21 +7,20 @@ use App\Models\Certificate;
 use App\Models\Course;
 use App\Models\User;
 use App\Models\OrganizationProfile;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
+use App\Models\CertificateTemplate;
 use Barryvdh\DomPDF\Facade\Pdf;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Storage;
 
 class CertificateGenerationService
 {
-    protected $imageManager;
     protected $defaultTemplate;
+    protected $imageService;
 
     public function __construct()
     {
-        $this->imageManager = new ImageManager(new Driver());
         $this->defaultTemplate = CertificateTemplate::where('is_default', true)->first();
+        $this->imageService = new CertificateImageService();
     }
 
     /**
@@ -37,7 +36,7 @@ class CertificateGenerationService
         // Check if all modules are completed
         $totalModules = $course->modules()->count();
         $completedModules = $course->modules()->where('is_completed', true)->count();
-        
+
         if ($totalModules !== $completedModules) {
             return false;
         }
@@ -98,7 +97,17 @@ class CertificateGenerationService
 
         // Generate PDF
         $pdfPath = $this->generatePdf($certificate);
-        $certificate->update(['metadata' => ['pdf_path' => $pdfPath]]);
+
+        // Generate shareable image
+        $imagePath = $this->generateShareableImage($certificate);
+
+        $certificate->update([
+            'metadata' => [
+                'pdf_path' => $pdfPath,
+                'image_path' => $imagePath,
+                'generated_at' => now()->toISOString(),
+            ]
+        ]);
 
         // Send notification to user
         $this->sendCertificateNotification($user, $certificate);
@@ -114,6 +123,15 @@ class CertificateGenerationService
         $template = $organization?->certificateTemplate ?? $this->defaultTemplate;
 
         return [
+            'certificate_number' => $certificate->certificate_number,
+            'student_name' => $user->name,
+            'student_email' => $user->email,
+            'course_title' => $course->title,
+            'title' => $certificate->title,
+            'issue_date' => $certificate->issue_date->format('F j, Y'),
+            'expiry_date' => $certificate->expiry_date ? $certificate->expiry_date->format('F j, Y') : null,
+            'verification_url' => $certificate->verification_url,
+            'qr_code' => $certificate->qr_code,
             'student' => [
                 'name' => $user->name,
                 'email' => $user->email,
@@ -123,7 +141,7 @@ class CertificateGenerationService
                 'title' => $course->title,
                 'subject' => $course->subject,
                 'level' => $course->level,
-                'completed_date' => $course->actual_completion_date->format('F j, Y'),
+                'completed_date' => $course->actual_completion_date?->format('F j, Y'),
                 'progress_percentage' => $course->progress_percentage,
             ],
             'issuer' => [
@@ -163,7 +181,7 @@ class CertificateGenerationService
     protected function generatePdf(Certificate $certificate): string
     {
         $data = $certificate->getCertificateData();
-        
+
         $pdf = Pdf::loadView('certificates.pdf', [
             'certificate' => $data,
             'template' => $certificate->organization?->certificateTemplate ?? $this->defaultTemplate,
@@ -171,105 +189,38 @@ class CertificateGenerationService
 
         $fileName = "certificates/pdf/{$certificate->certificate_number}.pdf";
         $pdfPath = storage_path("app/public/{$fileName}");
-        
+
         // Ensure directory exists
         Storage::disk('public')->makeDirectory('certificates/pdf');
-        
+
         $pdf->save($pdfPath);
 
         return Storage::url($fileName);
     }
 
     /**
-     * Generate shareable image
+     * Generate shareable image using GD
      */
     public function generateShareableImage(Certificate $certificate): string
     {
         $data = $certificate->getCertificateData();
-        
-        // Create image using Intervention Image
-        $image = $this->imageManager->create(1200, 800);
-        
-        // Set background
-        $backgroundColor = $certificate->organization?->certificateTemplate?->background_color ?? '#ffffff';
-        $image->fill($backgroundColor);
-        
-        // Add logo
-        $logoPath = $data['issuer']['logo'] ?? public_path('images/logo.png');
-        if (file_exists($logoPath)) {
-            $logo = $this->imageManager->read($logoPath);
-            $logo->scale(200, 200);
-            $image->place($logo, 'top-center', 10, 50);
+
+        // Get template colors or use defaults
+        $backgroundColor = '#ffffff';
+        $textColor = '#000000';
+
+        if ($certificate->organization?->certificateTemplate) {
+            $backgroundColor = $certificate->organization->certificateTemplate->background_color ?? $backgroundColor;
+            $textColor = $certificate->organization->certificateTemplate->text_color ?? $textColor;
+        } elseif ($this->defaultTemplate) {
+            $backgroundColor = $this->defaultTemplate->background_color ?? $backgroundColor;
+            $textColor = $this->defaultTemplate->text_color ?? $textColor;
         }
-        
-        // Add text
-        $textColor = $certificate->organization?->certificateTemplate?->text_color ?? '#000000';
-        
-        // Certificate title
-        $image->text($data['title'], 600, 300, function($font) use ($textColor) {
-            $font->file(public_path('fonts/Roboto-Bold.ttf'));
-            $font->size(48);
-            $font->color($textColor);
-            $font->align('center');
-        });
-        
-        // Student name
-        $image->text($data['student_name'], 600, 400, function($font) use ($textColor) {
-            $font->file(public_path('fonts/Roboto-Regular.ttf'));
-            $font->size(36);
-            $font->color($textColor);
-            $font->align('center');
-        });
-        
-        // Course title
-        $image->text("has successfully completed", 600, 450, function($font) use ($textColor) {
-            $font->file(public_path('fonts/Roboto-Italic.ttf'));
-            $font->size(24);
-            $font->color($textColor);
-            $font->align('center');
-        });
-        
-        $image->text($data['course_title'], 600, 500, function($font) use ($textColor) {
-            $font->file(public_path('fonts/Roboto-Bold.ttf'));
-            $font->size(28);
-            $font->color($textColor);
-            $font->align('center');
-        });
-        
-        // Issue date
-        $image->text("Issued on: {$data['issue_date']}", 600, 600, function($font) use ($textColor) {
-            $font->file(public_path('fonts/Roboto-Regular.ttf'));
-            $font->size(18);
-            $font->color($textColor);
-            $font->align('center');
-        });
-        
-        // Certificate number
-        $image->text("Certificate #: {$data['certificate_number']}", 600, 650, function($font) use ($textColor) {
-            $font->file(public_path('fonts/Roboto-Regular.ttf'));
-            $font->size(16);
-            $font->color($textColor);
-            $font->align('center');
-        });
-        
-        // Add QR code
-        if ($certificate->qr_code) {
-            $qrCodePath = storage_path('app/public/' . str_replace('/storage/', '', $certificate->qr_code));
-            if (file_exists($qrCodePath)) {
-                $qrCode = $this->imageManager->read($qrCodePath);
-                $qrCode->scale(100, 100);
-                $image->place($qrCode, 'bottom-right', 50, 50);
-            }
-        }
-        
-        // Save image
-        $fileName = "certificates/images/{$certificate->certificate_number}.png";
-        $imagePath = storage_path("app/public/{$fileName}");
-        
-        Storage::disk('public')->makeDirectory('certificates/images');
-        $image->save($imagePath);
-        
-        return Storage::url($fileName);
+
+        // Generate the image using GD
+        $imageUrl = $this->imageService->createCertificateImage($data, $backgroundColor, $textColor);
+
+        return $imageUrl;
     }
 
     /**
@@ -278,7 +229,7 @@ class CertificateGenerationService
     protected function getCourseAchievements(Course $course, User $user): array
     {
         $achievements = [];
-        
+
         // Check for high score achievement
         if ($course->progress_percentage >= 90) {
             $achievements[] = [
@@ -287,11 +238,11 @@ class CertificateGenerationService
                 'icon' => '🏆',
             ];
         }
-        
+
         // Check for fast completion
         $estimatedDuration = $course->estimated_duration_hours;
         $actualDuration = $course->actual_duration_hours;
-        
+
         if ($actualDuration && $actualDuration < ($estimatedDuration * 0.7)) {
             $achievements[] = [
                 'title' => 'Fast Learner',
@@ -299,7 +250,7 @@ class CertificateGenerationService
                 'icon' => '⚡',
             ];
         }
-        
+
         // Check for perfect quiz scores
         $perfectQuizzes = $course->quizzes()
             ->whereHas('attempts', function($q) use ($user) {
@@ -307,7 +258,7 @@ class CertificateGenerationService
                   ->where('percentage', 100);
             })
             ->count();
-        
+
         if ($perfectQuizzes >= 3) {
             $achievements[] = [
                 'title' => 'Quiz Master',
@@ -315,7 +266,7 @@ class CertificateGenerationService
                 'icon' => '🧠',
             ];
         }
-        
+
         return $achievements;
     }
 
@@ -325,7 +276,7 @@ class CertificateGenerationService
     protected function sendCertificateNotification(User $user, Certificate $certificate): void
     {
         $user->notify(new \App\Notifications\CertificateIssuedNotification($certificate));
-        
+
         // Also notify organization if applicable
         if ($certificate->organization) {
             $organizationUser = $certificate->organization->user;
@@ -342,18 +293,18 @@ class CertificateGenerationService
             'successful' => [],
             'failed' => [],
         ];
-        
+
         $students = $organization->students()
             ->whereHas('courses', function($q) use ($courseIds) {
                 $q->whereIn('courses.id', $courseIds)
                   ->where('status', 'completed');
             })
             ->get();
-        
+
         foreach ($students as $student) {
             foreach ($courseIds as $courseId) {
                 $course = Course::find($courseId);
-                
+
                 if ($course && $this->isEligibleForCertificate($student->user, $course)) {
                     try {
                         $certificate = $this->generateCertificate($student->user, $course, $organization);
@@ -372,7 +323,77 @@ class CertificateGenerationService
                 }
             }
         }
-        
+
         return $results;
+    }
+
+    /**
+     * Regenerate certificate image (useful if template changes)
+     */
+    public function regenerateCertificateImage(Certificate $certificate): bool
+    {
+        try {
+            $data = $certificate->getCertificateData();
+
+            // Get template colors
+            $backgroundColor = '#ffffff';
+            $textColor = '#000000';
+
+            if ($certificate->organization?->certificateTemplate) {
+                $backgroundColor = $certificate->organization->certificateTemplate->background_color ?? $backgroundColor;
+                $textColor = $certificate->organization->certificateTemplate->text_color ?? $textColor;
+            } elseif ($this->defaultTemplate) {
+                $backgroundColor = $this->defaultTemplate->background_color ?? $backgroundColor;
+                $textColor = $this->defaultTemplate->text_color ?? $textColor;
+            }
+
+            // Generate new image
+            $imageUrl = $this->imageService->createCertificateImage($data, $backgroundColor, $textColor);
+
+            // Update metadata
+            $metadata = $certificate->metadata ?? [];
+            $metadata['image_path'] = $imageUrl;
+            $metadata['regenerated_at'] = now()->toISOString();
+
+            $certificate->update(['metadata' => $metadata]);
+
+            return true;
+        } catch (\Exception $e) {
+            \Log::error('Failed to regenerate certificate image: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Generate certificate preview for a template
+     */
+    public function generateTemplatePreview(CertificateTemplate $template, array $sampleData = []): string
+    {
+        // Prepare sample data if not provided
+        if (empty($sampleData)) {
+            $sampleData = [
+                'certificate_number' => 'OLCERT-' . date('Y') . '-000001',
+                'student_name' => 'John Doe',
+                'course_title' => 'Sample Course',
+                'title' => 'Certificate of Completion',
+                'issue_date' => date('F j, Y'),
+                'expiry_date' => date('F j, Y', strtotime('+2 years')),
+                'verification_url' => 'https://example.com/verify/123456',
+                'qr_code' => null,
+                'issuer' => [
+                    'name' => 'Olilearn AI Learning Platform',
+                    'logo' => config('app.logo'),
+                ],
+            ];
+        }
+
+        // Generate preview image
+        $imageUrl = $this->imageService->createCertificateImage(
+            $sampleData,
+            $template->background_color ?? '#ffffff',
+            $template->text_color ?? '#000000'
+        );
+
+        return $imageUrl;
     }
 }

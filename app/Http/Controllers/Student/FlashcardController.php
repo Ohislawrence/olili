@@ -177,9 +177,9 @@ class FlashcardController extends Controller
     {
         $student = auth()->user();
 
-        //if ($flashcardSet->user_id !== $student->id) {
-        //   abort(403, 'Unauthorized access to this flashcard set.');
-        //}
+        if ($flashcardSet->user->id !== $student->id) {
+           abort(403, 'Unauthorized access to this flashcard set.');
+        }
 
         $flashcardSet->load(['course', 'flashcards' => function ($query) {
             $query->orderBy('created_at');
@@ -194,7 +194,7 @@ class FlashcardController extends Controller
     {
         $student = auth()->user();
 
-        if ($flashcardSet->user_id !== $student->id) {
+        if ($flashcardSet->user->id !== $student->id) {
             abort(403, 'Unauthorized access to this flashcard set.');
         }
 
@@ -222,7 +222,7 @@ class FlashcardController extends Controller
     {
         $student = auth()->user();
 
-        if ($flashcard->user_id !== $student->id) {
+        if ($flashcard->user->id !== $student->id) {
             abort(403, 'Unauthorized access to this flashcard.');
         }
 
@@ -316,7 +316,7 @@ class FlashcardController extends Controller
     {
         $student = auth()->user();
 
-        if ($flashcardSet->user_id !== $student->id) {
+        if ($flashcardSet->user->id !== $student->id) {
             abort(403, 'Unauthorized access to this flashcard set.');
         }
 

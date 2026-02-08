@@ -194,6 +194,13 @@ class UserController extends Controller
             'progressTracking',
         ]);
 
+        // Enhance certificates with image URLs
+        $user->certificates->transform(function ($certificate) {
+            $certificate->image_url = $certificate->getShareableImageUrl();
+            $certificate->pdf_url = $certificate->getPdfUrl();
+            return $certificate;
+        });
+
         // Calculate enrollment statistics
         $enrollmentStats = $this->getUserEnrollmentStats($user);
 
@@ -663,17 +670,17 @@ class UserController extends Controller
 
         // Build query for certificates
         $query = Certificate::where('user_id', $user->id)
-            ->with(['course', 'organization'])
+            ->with(['course', 'organization', 'user'])
             ->latest();
 
         // Apply filters
         if (!empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
                 $q->where('certificate_number', 'like', "%{$filters['search']}%")
-                  ->orWhere('title', 'like', "%{$filters['search']}%")
-                  ->orWhereHas('course', function ($q) use ($filters) {
-                      $q->where('title', 'like', "%{$filters['search']}%");
-                  });
+                ->orWhere('title', 'like', "%{$filters['search']}%")
+                ->orWhereHas('course', function ($q) use ($filters) {
+                    $q->where('title', 'like', "%{$filters['search']}%");
+                });
             });
         }
 
@@ -694,6 +701,26 @@ class UserController extends Controller
         }
 
         $certificates = $query->paginate(20);
+
+        // Enhance certificates with additional data
+        $certificates->getCollection()->transform(function ($certificate) {
+            // Get shareable image URL
+            $certificate->image_url = $certificate->getShareableImageUrl();
+
+            // Get PDF URL
+            $certificate->pdf_url = $certificate->getPdfUrl();
+
+            // Get certificate data
+            $certificate->certificate_data = $certificate->getCertificateData();
+
+            // Check if certificate is expired
+            $certificate->is_expired = $certificate->isExpired();
+
+            // Check if downloadable
+            $certificate->can_download = $certificate->canDownload();
+
+            return $certificate;
+        });
 
         // Get certificate statistics
         $stats = $this->getUserCertificateStats($user);
@@ -717,7 +744,189 @@ class UserController extends Controller
             'courses' => $courses,
             'statuses' => $statuses,
             'total_certificates' => $stats['total'],
+            'organizations' => \App\Models\OrganizationProfile::select('id', 'name')->get(),
         ]);
+    }
+
+    public function batchGenerateCertificates(Request $request)
+    {
+        $request->validate([
+            'user_ids' => 'required|array|min:1',
+            'user_ids.*' => 'exists:users,id',
+            'course_id' => 'required|exists:courses,id',
+            'organization_id' => 'nullable|exists:organization_profiles,id',
+        ]);
+
+        $course = Course::findOrFail($request->course_id);
+        $organization = $request->organization_id
+            ? \App\Models\OrganizationProfile::find($request->organization_id)
+            : null;
+
+        $results = [
+            'successful' => [],
+            'failed' => [],
+        ];
+
+        $certificateService = app(\App\Services\CertificateGenerationService::class);
+
+        foreach ($request->user_ids as $userId) {
+            $user = User::find($userId);
+
+            try {
+                // Check enrollment
+                $enrollment = $user->courseEnrollments()
+                    ->where('course_id', $course->id)
+                    ->where('status', 'completed')
+                    ->first();
+
+                if (!$enrollment) {
+                    $results['failed'][] = [
+                        'user' => $user->name,
+                        'error' => 'Course not completed',
+                    ];
+                    continue;
+                }
+
+                // Check eligibility
+                if (!$certificateService->isEligibleForCertificate($user, $course)) {
+                    $results['failed'][] = [
+                        'user' => $user->name,
+                        'error' => 'Not eligible for certificate',
+                    ];
+                    continue;
+                }
+
+                // Generate certificate
+                $certificate = $certificateService->generateCertificate($user, $course, $organization);
+
+                $results['successful'][] = [
+                    'user' => $user->name,
+                    'certificate_number' => $certificate->certificate_number,
+                    'certificate_id' => $certificate->id,
+                ];
+
+            } catch (\Exception $e) {
+                $results['failed'][] = [
+                    'user' => $user->name ?? 'Unknown',
+                    'error' => $e->getMessage(),
+                ];
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Batch certificate generation completed',
+            'results' => $results,
+            'summary' => [
+                'total' => count($request->user_ids),
+                'successful' => count($results['successful']),
+                'failed' => count($results['failed']),
+            ],
+        ]);
+    }
+
+    public function downloadCertificate(Certificate $certificate)
+    {
+        // Verify the certificate belongs to the user (admin can download any)
+        if (!auth()->user()->hasRole('admin') && $certificate->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        if (!$certificate->canDownload()) {
+            return redirect()->back()
+                ->with('error', 'Certificate cannot be downloaded.');
+        }
+
+        $pdfPath = $certificate->getPdfUrl();
+
+        if (empty($pdfPath)) {
+            // Generate PDF if not exists
+            try {
+                $certificateService = app(\App\Services\CertificateGenerationService::class);
+                $pdfPath = $certificateService->generatePdf($certificate);
+
+                // Update metadata
+                $metadata = $certificate->metadata ?? [];
+                $metadata['pdf_path'] = $pdfPath;
+                $certificate->update(['metadata' => $metadata]);
+            } catch (\Exception $e) {
+                \Log::error('Failed to generate PDF: ' . $e->getMessage());
+                return redirect()->back()
+                    ->with('error', 'Failed to generate PDF: ' . $e->getMessage());
+            }
+        }
+
+        // Increment download count
+        $certificate->incrementDownloadCount();
+
+        // Return the PDF file
+        $fileName = "certificate-{$certificate->certificate_number}.pdf";
+        $filePath = storage_path('app/public/' . str_replace('/storage/', '', $pdfPath));
+
+        return response()->download($filePath, $fileName);
+    }
+
+    /**
+     * Download certificate as image
+     */
+    public function downloadCertificateImage(Certificate $certificate)
+    {
+        // Verify the certificate belongs to the user (admin can download any)
+        if (!auth()->user()->hasRole('admin') && $certificate->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        $imagePath = $certificate->getShareableImageUrl();
+
+        if (empty($imagePath)) {
+            // Generate image if not exists
+            try {
+                $certificateService = app(\App\Services\CertificateGenerationService::class);
+                $imagePath = $certificateService->generateShareableImage($certificate);
+
+                // Update metadata
+                $metadata = $certificate->metadata ?? [];
+                $metadata['image_path'] = $imagePath;
+                $certificate->update(['metadata' => $metadata]);
+            } catch (\Exception $e) {
+                \Log::error('Failed to generate image: ' . $e->getMessage());
+                return redirect()->back()
+                    ->with('error', 'Failed to generate image: ' . $e->getMessage());
+            }
+        }
+
+        // Return the image file
+        $fileName = "certificate-{$certificate->certificate_number}.png";
+        $filePath = storage_path('app/public/' . str_replace('/storage/', '', $imagePath));
+
+        return response()->download($filePath, $fileName);
+    }
+
+    /**
+     * Verify certificate (public endpoint)
+     */
+    public function verifyCertificate($hash)
+    {
+        $certificate = Certificate::where('verification_url', route('certificates.verify', $hash))
+            ->orWhere('certificate_number', $hash)
+            ->first();
+
+        if (!$certificate) {
+            return Inertia::render('Certificates/NotFound', [
+                'message' => 'Certificate not found or invalid.',
+            ])->toResponse(request())->setStatusCode(404);
+        }
+
+        $isValid = !$certificate->isExpired() && $certificate->status === 'active';
+
+        $verificationData = [
+            'certificate' => $certificate->getCertificateData(),
+            'is_valid' => $isValid,
+            'verification_date' => now()->format('F j, Y H:i:s'),
+            'verification_id' => uniqid('VER-'),
+        ];
+
+        return Inertia::render('Certificates/Verify', $verificationData);
     }
 
     /**
@@ -733,6 +942,9 @@ class UserController extends Controller
 
         $user = User::findOrFail($request->user_id);
         $course = Course::findOrFail($request->course_id);
+        $organization = $request->organization_id
+            ? \App\Models\OrganizationProfile::find($request->organization_id)
+            : null;
 
         // Check if user has completed enrollment for this course
         $enrollment = $user->courseEnrollments()
@@ -757,21 +969,17 @@ class UserController extends Controller
         }
 
         try {
-            // Generate certificate using enrollment data
-            $certificate = Certificate::create([
-                'user_id' => $user->id,
-                'course_id' => $course->id,
-                'course_enrollment_id' => $enrollment->id,
-                'certificate_number' => $this->generateCertificateNumber(),
-                'issue_date' => now(),
-                'completion_date' => $enrollment->completed_at,
-                'status' => 'active',
-                'metadata' => [
-                    'enrollment_id' => $enrollment->id,
-                    'progress_percentage' => $enrollment->progress_percentage,
-                    'total_study_hours' => $enrollment->actual_duration_hours,
-                ],
-            ]);
+            // Use the CertificateGenerationService
+            $certificateService = app(\App\Services\CertificateGenerationService::class);
+
+            // Check eligibility first
+            if (!$certificateService->isEligibleForCertificate($user, $course)) {
+                return redirect()->back()
+                    ->with('error', 'User is not eligible for certificate. Please ensure all course requirements are met.');
+            }
+
+            // Generate certificate
+            $certificate = $certificateService->generateCertificate($user, $course, $organization);
 
             return redirect()->route('admin.users.certificates', $user->id)
                 ->with('success', 'Certificate generated successfully!');
@@ -780,6 +988,26 @@ class UserController extends Controller
             \Log::error('Failed to generate certificate: ' . $e->getMessage());
             return redirect()->back()
                 ->with('error', 'Failed to generate certificate: ' . $e->getMessage());
+        }
+    }
+
+    public function regenerateCertificateImage(Request $request, Certificate $certificate)
+    {
+        try {
+            $certificateService = app(\App\Services\CertificateGenerationService::class);
+            $success = $certificateService->regenerateCertificateImage($certificate);
+
+            if ($success) {
+                return redirect()->back()
+                    ->with('success', 'Certificate image regenerated successfully!');
+            } else {
+                return redirect()->back()
+                    ->with('error', 'Failed to regenerate certificate image.');
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to regenerate certificate image: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Failed to regenerate certificate image: ' . $e->getMessage());
         }
     }
 
@@ -1174,6 +1402,92 @@ class UserController extends Controller
 
 
 
+    }
+
+
+    private function getUserCertificateStats(User $user): array
+    {
+        $certificates = $user->certificates;
+
+        $total = $certificates->count();
+        $active = $certificates->where('status', 'active')->count();
+        $expired = $certificates->where('status', 'expired')->count();
+
+        // Calculate manual expiration check
+        $manuallyExpired = $certificates->filter(function ($cert) {
+            return $cert->isExpired();
+        })->count();
+
+        $totalExpired = max($expired, $manuallyExpired);
+
+        $recent30d = $certificates->where('issue_date', '>=', now()->subDays(30))->count();
+        $totalDownloads = $certificates->sum('download_count');
+
+        // Calculate certificate completion rate
+        $completedCourses = $user->courseEnrollments()
+            ->where('status', 'completed')
+            ->count();
+
+        $coursesWithCertificates = $certificates->count();
+
+        $certificateRate = $completedCourses > 0
+            ? round(($coursesWithCertificates / $completedCourses) * 100, 1)
+            : 0;
+
+        return [
+            'total' => $total,
+            'active' => $active,
+            'expired' => $totalExpired,
+            'recent_30d' => $recent30d,
+            'total_downloads' => $totalDownloads,
+            'certificate_rate' => $certificateRate,
+            'completed_courses' => $completedCourses,
+            'courses_with_certificates' => $coursesWithCertificates,
+            'expiry_distribution' => $this->getCertificateExpiryDistribution($certificates),
+            'monthly_issued' => $this->getMonthlyIssuedCertificates($certificates),
+        ];
+    }
+
+    /**
+     * Get certificate expiry distribution
+     */
+    private function getCertificateExpiryDistribution($certificates): array
+    {
+        $distribution = [
+            'expired' => 0,
+            'expiring_soon' => 0, // Within 30 days
+            'valid' => 0,
+            'no_expiry' => 0,
+        ];
+
+        foreach ($certificates as $certificate) {
+            if ($certificate->isExpired()) {
+                $distribution['expired']++;
+            } elseif (!$certificate->expiry_date) {
+                $distribution['no_expiry']++;
+            } elseif ($certificate->expiry_date->diffInDays(now()) <= 30) {
+                $distribution['expiring_soon']++;
+            } else {
+                $distribution['valid']++;
+            }
+        }
+
+        return $distribution;
+    }
+
+    /**
+     * Get monthly issued certificates
+     */
+    private function getMonthlyIssuedCertificates($certificates): array
+    {
+        $monthly = $certificates->groupBy(function ($cert) {
+            return $cert->issue_date->format('Y-m');
+        })->map->count();
+
+        return [
+            'labels' => $monthly->keys()->toArray(),
+            'data' => $monthly->values()->toArray(),
+        ];
     }
 
 }

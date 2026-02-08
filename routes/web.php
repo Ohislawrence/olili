@@ -21,6 +21,16 @@ use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Student\CertificateController;
 use App\Http\Controllers\SitemapController;
 
+
+use Intervention\Image\Format;
+use Intervention\Image\Laravel\Facades\Image;
+
+Route::get('/test-image', function () {
+    // Create a new image (e.g., 300x200)
+    $img = Image::read('example.jpg')->resize(300, 200);
+    return $img->response('jpg');
+});
+
 // Public routes
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 

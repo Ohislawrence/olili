@@ -72,15 +72,16 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
     // certificates
     Route::prefix('certificates')->name('certificates.')->group(function () {
-        Route::get('/', [CertificateController::class, 'index'])->name('index');
+         Route::get('/', [CertificateController::class, 'index'])->name('index');
+        Route::get('/request', [CertificateController::class, 'request'])->name('request');
+        Route::post('/request/{course}', [CertificateController::class, 'requestCertificate'])->name('request-certificate');
         Route::get('/{certificate}', [CertificateController::class, 'show'])->name('show');
         Route::get('/{certificate}/download', [CertificateController::class, 'download'])->name('download');
+        Route::get('/{certificate}/download-image', [CertificateController::class, 'downloadImage'])->name('download-image');
         Route::post('/{certificate}/share', [CertificateController::class, 'share'])->name('share');
-        Route::get('/request', [CertificateController::class, 'request'])->name('request');
-        Route::post('/courses/{course}/request-certificate', [CertificateController::class, 'requestCertificate'])->name('post.request');
-
-        Route::get('/request', [CertificateController::class, 'request'])->name('get.request');
-        Route::post('/export-all', [CertificateController::class, 'exportAll'])->name('export-all');
+        Route::post('/{certificate}/renew', [CertificateController::class, 'renew'])->name('renew');
+        Route::post('/{certificate}/toggle-public', [CertificateController::class, 'togglePublic'])->name('toggle-public');
+        Route::get('/export/all', [CertificateController::class, 'exportAll'])->name('export-all');
     });
 
 

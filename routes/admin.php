@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\SystemSettingsController;
 use App\Http\Controllers\Admin\SubscriptionPlanController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\BlogPostController;
+use App\Http\Controllers\Admin\CertificateController;
 use App\Http\Controllers\Admin\CommunityController as AdminCommunityController;
 use App\Http\Controllers\Admin\CourseOutlineController;
 use Illuminate\Support\Facades\Route;
@@ -58,15 +59,55 @@ Route::middleware([
 
     // Certificate Management Routes
     Route::prefix('certificates')->name('certificates.')->group(function () {
-        Route::get('/create', [UserController::class, 'showCertificate'])->name('create');
-        Route::get('/{certificate}', [UserController::class, 'showCertificate'])->name('show');
-        Route::post('/generate', [UserController::class, 'generateCertificate'])->name('generate');
+        //Route::post('/generate', [UserController::class, 'generateCertificate'])->name('generate');
         Route::post('/batch-generate', [UserController::class, 'batchGenerateCertificates'])->name('batch-generate');
-        Route::patch('/{certificate}/status', [UserController::class, 'updateCertificateStatus'])->name('update-status');
-        Route::delete('/{certificate}', [UserController::class, 'deleteCertificate'])->name('delete');
-        Route::post('/{certificate}/send', [UserController::class, 'sendCertificate'])->name('send');
-        Route::post('/users/{user}/export', [UserController::class, 'exportCertificates'])->name('export');
-        Route::get('/{certificate}/preview', [UserController::class, 'previewCertificate'])->name('preview');
+        Route::post('/{certificate}/regenerate-image', [UserController::class, 'regenerateCertificateImage'])->name('regenerate-image');
+        Route::get('/{certificate}/download', [UserController::class, 'downloadCertificate'])->name('download');
+        Route::get('/{certificate}/download-image', [UserController::class, 'downloadCertificateImage'])->name('download-image');
+
+        // Generate certificate
+        Route::get('/generate', [CertificateController::class, 'create'])->name('generate');
+        Route::post('/generate', [CertificateController::class, 'store'])->name('store');
+
+        // View certificate
+        Route::get('/{certificate}', [CertificateController::class, 'show'])->name('show');
+
+        // Update certificate
+        Route::patch('/{certificate}/status', [CertificateController::class, 'updateStatus'])->name('update-status');
+        Route::patch('/{certificate}/renew', [CertificateController::class, 'renew'])->name('renew');
+
+        // Send certificate
+        Route::post('/{certificate}/send', [CertificateController::class, 'send'])->name('send');
+
+        // Regenerate image
+        Route::post('/{certificate}/regenerate-image', [CertificateController::class, 'regenerateImage'])->name('regenerate-image');
+
+        // Download
+        Route::get('/{certificate}/download', [CertificateController::class, 'download'])->name('download');
+        Route::get('/{certificate}/download-image', [CertificateController::class, 'downloadImage'])->name('download-image');
+
+        // Delete
+        Route::delete('/{certificate}', [CertificateController::class, 'destroy'])->name('delete');
+
+        // Bulk actions
+        Route::post('/batch-generate', [CertificateController::class, 'batchGenerate'])->name('batch-generate');
+        Route::get('/users/{user}/check-eligible', [CertificateController::class, 'checkEligible'])->name('check-eligible');
+        Route::post('/bulk-send', [CertificateController::class, 'bulkSend'])->name('bulk-send');
+        Route::post('/bulk-regenerate', [CertificateController::class, 'bulkRegenerate'])->name('bulk-regenerate');
+        Route::post('/users/{user}/bulk-regenerate-all', [CertificateController::class, 'bulkRegenerateAll'])->name('bulk-regenerate-all');
+        Route::post('/users/{user}/bulk-send-all', [CertificateController::class, 'bulkSendAll'])->name('bulk-send-all');
+        Route::get('/users/{user}/bulk-export-pdf', [CertificateController::class, 'bulkExportPdf'])->name('bulk-export-pdf');
+        Route::get('/bulk-download-pdf', [CertificateController::class, 'bulkDownloadPdf'])->name('bulk-download-pdf');
+        Route::get('/bulk-download-images', [CertificateController::class, 'bulkDownloadImages'])->name('bulk-download-images');
+        Route::post('/users/{user}/export', [CertificateController::class, 'export'])->name('export');
+
+        //Route::get('/create', [UserController::class, 'showCertificate'])->name('create'); //watch
+        //Route::get('/{certificate}', [UserController::class, 'showCertificate'])->name('show');//watch
+        //Route::patch('/{certificate}/status', [UserController::class, 'updateCertificateStatus'])->name('update-status'); //
+        //Route::delete('/{certificate}', [UserController::class, 'deleteCertificate'])->name('delete'); //
+        //Route::post('/{certificate}/send', [UserController::class, 'sendCertificate'])->name('send'); //
+        //Route::post('/users/{user}/export', [UserController::class, 'exportCertificates'])->name('export'); //
+        //Route::get('/{certificate}/preview', [UserController::class, 'previewCertificate'])->name('preview'); //
     });
 
     // Course Management
