@@ -59,14 +59,15 @@ Route::middleware([
 
     // Certificate Management Routes
     Route::prefix('certificates')->name('certificates.')->group(function () {
-        //Route::post('/generate', [UserController::class, 'generateCertificate'])->name('generate');
+        Route::post('/generate', [UserController::class, 'generateCertificate'])->name('generate');
         Route::post('/batch-generate', [UserController::class, 'batchGenerateCertificates'])->name('batch-generate');
         Route::post('/{certificate}/regenerate-image', [UserController::class, 'regenerateCertificateImage'])->name('regenerate-image');
         Route::get('/{certificate}/download', [UserController::class, 'downloadCertificate'])->name('download');
         Route::get('/{certificate}/download-image', [UserController::class, 'downloadCertificateImage'])->name('download-image');
 
         // Generate certificate
-        Route::get('/generate', [CertificateController::class, 'create'])->name('generate');
+        Route::get('/create/generate', [CertificateController::class, 'create'])->name('generate');
+        Route::get('/generate', [CertificateController::class, 'create'])->name('create');
         Route::post('/generate', [CertificateController::class, 'store'])->name('store');
 
         // View certificate
