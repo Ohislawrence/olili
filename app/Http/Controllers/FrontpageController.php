@@ -13,6 +13,9 @@ use Illuminate\Http\Request;
 use App\Models\Specialization;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Category;
+use App\Models\ExamPrep;
+use App\Models\ExamBoard;
+use App\Models\Subject;
 
 class FrontpageController extends Controller
 {
@@ -1514,6 +1517,200 @@ class FrontpageController extends Controller
                 'image' => $specialization->banner_url ?: $specialization->thumbnail_url ?: asset('images/specializations-landing.png'),
                 'url' => route('specializations.show', $specialization),
             ]
+        ]);
+    }
+
+    public function examPreps(Request $request)
+    {
+        try {
+            $query = ExamPrep::query()
+                ->with(['examBoard', 'subject', 'course'])
+                ->where('status', 'active')
+                ->where('is_public', true);
+
+            // Apply search filter
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%")
+                      ->orWhereHas('examBoard', function ($qb) use ($search) {
+                          $qb->where('name', 'like', "%{$search}%");
+                      })
+                      ->orWhereHas('subject', function ($qb) use ($search) {
+                          $qb->where('name', 'like', "%{$search}%");
+                      });
+                });
+            }
+
+            // Apply exam board filter
+            if ($request->filled('exam_boards')) {
+                $examBoardIds = explode(',', $request->exam_boards);
+                $query->whereIn('exam_board_id', $examBoardIds);
+            }
+
+            // Apply subject filter
+            if ($request->filled('subjects')) {
+                $subjectIds = explode(',', $request->subjects);
+                $query->whereIn('subject_id', $subjectIds);
+            }
+
+            // Apply sorting
+            switch ($request->sort) {
+                case 'popular':
+                    $query->orderBy('enrolled_count', 'desc');
+                    break;
+                case 'questions_desc':
+                    $query->orderBy('total_questions', 'desc');
+                    break;
+                case 'questions_asc':
+                    $query->orderBy('total_questions', 'asc');
+                    break;
+                case 'name_asc':
+                    $query->orderBy('name', 'asc');
+                    break;
+                case 'name_desc':
+                    $query->orderBy('name', 'desc');
+                    break;
+                default: // 'latest'
+                    $query->orderBy('created_at', 'desc');
+                    break;
+            }
+
+            // Paginate results
+            $examPreps = $query->paginate(12)
+                ->withQueryString();
+
+            // Get filter data - with fallback if relationships don't exist
+            $examBoards = collect();
+            $subjects = collect();
+
+            // Only try to get exam boards if the relationship exists
+            if (method_exists(ExamBoard::class, 'examPreps')) {
+                $examBoards = ExamBoard::select('id', 'name')
+                    ->whereHas('examPreps', function ($q) {
+                        $q->where('status', 'active')->where('is_public', true);
+                    })
+                    ->orderBy('name')
+                    ->get();
+            } else {
+                // Fallback: Get exam boards that have exam preps via direct query
+                $examBoardIds = ExamPrep::where('status', 'active')
+                    ->where('is_public', true)
+                    ->whereNotNull('exam_board_id')
+                    ->distinct()
+                    ->pluck('exam_board_id');
+
+                if ($examBoardIds->isNotEmpty()) {
+                    $examBoards = ExamBoard::select('id', 'name')
+                        ->whereIn('id', $examBoardIds)
+                        ->orderBy('name')
+                        ->get();
+                }
+            }
+
+            // Only try to get subjects if the relationship exists
+            if (method_exists(Subject::class, 'examPreps')) {
+                $subjects = Subject::select('id', 'name')
+                    ->whereHas('examPreps', function ($q) {
+                        $q->where('status', 'active')->where('is_public', true);
+                    })
+                    ->orderBy('name')
+                    ->get();
+            } else {
+                // Fallback: Get subjects that have exam preps via direct query
+                $subjectIds = ExamPrep::where('status', 'active')
+                    ->where('is_public', true)
+                    ->whereNotNull('subject_id')
+                    ->distinct()
+                    ->pluck('subject_id');
+
+                if ($subjectIds->isNotEmpty()) {
+                    $subjects = Subject::select('id', 'name')
+                        ->whereIn('id', $subjectIds)
+                        ->orderBy('name')
+                        ->get();
+                }
+            }
+
+            // Calculate stats with safe fallbacks
+            $stats = [
+                'total_exam_preps' => ExamPrep::where('status', 'active')->where('is_public', true)->count(),
+                'total_questions' => ExamPrep::where('status', 'active')->where('is_public', true)->sum('total_questions') ?: 0,
+                'total_students' => ExamPrep::where('status', 'active')->where('is_public', true)->sum('enrolled_count') ?: 0,
+                'exam_boards' => $examBoards->count() ?: ExamPrep::where('status', 'active')
+                    ->where('is_public', true)
+                    ->whereNotNull('exam_board_id')
+                    ->distinct('exam_board_id')
+                    ->count('exam_board_id'),
+            ];
+
+            return Inertia::render('Frontpages/ExamPreps/Index', [
+                'examPreps' => $examPreps,
+                'examBoards' => $examBoards,
+                'subjects' => $subjects,
+                'filters' => $request->only(['search', 'exam_boards', 'subjects', 'sort']),
+                'stats' => $stats,
+                'pageTitle' => 'Exam Preparation',
+                'pageDescription' => 'Prepare for your exams with AI-powered practice tests. Access thousands of exam-style questions with detailed explanations for WAEC, NECO, JAMB, and more.'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error loading exam preparation page', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Return with empty data if something fails
+            return Inertia::render('Frontpages/ExamPreps/Index', [
+                'examPreps' => ExamPrep::where('status', 'active')->where('is_public', true)->paginate(12),
+                'examBoards' => [],
+                'subjects' => [],
+                'filters' => $request->only(['search', 'exam_boards', 'subjects', 'sort']),
+                'stats' => [
+                    'total_exam_preps' => 0,
+                    'total_questions' => 0,
+                    'total_students' => 0,
+                    'exam_boards' => 0,
+                ],
+                'pageTitle' => 'Exam Preparation',
+                'pageDescription' => 'Prepare for your exams with AI-powered practice tests.'
+            ]);
+        }
+    }
+
+    /**
+     * Display a single exam prep for students
+     */
+    public function showExamPrep($slug)
+    {
+        $examPrep = ExamPrep::where('slug', $slug)
+            ->with(['examBoard', 'subject', 'course', 'questions' => function ($q) {
+                $q->orderBy('order');
+            }])
+            ->where('status', 'active')
+            ->where('is_public', true)
+            ->firstOrFail();
+
+        // Check if user is enrolled or create enrollment
+        if (auth()->check()) {
+            $enrollment = $examPrep->enrollments()
+                ->where('user_id', auth()->id())
+                ->first();
+
+            if (!$enrollment) {
+                $enrollment = $examPrep->enrollments()->create([
+                    'user_id' => auth()->id(),
+                    'status' => 'active',
+                    'enrolled_at' => now()
+                ]);
+                $examPrep->incrementEnrolledCount();
+            }
+        }
+
+        return Inertia::render('Students/ExamPreps/Show', [
+            'examPrep' => $examPrep,
+            'userEnrollment' => $enrollment ?? null
         ]);
     }
 }

@@ -25,11 +25,6 @@ use App\Http\Controllers\SitemapController;
 use Intervention\Image\Format;
 use Intervention\Image\Laravel\Facades\Image;
 
-Route::get('/test-image', function () {
-    // Create a new image (e.g., 300x200)
-    $img = Image::read('example.jpg')->resize(300, 200);
-    return $img->response('jpg');
-});
 
 // Public routes
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
@@ -55,10 +50,15 @@ Route::get('/gdpr', [FrontpageController::class, 'pricing'])->name('gdpr');
 Route::get('/pass/weac', [FrontpageController::class, 'waeclanding'])->name('waeclanding');
 Route::get('/pass/jamb', [FrontpageController::class, 'jamblanding'])->name('jamblanding');
 Route::get('/specializations', [FrontpageController::class, 'specializations'])->name('specializations.index');
+//Exam prep
+Route::get('/exam-preparation', [FrontpageController::class, 'examPreps'])->name('exam-preps.index');
 
 // Courses routes
 Route::get('/course', [FrontpageController::class, 'coursesIndex'])->name('courses.index');
 Route::get('/course/{id}/{slug?}', [FrontpageController::class, 'courseShow'])->name('courses.show');
+
+
+//Route::get('/exam-preparation/{examPrep:slug}', [FrontpageController::class, 'showExamPrep'])->name('students.exam-preps.show');
 
 Route::get('/enterprise', [FrontpageController::class, 'enterprise'])->name('enterprise');
 

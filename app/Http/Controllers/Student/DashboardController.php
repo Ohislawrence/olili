@@ -25,48 +25,48 @@ class DashboardController extends Controller
     }
 
     public function index()
-{
-    try {
-        $student = auth()->user();
-        $studentProfile = $student->studentProfile;
+    {
+        try {
+            $student = auth()->user();
+            $studentProfile = $student->studentProfile;
 
-        $stats = $this->getStudentStats($student);
-        $activeCourse = $this->getActiveCourse($student);
-        $recentActivity = $this->getRecentActivity($student);
-        $upcomingDeadlines = $this->getUpcomingDeadlines($student);
-        $learningAnalytics = $this->progressService->getLearningAnalytics($student);
+            $stats = $this->getStudentStats($student);
+            $activeCourse = $this->getActiveCourse($student);
+            $recentActivity = $this->getRecentActivity($student);
+            $upcomingDeadlines = $this->getUpcomingDeadlines($student);
+            $learningAnalytics = $this->progressService->getLearningAnalytics($student);
 
-        // Get recently dropped courses
-        $recentlyDroppedCourses = $this->getRecentlyDroppedCourses($student);
+            // Get recently dropped courses
+            $recentlyDroppedCourses = $this->getRecentlyDroppedCourses($student);
 
-        // Get current subscription
-        $currentSubscription = $student->current_subscription;
+            // Get current subscription
+            $currentSubscription = $student->current_subscription;
 
-        return Inertia::render('Student/Dashboard', [
-            'stats' => $stats,
-            'active_course' => $activeCourse,
-            'recent_activity' => $recentActivity,
-            'upcoming_deadlines' => $upcomingDeadlines,
-            'learning_analytics' => $learningAnalytics,
-            'recently_dropped_courses' => $recentlyDroppedCourses, // Add this
-            'student_profile' => $studentProfile,
-            'current_subscription' => $currentSubscription,
-        ]);
-    } catch (\Exception $e) {
-        \Log::error('DashboardController error: ' . $e->getMessage());
+            return Inertia::render('Student/Dashboard', [
+                'stats' => $stats,
+                'active_course' => $activeCourse,
+                'recent_activity' => $recentActivity,
+                'upcoming_deadlines' => $upcomingDeadlines,
+                'learning_analytics' => $learningAnalytics,
+                'recently_dropped_courses' => $recentlyDroppedCourses, // Add this
+                'student_profile' => $studentProfile,
+                'current_subscription' => $currentSubscription,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('DashboardController error: ' . $e->getMessage());
 
-        return Inertia::render('Student/Dashboard', [
-            'stats' => $this->getDefaultStats(),
-            'active_course' => null,
-            'recent_activity' => [],
-            'upcoming_deadlines' => ['courses' => [], 'quizzes' => []],
-            'learning_analytics' => [],
-            'recently_dropped_courses' => [], // Add this
-            'student_profile' => null,
-            'current_subscription' => null,
-        ]);
+            return Inertia::render('Student/Dashboard', [
+                'stats' => $this->getDefaultStats(),
+                'active_course' => null,
+                'recent_activity' => [],
+                'upcoming_deadlines' => ['courses' => [], 'quizzes' => []],
+                'learning_analytics' => [],
+                'recently_dropped_courses' => [], // Add this
+                'student_profile' => null,
+                'current_subscription' => null,
+            ]);
+        }
     }
-}
 
     private function getStudentStats($student)
     {

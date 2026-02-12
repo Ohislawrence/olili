@@ -3,34 +3,34 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ExamPrepQuestion extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
-        'exam_prep_id',
         'quiz_id',
         'course_outline_id',
+        'exam_prep_id',
         'question_text',
         'options',
         'correct_answer',
+        'explanation',
         'question_type',
         'points',
         'difficulty',
+        'order',
         'metadata',
         'times_used',
         'times_correct',
         'times_incorrect',
+
     ];
 
     protected $casts = [
         'options' => 'array',
         'metadata' => 'array',
-        'points' => 'integer',
         'times_used' => 'integer',
         'times_correct' => 'integer',
         'times_incorrect' => 'integer',
@@ -42,50 +42,50 @@ class ExamPrepQuestion extends Model
         return $this->belongsTo(ExamPrep::class);
     }
 
-    public function quiz(): BelongsTo
+    public function attempts(): HasMany
     {
-        return $this->belongsTo(Quiz::class);
-    }
-
-    public function courseOutline(): BelongsTo
-    {
-        return $this->belongsTo(CourseOutline::class);
+        return $this->hasMany(ExamPrepAttemptQuestion::class);
     }
 
     // Methods
-    public function getSuccessRate(): float
-    {
-        $totalAttempts = $this->times_correct + $this->times_incorrect;
-
-        return $totalAttempts > 0 ?
-            ($this->times_correct / $totalAttempts) * 100 : 0;
-    }
-
-    public function incrementUsage(bool $wasCorrect): void
+    public function recordAttempt(bool $isCorrect): void
     {
         $this->increment('times_used');
 
-        if ($wasCorrect) {
+        if ($isCorrect) {
             $this->increment('times_correct');
         } else {
             $this->increment('times_incorrect');
         }
-
-        $this->save();
     }
 
-    public function getTopicIdAttribute()
+    public function getSuccessRate(): float
     {
-        return $this->metadata['topic_id'] ?? null;
+        if ($this->times_used === 0) {
+            return 0;
+        }
+
+        return round(($this->times_correct / $this->times_used) * 100, 1);
     }
 
-    public function getExplanationAttribute()
+    public function getFormattedOptions(): array
     {
-        return $this->metadata['explanation'] ?? null;
+        $options = $this->options ?? [];
+
+        // Ensure options are indexed from A, B, C, D
+        $formatted = [];
+        $letters = ['A', 'B', 'C', 'D'];
+
+        foreach ($options as $index => $option) {
+            $letter = $letters[$index] ?? chr(65 + $index);
+            $formatted[$letter] = $option;
+        }
+
+        return $formatted;
     }
 
-    public function getCourseIdAttribute()
+    public function isCorrectAnswer(string $answer): bool
     {
-        return $this->metadata['course_id'] ?? null;
+        return $this->correct_answer === $answer;
     }
 }

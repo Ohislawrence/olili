@@ -331,14 +331,12 @@
                           :href="route('student.profile.show')"
                           class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50/80 hover:text-emerald-700 transition-all duration-200 group"
                         >
-                          <UserCircleIcon class="h-4 w-4 mr-3 text-gray-400 transform group-hover:scale-110 transition-transform duration-300" />
                           Profile
                         </DropdownLink>
                         <DropdownLink
                           :href="route('payment.pricing')"
                           class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50/80 hover:text-emerald-700 transition-all duration-200 group"
                         >
-                          <CreditCardIcon class="h-4 w-4 mr-3 text-gray-400 transform group-hover:scale-110 transition-transform duration-300" />
                           Billing
                         </DropdownLink>
                       </div>

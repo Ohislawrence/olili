@@ -1,7 +1,7 @@
-
+<!-- resources/js/Pages/Admin/ExamPreps/Create.vue -->
 <template>
   <AdminLayout>
-    <Head title="Create Exam Prep" />
+    <Head title="Create Exam Prep - AI Powered" />
 
     <div class="py-6">
       <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -9,14 +9,20 @@
         <div class="mb-8">
           <div class="flex items-center justify-between">
             <div>
-              <h1 class="text-2xl font-bold text-gray-900">Create Exam Preparation</h1>
+              <div class="flex items-center space-x-2">
+                <h1 class="text-2xl font-bold text-gray-900">Create AI-Powered Exam Preparation</h1>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-purple-100 to-blue-100 text-purple-800 border border-purple-200">
+                  <SparklesIcon class="h-3 w-3 mr-1" />
+                  AI Generated
+                </span>
+              </div>
               <p class="mt-1 text-sm text-gray-600">
-                Create a practice exam for students to prepare for their exams
+                Generate custom exam questions using AI based on your specifications
               </p>
             </div>
             <Link
               :href="route('admin.exam-preps.index')"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all"
             >
               <ArrowLeftIcon class="h-4 w-4 mr-2" />
               Back to Exam Preps
@@ -25,20 +31,50 @@
         </div>
 
         <!-- Form -->
-        <div class="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
+        <div class="bg-white shadow-xl rounded-xl border border-gray-200 overflow-hidden">
           <form @submit.prevent="submit">
+            <!-- Progress Steps -->
+            <div class="px-6 pt-6 pb-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                  <div v-for="(step, index) in steps" :key="index" class="flex items-center">
+                    <div
+                      :class="[
+                        'flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold transition-all',
+                        currentStep > index + 1 ? 'bg-emerald-600 text-white' :
+                        currentStep === index + 1 ? 'bg-emerald-600 text-white ring-4 ring-emerald-100' :
+                        'bg-gray-200 text-gray-600'
+                      ]"
+                    >
+                      <CheckIcon v-if="currentStep > index + 1" class="h-4 w-4" />
+                      <span v-else>{{ index + 1 }}</span>
+                    </div>
+                    <span v-if="index < steps.length - 1" class="mx-4 text-gray-400">
+                      <ChevronRightIcon class="h-4 w-4" />
+                    </span>
+                  </div>
+                </div>
+                <span class="text-sm text-emerald-700 font-medium">
+                  Step {{ currentStep }} of {{ steps.length }}: {{ steps[currentStep - 1] }}
+                </span>
+              </div>
+            </div>
+
             <div class="p-6 space-y-8">
-              <!-- Basic Information Section -->
-              <div class="space-y-6">
-                <div class="border-b border-gray-200 pb-4">
-                  <h2 class="text-lg font-semibold text-gray-900">Basic Information</h2>
-                  <p class="mt-1 text-sm text-gray-500">General information about the exam prep</p>
+              <!-- Step 1: Basic Information -->
+              <div v-show="currentStep === 1" class="space-y-6 animate-fadeIn">
+                <div>
+                  <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <InformationCircleIcon class="h-5 w-5 mr-2 text-emerald-600" />
+                    Basic Information
+                  </h2>
+                  <p class="mt-1 text-sm text-gray-500">Define the core details of your exam</p>
                 </div>
 
                 <!-- Exam Prep Name -->
                 <div>
                   <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
-                    Exam Prep Name *
+                    Exam Prep Name <span class="text-red-500">*</span>
                   </label>
                   <input
                     id="name"
@@ -46,7 +82,7 @@
                     type="text"
                     required
                     class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
-                    placeholder="e.g., WAEC Mathematics Practice Exam"
+                    placeholder="e.g., WAEC Mathematics 2024 Practice Exam"
                   />
                   <p v-if="form.errors.name" class="mt-1 text-sm text-red-600">
                     {{ form.errors.name }}
@@ -63,17 +99,14 @@
                     v-model="form.description"
                     rows="3"
                     class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
-                    placeholder="Describe what this exam prep covers..."
+                    placeholder="Describe what this exam covers, who it's for, and what students can expect..."
                   />
-                  <p v-if="form.errors.description" class="mt-1 text-sm text-red-600">
-                    {{ form.errors.description }}
-                  </p>
                 </div>
 
                 <!-- Exam Board Selection -->
                 <div>
                   <label for="exam_board_id" class="block text-sm font-medium text-gray-700 mb-1">
-                    Exam Board *
+                    Exam Board <span class="text-red-500">*</span>
                   </label>
                   <select
                     id="exam_board_id"
@@ -95,135 +128,188 @@
                   </p>
                 </div>
 
-                <!-- Subject Selection -->
-                <div>
-                  <label for="subject_id" class="block text-sm font-medium text-gray-700 mb-1">
-                    Subject (Optional)
-                  </label>
-                  <select
-                    id="subject_id"
-                    v-model="form.subject_id"
-                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
-                  >
-                    <option value="">Select a subject (optional)</option>
-                    <option
-                      v-for="subject in subjects"
-                      :key="subject.id"
-                      :value="subject.id"
+                <!-- Subject & Course -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label for="subject_id" class="block text-sm font-medium text-gray-700 mb-1">
+                      Subject
+                    </label>
+                    <select
+                      id="subject_id"
+                      v-model="form.subject_id"
+                      class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
                     >
-                      {{ subject.name }}
-                    </option>
-                  </select>
-                  <p class="mt-1 text-sm text-gray-500">
-                    Select a specific subject to filter questions
-                  </p>
+                      <option value="">Select a subject (optional)</option>
+                      <option
+                        v-for="subject in subjects"
+                        :key="subject.id"
+                        :value="subject.id"
+                      >
+                        {{ subject.name }}
+                      </option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">
+                      AI will generate subject-specific questions
+                    </p>
+                  </div>
+
+                  <div>
+                    <label for="course_id" class="block text-sm font-medium text-gray-700 mb-1">
+                      Related Course
+                    </label>
+                    <select
+                      id="course_id"
+                      v-model="form.course_id"
+                      class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
+                    >
+                      <option value="">Select a course (optional)</option>
+                      <option
+                        v-for="course in courses"
+                        :key="course.id"
+                        :value="course.id"
+                      >
+                        {{ course.title }} ({{ course.level }})
+                      </option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">
+                      AI will align questions with course learning objectives
+                    </p>
+                  </div>
                 </div>
 
-                <!-- Course Selection -->
+                <!-- AI Model Selection -->
                 <div>
-                  <label for="course_id" class="block text-sm font-medium text-gray-700 mb-1">
-                    Course (Optional)
+                  <label for="ai_model" class="block text-sm font-medium text-gray-700 mb-1">
+                    AI Model
                   </label>
                   <select
-                    id="course_id"
-                    v-model="form.course_id"
+                    id="ai_model"
+                    v-model="form.ai_model"
                     class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
                   >
-                    <option value="">Select a course (optional)</option>
-                    <option
-                      v-for="course in courses"
-                      :key="course.id"
-                      :value="course.id"
-                    >
-                      {{ course.title }}
-                    </option>
+                    <option value="gpt-4">GPT-4 (Recommended - Highest Quality)</option>
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Faster)</option>
+                    <option value="claude-2">Claude 2 (Excellent for complex topics)</option>
+                    <option value="llama2">Llama 2 (Open source)</option>
                   </select>
-                  <p class="mt-1 text-sm text-gray-500">
-                    Select a specific course to pull questions from
+                  <p class="mt-1 text-xs text-gray-500">
+                    Choose the AI model for question generation
                   </p>
                 </div>
               </div>
 
-              <!-- Exam Configuration Section -->
-              <div class="space-y-6">
-                <div class="border-b border-gray-200 pb-4">
-                  <h2 class="text-lg font-semibold text-gray-900">Exam Configuration</h2>
-                  <p class="mt-1 text-sm text-gray-500">Configure the exam settings</p>
+              <!-- Step 2: Exam Configuration -->
+              <div v-show="currentStep === 2" class="space-y-6 animate-fadeIn">
+                <div>
+                  <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <Cog6ToothIcon class="h-5 w-5 mr-2 text-emerald-600" />
+                    Exam Configuration
+                  </h2>
+                  <p class="mt-1 text-sm text-gray-500">Configure the exam settings and requirements</p>
                 </div>
 
                 <!-- Total Questions -->
                 <div>
                   <label for="total_questions" class="block text-sm font-medium text-gray-700 mb-1">
-                    Total Questions *
+                    Total Questions <span class="text-red-500">*</span>
                   </label>
-                  <input
-                    id="total_questions"
-                    v-model="form.total_questions"
-                    type="number"
-                    min="10"
-                    max="200"
-                    required
-                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
-                    placeholder="e.g., 50"
-                  />
+                  <div class="relative">
+                    <input
+                      id="total_questions"
+                      v-model="form.total_questions"
+                      type="number"
+                      min="5"
+                      max="100"
+                      required
+                      class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
+                      placeholder="e.g., 50"
+                    />
+                    <div class="mt-2 flex items-center space-x-2">
+                      <span class="text-xs text-gray-500">Quick select:</span>
+                      <button
+                        type="button"
+                        @click="form.total_questions = 20"
+                        class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                      >
+                        20
+                      </button>
+                      <button
+                        type="button"
+                        @click="form.total_questions = 50"
+                        class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                      >
+                        50
+                      </button>
+                      <button
+                        type="button"
+                        @click="form.total_questions = 75"
+                        class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                      >
+                        75
+                      </button>
+                      <button
+                        type="button"
+                        @click="form.total_questions = 100"
+                        class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                      >
+                        100
+                      </button>
+                    </div>
+                  </div>
                   <p v-if="form.errors.total_questions" class="mt-1 text-sm text-red-600">
                     {{ form.errors.total_questions }}
                   </p>
                   <p class="mt-1 text-sm text-gray-500">
-                    Number of questions in the exam (10-200)
+                    Number of questions AI will generate (5-100)
                   </p>
                 </div>
 
-                <!-- Time Limit -->
-                <div>
-                  <label for="time_limit_minutes" class="block text-sm font-medium text-gray-700 mb-1">
-                    Time Limit (Minutes) *
-                  </label>
-                  <input
-                    id="time_limit_minutes"
-                    v-model="form.time_limit_minutes"
-                    type="number"
-                    min="10"
-                    max="300"
-                    required
-                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
-                    placeholder="e.g., 60"
-                  />
-                  <p v-if="form.errors.time_limit_minutes" class="mt-1 text-sm text-red-600">
-                    {{ form.errors.time_limit_minutes }}
-                  </p>
-                  <p class="mt-1 text-sm text-gray-500">
-                    Total time allowed for the exam (10-300 minutes)
-                  </p>
-                </div>
+                <!-- Time Limit & Passing Score -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label for="time_limit_minutes" class="block text-sm font-medium text-gray-700 mb-1">
+                      Time Limit (Minutes) <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="time_limit_minutes"
+                      v-model="form.time_limit_minutes"
+                      type="number"
+                      min="10"
+                      max="300"
+                      required
+                      class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
+                    />
+                    <p class="mt-1 text-xs text-gray-500">
+                      Recommended: {{ Math.ceil(form.total_questions * 1.5) }} minutes
+                    </p>
+                  </div>
 
-                <!-- Passing Score -->
-                <div>
-                  <label for="passing_score" class="block text-sm font-medium text-gray-700 mb-1">
-                    Passing Score (%) *
-                  </label>
-                  <input
-                    id="passing_score"
-                    v-model="form.passing_score"
-                    type="number"
-                    min="1"
-                    max="100"
-                    required
-                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
-                    placeholder="e.g., 70"
-                  />
-                  <p v-if="form.errors.passing_score" class="mt-1 text-sm text-red-600">
-                    {{ form.errors.passing_score }}
-                  </p>
-                  <p class="mt-1 text-sm text-gray-500">
-                    Minimum score required to pass the exam (1-100%)
-                  </p>
+                  <div>
+                    <label for="passing_score" class="block text-sm font-medium text-gray-700 mb-1">
+                      Passing Score (%) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex items-center space-x-2">
+                      <input
+                        id="passing_score"
+                        v-model="form.passing_score"
+                        type="number"
+                        min="1"
+                        max="100"
+                        required
+                        class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
+                      />
+                      <span class="text-gray-500">%</span>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">
+                      Default: 70%
+                    </p>
+                  </div>
                 </div>
 
                 <!-- Max Attempts -->
                 <div>
                   <label for="max_attempts" class="block text-sm font-medium text-gray-700 mb-1">
-                    Maximum Attempts *
+                    Maximum Attempts <span class="text-red-500">*</span>
                   </label>
                   <input
                     id="max_attempts"
@@ -232,220 +318,433 @@
                     min="0"
                     required
                     class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
-                    placeholder="e.g., 3 (0 for unlimited)"
                   />
-                  <p v-if="form.errors.max_attempts" class="mt-1 text-sm text-red-600">
-                    {{ form.errors.max_attempts }}
-                  </p>
-                  <p class="mt-1 text-sm text-gray-500">
-                    Maximum number of attempts allowed (0 = unlimited)
+                  <p class="mt-1 text-xs text-gray-500">
+                    0 = unlimited attempts
                   </p>
                 </div>
 
                 <!-- Exam Settings -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <!-- Randomize Questions -->
-                  <div class="flex items-start">
-                    <div class="flex items-center h-5">
-                      <input
-                        id="randomize_questions"
-                        v-model="form.randomize_questions"
-                        type="checkbox"
-                        class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
-                      />
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-3">
+                    Exam Features
+                  </label>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-start p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                      <div class="flex items-center h-5">
+                        <input
+                          id="randomize_questions"
+                          v-model="form.randomize_questions"
+                          type="checkbox"
+                          class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                        />
+                      </div>
+                      <div class="ml-3">
+                        <label for="randomize_questions" class="text-sm font-medium text-gray-700">
+                          Randomize Questions
+                        </label>
+                        <p class="text-xs text-gray-500">
+                          Shuffle questions order for each attempt
+                        </p>
+                      </div>
                     </div>
-                    <div class="ml-3">
-                      <label for="randomize_questions" class="text-sm font-medium text-gray-700">
-                        Randomize Questions
-                      </label>
-                      <p class="text-sm text-gray-500">
-                        Shuffle questions for each attempt
-                      </p>
-                    </div>
-                  </div>
 
-                  <!-- Allow Pause -->
-                  <div class="flex items-start">
-                    <div class="flex items-center h-5">
-                      <input
-                        id="allow_pause"
-                        v-model="form.allow_pause"
-                        type="checkbox"
-                        class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
-                      />
+                    <div class="flex items-start p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                      <div class="flex items-center h-5">
+                        <input
+                          id="allow_pause"
+                          v-model="form.allow_pause"
+                          type="checkbox"
+                          class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                        />
+                      </div>
+                      <div class="ml-3">
+                        <label for="allow_pause" class="text-sm font-medium text-gray-700">
+                          Allow Pause & Resume
+                        </label>
+                        <p class="text-xs text-gray-500">
+                          Students can pause and continue later
+                        </p>
+                      </div>
                     </div>
-                    <div class="ml-3">
-                      <label for="allow_pause" class="text-sm font-medium text-gray-700">
-                        Allow Pause
-                      </label>
-                      <p class="text-sm text-gray-500">
-                        Allow students to pause and resume the exam
-                      </p>
-                    </div>
-                  </div>
 
-                  <!-- Show Results Immediately -->
-                  <div class="flex items-start">
-                    <div class="flex items-center h-5">
-                      <input
-                        id="show_results_immediately"
-                        v-model="form.show_results_immediately"
-                        type="checkbox"
-                        class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
-                      />
+                    <div class="flex items-start p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                      <div class="flex items-center h-5">
+                        <input
+                          id="show_results_immediately"
+                          v-model="form.show_results_immediately"
+                          type="checkbox"
+                          class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                        />
+                      </div>
+                      <div class="ml-3">
+                        <label for="show_results_immediately" class="text-sm font-medium text-gray-700">
+                          Instant Results
+                        </label>
+                        <p class="text-xs text-gray-500">
+                          Show scores and answers immediately
+                        </p>
+                      </div>
                     </div>
-                    <div class="ml-3">
-                      <label for="show_results_immediately" class="text-sm font-medium text-gray-700">
-                        Show Results Immediately
-                      </label>
-                      <p class="text-sm text-gray-500">
-                        Show results right after submission
-                      </p>
-                    </div>
-                  </div>
 
-                  <!-- Public Access -->
-                  <div class="flex items-start">
-                    <div class="flex items-center h-5">
-                      <input
-                        id="is_public"
-                        v-model="form.is_public"
-                        type="checkbox"
-                        class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
-                      />
-                    </div>
-                    <div class="ml-3">
-                      <label for="is_public" class="text-sm font-medium text-gray-700">
-                        Public Access
-                      </label>
-                      <p class="text-sm text-gray-500">
-                        Make this exam prep available to all students
-                      </p>
+                    <div class="flex items-start p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                      <div class="flex items-center h-5">
+                        <input
+                          id="is_public"
+                          v-model="form.is_public"
+                          type="checkbox"
+                          class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                        />
+                      </div>
+                      <div class="ml-3">
+                        <label for="is_public" class="text-sm font-medium text-gray-700">
+                          Public Access
+                        </label>
+                        <p class="text-xs text-gray-500">
+                          Make available to all students
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Question Criteria Section -->
-              <div class="space-y-6">
-                <div class="border-b border-gray-200 pb-4">
-                  <h2 class="text-lg font-semibold text-gray-900">Question Criteria</h2>
-                  <p class="mt-1 text-sm text-gray-500">Filter and distribute questions</p>
+              <!-- Step 3: AI Question Criteria -->
+              <div v-show="currentStep === 3" class="space-y-6 animate-fadeIn">
+                <div>
+                  <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <AdjustmentsHorizontalIcon class="h-5 w-5 mr-2 text-emerald-600" />
+                    AI Question Criteria
+                  </h2>
+                  <p class="mt-1 text-sm text-gray-500">
+                    Customize how AI generates questions for your exam
+                  </p>
                 </div>
 
-                <!-- Question Criteria -->
+                <!-- Difficulty Distribution -->
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-3">
-                    Question Filters
-                  </label>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Difficulty Filter -->
-                    <div>
-                      <label for="difficulty_filter" class="block text-sm text-gray-600 mb-1">
-                        Difficulty Level
-                      </label>
-                      <select
-                        id="difficulty_filter"
-                        v-model="form.question_criteria.difficulty"
-                        class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
-                      >
-                        <option value="">All Difficulties</option>
-                        <option
-                          v-for="(label, value) in difficultyLevels"
-                          :key="value"
-                          :value="value"
-                        >
-                          {{ label }}
-                        </option>
-                      </select>
-                    </div>
-
-                    <!-- Question Type Filter -->
-                    <div>
-                      <label for="question_type_filter" class="block text-sm text-gray-600 mb-1">
-                        Question Type
-                      </label>
-                      <select
-                        id="question_type_filter"
-                        v-model="form.question_criteria.question_type"
-                        class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
-                      >
-                        <option value="">All Types</option>
-                        <option
-                          v-for="(label, value) in questionTypes"
-                          :key="value"
-                          :value="value"
-                        >
-                          {{ label }}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Question Distribution -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-3">
-                    Question Distribution (Optional)
+                    Question Difficulty Distribution
                   </label>
                   <p class="text-sm text-gray-500 mb-4">
-                    Set the number of questions for each difficulty level. Leave empty for random selection.
+                    Set the number of questions for each difficulty level. AI will generate questions accordingly.
                   </p>
 
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div
-                      v-for="(label, value) in difficultyLevels"
-                      :key="value"
-                      class="space-y-2"
-                    >
-                      <label :for="`distribution_${value}`" class="block text-sm text-gray-600">
-                        {{ label }}
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="space-y-2 p-4 bg-green-50 rounded-lg border border-green-200">
+                      <label class="block text-sm font-medium text-green-700">
+                        Easy Questions
                       </label>
-                      <input
-                        :id="`distribution_${value}`"
-                        v-model="form.question_distribution[value]"
-                        type="number"
-                        min="0"
-                        :max="form.total_questions"
-                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2 px-3"
-                        placeholder="0"
-                      />
+                      <div class="flex items-center space-x-2">
+                        <input
+                          v-model="form.question_distribution.easy"
+                          type="number"
+                          min="0"
+                          :max="form.total_questions"
+                          class="block w-full rounded-lg border-green-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2 px-3"
+                          placeholder="0"
+                        />
+                        <span class="text-sm text-green-600">questions</span>
+                      </div>
+                      <p class="text-xs text-green-600">
+                        Basic recall and fundamental concepts
+                      </p>
+                    </div>
+
+                    <div class="space-y-2 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                      <label class="block text-sm font-medium text-amber-700">
+                        Medium Questions
+                      </label>
+                      <div class="flex items-center space-x-2">
+                        <input
+                          v-model="form.question_distribution.medium"
+                          type="number"
+                          min="0"
+                          :max="form.total_questions"
+                          class="block w-full rounded-lg border-amber-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2 px-3"
+                          placeholder="0"
+                        />
+                        <span class="text-sm text-amber-600">questions</span>
+                      </div>
+                      <p class="text-xs text-amber-600">
+                        Application and critical thinking
+                      </p>
+                    </div>
+
+                    <div class="space-y-2 p-4 bg-red-50 rounded-lg border border-red-200">
+                      <label class="block text-sm font-medium text-red-700">
+                        Hard Questions
+                      </label>
+                      <div class="flex items-center space-x-2">
+                        <input
+                          v-model="form.question_distribution.hard"
+                          type="number"
+                          min="0"
+                          :max="form.total_questions"
+                          class="block w-full rounded-lg border-red-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2 px-3"
+                          placeholder="0"
+                        />
+                        <span class="text-sm text-red-600">questions</span>
+                      </div>
+                      <p class="text-xs text-red-600">
+                        Complex problem-solving and synthesis
+                      </p>
                     </div>
                   </div>
 
-                  <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p class="text-sm text-amber-700">
-                      <strong>Note:</strong> Total distributed questions: {{ distributedTotal }}/{{ form.total_questions }}
-                      {{ distributionWarning }}
-                    </p>
+                  <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div class="flex items-start">
+                      <InformationCircleIcon class="h-5 w-5 text-blue-500 mr-2 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p class="text-sm text-blue-700">
+                          <span class="font-semibold">Distribution Summary:</span>
+                          {{ distributedTotal }} of {{ form.total_questions }} questions assigned
+                        </p>
+                        <p v-if="distributedTotal < form.total_questions" class="text-sm text-blue-600 mt-1">
+                          ⚡ {{ form.total_questions - distributedTotal }} unassigned questions will be randomly distributed by AI
+                        </p>
+                        <p v-else-if="distributedTotal > form.total_questions" class="text-sm text-red-600 mt-1">
+                          ⚠️ Total exceeds question limit. Please adjust.
+                        </p>
+                        <p v-else class="text-sm text-green-600 mt-1">
+                          ✓ Perfect distribution! All questions assigned.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Topic Focus (Optional) -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-3">
+                    Topic Focus (Optional)
+                  </label>
+                  <p class="text-sm text-gray-500 mb-4">
+                    Specify specific topics or areas to focus on. Leave empty for general coverage.
+                  </p>
+                  <div class="space-y-3">
+                    <div
+                      v-for="(topic, index) in form.question_criteria.topics"
+                      :key="index"
+                      class="flex items-center space-x-2"
+                    >
+                      <input
+                        v-model="form.question_criteria.topics[index]"
+                        type="text"
+                        class="flex-1 rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2 px-3"
+                        :placeholder="`Topic ${index + 1}`"
+                      />
+                      <button
+                        type="button"
+                        @click="removeTopic(index)"
+                        class="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <XMarkIcon class="h-5 w-5" />
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      @click="addTopic"
+                      class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                    >
+                      <PlusIcon class="h-4 w-4 mr-1" />
+                      Add Topic
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Additional AI Instructions -->
+                <div>
+                  <label for="ai_instructions" class="block text-sm font-medium text-gray-700 mb-1">
+                    Additional AI Instructions (Optional)
+                  </label>
+                  <textarea
+                    id="ai_instructions"
+                    v-model="form.question_criteria.custom_instructions"
+                    rows="3"
+                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
+                    placeholder="e.g., Focus on real-world applications, include diagrams in explanations, emphasize recent developments..."
+                  />
+                  <p class="mt-1 text-xs text-gray-500">
+                    Provide specific guidance for AI question generation
+                  </p>
+                </div>
+              </div>
+
+              <!-- Step 4: Review & Generate -->
+              <div v-show="currentStep === 4" class="space-y-6 animate-fadeIn">
+                <div>
+                  <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <CheckCircleIcon class="h-5 w-5 mr-2 text-emerald-600" />
+                    Review & Generate
+                  </h2>
+                  <p class="mt-1 text-sm text-gray-500">
+                    Review your settings before generating questions with AI
+                  </p>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="bg-gray-50 rounded-lg p-5 border border-gray-200">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                      <AcademicCapIcon class="h-4 w-4 mr-1 text-emerald-600" />
+                      Exam Details
+                    </h3>
+                    <dl class="space-y-2">
+                      <div class="flex justify-between">
+                        <dt class="text-xs text-gray-500">Name:</dt>
+                        <dd class="text-xs font-medium text-gray-900">{{ form.name || 'Not set' }}</dd>
+                      </div>
+                      <div class="flex justify-between">
+                        <dt class="text-xs text-gray-500">Exam Board:</dt>
+                        <dd class="text-xs font-medium text-gray-900">
+                          {{ getExamBoardName(form.exam_board_id) }}
+                        </dd>
+                      </div>
+                      <div class="flex justify-between">
+                        <dt class="text-xs text-gray-500">Subject:</dt>
+                        <dd class="text-xs font-medium text-gray-900">
+                          {{ getSubjectName(form.subject_id) || 'Any' }}
+                        </dd>
+                      </div>
+                      <div class="flex justify-between">
+                        <dt class="text-xs text-gray-500">Course:</dt>
+                        <dd class="text-xs font-medium text-gray-900">
+                          {{ getCourseTitle(form.course_id) || 'None' }}
+                        </dd>
+                      </div>
+                      <div class="flex justify-between">
+                        <dt class="text-xs text-gray-500">AI Model:</dt>
+                        <dd class="text-xs font-medium text-gray-900">
+                          {{ getAiModelName(form.ai_model) }}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+
+                  <div class="bg-gray-50 rounded-lg p-5 border border-gray-200">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                      <Cog6ToothIcon class="h-4 w-4 mr-1 text-emerald-600" />
+                      Exam Settings
+                    </h3>
+                    <dl class="space-y-2">
+                      <div class="flex justify-between">
+                        <dt class="text-xs text-gray-500">Questions:</dt>
+                        <dd class="text-xs font-medium text-gray-900">{{ form.total_questions }}</dd>
+                      </div>
+                      <div class="flex justify-between">
+                        <dt class="text-xs text-gray-500">Time Limit:</dt>
+                        <dd class="text-xs font-medium text-gray-900">{{ form.time_limit_minutes }} minutes</dd>
+                      </div>
+                      <div class="flex justify-between">
+                        <dt class="text-xs text-gray-500">Passing Score:</dt>
+                        <dd class="text-xs font-medium text-gray-900">{{ form.passing_score }}%</dd>
+                      </div>
+                      <div class="flex justify-between">
+                        <dt class="text-xs text-gray-500">Max Attempts:</dt>
+                        <dd class="text-xs font-medium text-gray-900">
+                          {{ form.max_attempts === 0 ? 'Unlimited' : form.max_attempts }}
+                        </dd>
+                      </div>
+                      <div class="flex justify-between">
+                        <dt class="text-xs text-gray-500">Visibility:</dt>
+                        <dd class="text-xs font-medium text-gray-900">
+                          {{ form.is_public ? 'Public' : 'Private' }}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+
+                  <div class="bg-gray-50 rounded-lg p-5 border border-gray-200 md:col-span-2">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                      <AdjustmentsHorizontalIcon class="h-4 w-4 mr-1 text-emerald-600" />
+                      Question Distribution
+                    </h3>
+                    <div class="grid grid-cols-3 gap-4">
+                      <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600">
+                          {{ form.question_distribution.easy || 0 }}
+                        </div>
+                        <div class="text-xs text-gray-500">Easy</div>
+                      </div>
+                      <div class="text-center">
+                        <div class="text-2xl font-bold text-amber-600">
+                          {{ form.question_distribution.medium || 0 }}
+                        </div>
+                        <div class="text-xs text-gray-500">Medium</div>
+                      </div>
+                      <div class="text-center">
+                        <div class="text-2xl font-bold text-red-600">
+                          {{ form.question_distribution.hard || 0 }}
+                        </div>
+                        <div class="text-xs text-gray-500">Hard</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Generation Options -->
+                <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-5">
+                  <div class="flex items-start">
+                    <div class="flex items-center h-5">
+                      <input
+                        id="generate_now"
+                        v-model="form.generate_now"
+                        type="checkbox"
+                        class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                      />
+                    </div>
+                    <div class="ml-3">
+                      <label for="generate_now" class="text-sm font-medium text-emerald-800">
+                        Generate questions immediately
+                      </label>
+                      <p class="text-xs text-emerald-700 mt-1">
+                        AI will start generating {{ form.total_questions }} questions right away.
+                        This may take 1-2 minutes. You can continue using the system while generation runs in the background.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Form Actions -->
+            <!-- Navigation Buttons -->
             <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-xl flex justify-between items-center">
-              <div>
+              <button
+                v-if="currentStep > 1"
+                type="button"
+                @click="currentStep--"
+                class="inline-flex items-center px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all"
+              >
+                <ArrowLeftIcon class="h-4 w-4 mr-2" />
+                Previous
+              </button>
+              <div v-else></div>
+
+              <div class="flex space-x-3">
                 <Link
                   :href="route('admin.exam-preps.index')"
-                  class="inline-flex items-center px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200"
+                  class="inline-flex items-center px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all"
                 >
                   Cancel
                 </Link>
-              </div>
-              <div class="flex space-x-3">
+
                 <button
+                  v-if="currentStep < steps.length"
                   type="button"
-                  @click="saveAsDraft"
-                  :disabled="form.processing"
-                  class="inline-flex items-center px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 disabled:opacity-50"
+                  @click="nextStep"
+                  :disabled="!canProceed"
+                  class="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 border border-transparent rounded-lg font-semibold text-white shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Save as Draft
+                  Next Step
+                  <ChevronRightIcon class="h-4 w-4 ml-2" />
                 </button>
+
                 <button
+                  v-else
                   type="submit"
-                  :disabled="form.processing"
-                  class="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 border border-transparent rounded-lg font-semibold text-white shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50"
+                  :disabled="form.processing || !isValid"
+                  class="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 border border-transparent rounded-lg font-semibold text-white shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <template v-if="form.processing">
                     <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -456,7 +755,7 @@
                   </template>
                   <template v-else>
                     <SparklesIcon class="h-4 w-4 mr-2" />
-                    Create Exam Prep
+                    Generate with AI
                   </template>
                 </button>
               </div>
@@ -464,27 +763,24 @@
           </form>
         </div>
 
-        <!-- Information Card -->
-        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <div class="flex">
+        <!-- AI Info Card -->
+        <div class="mt-6 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-5">
+          <div class="flex items-start">
             <div class="flex-shrink-0">
-              <InformationCircleIcon class="h-5 w-5 text-blue-500" />
+              <div class="p-2 bg-purple-100 rounded-lg">
+                <SparklesIcon class="h-5 w-5 text-purple-600" />
+              </div>
             </div>
-            <div class="ml-3">
-              <h3 class="text-sm font-semibold text-blue-800">
-                How Questions Are Selected
+            <div class="ml-4">
+              <h3 class="text-sm font-semibold text-purple-900">
+                AI-Powered Question Generation
               </h3>
-              <div class="mt-2 text-sm text-blue-700">
-                <p class="mb-2">Questions are automatically pulled from your quiz database based on:</p>
-                <ul class="list-disc list-inside space-y-1">
-                  <li>Selected exam board</li>
-                  <li>Subject and course filters (if specified)</li>
-                  <li>Question criteria (difficulty, type)</li>
-                  <li>Distribution settings (if configured)</li>
-                </ul>
-                <p class="mt-2">
-                  <strong>Note:</strong> The system will generate the exam prep first, then you can review and edit questions before publishing.
-                </p>
+              <div class="mt-2 text-sm text-purple-800 space-y-1">
+                <p>✨ Questions are generated fresh for each exam prep - no recycling</p>
+                <p>🎯 AI adapts difficulty and content based on your criteria</p>
+                <p>⚡ Generation runs in background - you can continue working</p>
+                <p>📊 Each question includes detailed explanations</p>
+                <p>🔄 You can regenerate questions anytime</p>
               </div>
             </div>
           </div>
@@ -495,7 +791,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import { Head, Link } from '@inertiajs/vue3'
@@ -503,6 +799,14 @@ import {
   ArrowLeftIcon,
   SparklesIcon,
   InformationCircleIcon,
+  CheckIcon,
+  ChevronRightIcon,
+  Cog6ToothIcon,
+  AdjustmentsHorizontalIcon,
+  CheckCircleIcon,
+  AcademicCapIcon,
+  PlusIcon,
+  XMarkIcon,
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -510,9 +814,10 @@ const props = defineProps({
   subjects: Array,
   courses: Array,
   difficultyLevels: Object,
-  questionTypes: Object,
+  aiModels: Object,
 })
 
+// Form state
 const form = reactive({
   name: '',
   description: '',
@@ -527,18 +832,26 @@ const form = reactive({
   allow_pause: false,
   show_results_immediately: true,
   is_public: false,
+  status: 'draft',
+  ai_model: 'gpt-4',
+  generate_now: true,
   question_criteria: {
     difficulty: '',
-    question_type: ''
+    topics: [''],
+    custom_instructions: '',
   },
   question_distribution: {
     easy: null,
     medium: null,
-    hard: null
+    hard: null,
   },
   errors: {},
   processing: false,
 })
+
+// Step management
+const currentStep = ref(1)
+const steps = ['Basic Information', 'Exam Configuration', 'AI Question Criteria', 'Review & Generate']
 
 // Computed properties
 const distributedTotal = computed(() => {
@@ -548,22 +861,86 @@ const distributedTotal = computed(() => {
   return values.reduce((sum, val) => sum + val, 0)
 })
 
-const distributionWarning = computed(() => {
-  if (distributedTotal.value === 0) return ''
-
-  if (distributedTotal.value < form.total_questions) {
-    const remaining = form.total_questions - distributedTotal.value
-    return ` (${remaining} questions will be filled randomly)`
-  } else if (distributedTotal.value > form.total_questions) {
-    return ' - Warning: Distribution exceeds total questions'
+const canProceed = computed(() => {
+  switch (currentStep.value) {
+    case 1:
+      return form.name && form.exam_board_id
+    case 2:
+      return form.total_questions >= 5 &&
+             form.total_questions <= 100 &&
+             form.time_limit_minutes >= 10 &&
+             form.time_limit_minutes <= 300 &&
+             form.passing_score >= 1 &&
+             form.passing_score <= 100
+    case 3:
+      return distributedTotal.value <= form.total_questions
+    default:
+      return true
   }
-
-  return ' - Perfect distribution'
 })
+
+const isValid = computed(() => {
+  return form.name &&
+         form.exam_board_id &&
+         form.total_questions >= 5 &&
+         form.total_questions <= 100 &&
+         distributedTotal.value <= form.total_questions
+})
+
+// Helper methods
+const getExamBoardName = (id) => {
+  if (!id) return 'Not selected'
+  const board = props.examBoards.find(b => b.id === id)
+  return board?.name || 'Unknown'
+}
+
+const getSubjectName = (id) => {
+  if (!id) return null
+  const subject = props.subjects.find(s => s.id === id)
+  return subject?.name
+}
+
+const getCourseTitle = (id) => {
+  if (!id) return null
+  const course = props.courses.find(c => c.id === id)
+  return course?.title
+}
+
+const getAiModelName = (model) => {
+  const models = {
+    'gpt-4': 'GPT-4 (Highest Quality)',
+    'gpt-3.5-turbo': 'GPT-3.5 Turbo (Faster)',
+    'claude-2': 'Claude 2',
+    'llama2': 'Llama 2',
+  }
+  return models[model] || model
+}
+
+const addTopic = () => {
+  form.question_criteria.topics.push('')
+}
+
+const removeTopic = (index) => {
+  form.question_criteria.topics.splice(index, 1)
+  if (form.question_criteria.topics.length === 0) {
+    form.question_criteria.topics.push('')
+  }
+}
+
+const nextStep = () => {
+  if (canProceed.value) {
+    currentStep.value++
+  }
+}
 
 // Submit form
 const submit = async () => {
+  if (!isValid.value) return
+
   form.processing = true
+
+  // Clean up empty topics
+  form.question_criteria.topics = form.question_criteria.topics.filter(t => t.trim() !== '')
 
   try {
     await router.post(route('admin.exam-preps.store'), form, {
@@ -571,6 +948,12 @@ const submit = async () => {
       onError: (errors) => {
         form.processing = false
         form.errors = errors
+        // Go back to the step with errors
+        if (errors.name || errors.exam_board_id) {
+          currentStep.value = 1
+        } else if (errors.total_questions || errors.time_limit_minutes || errors.passing_score) {
+          currentStep.value = 2
+        }
       },
     })
   } catch (error) {
@@ -579,25 +962,23 @@ const submit = async () => {
   }
 }
 
-// Save as draft
-const saveAsDraft = async () => {
-  form.processing = true
+// Initialize empty topics
+form.question_criteria.topics = ['']
+</script>
 
-  try {
-    await router.post(route('admin.exam-preps.store'), {
-      ...form,
-      is_public: false,
-      status: 'draft'
-    }, {
-      preserveScroll: true,
-      onError: (errors) => {
-        form.processing = false
-        form.errors = errors
-      },
-    })
-  } catch (error) {
-    form.processing = false
-    console.error('Draft save failed:', error)
+<style scoped>
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
-</script>
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+</style>

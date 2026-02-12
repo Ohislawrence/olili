@@ -22,6 +22,10 @@ class AppServiceProvider extends ServiceProvider
             return new \App\Services\ChatService($app->make('ai.driver.openai'));
         });
 
+        $this->app->singleton(\App\Services\ExamPrepGenerationService::class, function ($app) {
+            return new \App\Services\ExamPrepGenerationService($app->make('ai.driver.openai'));
+        });
+
         $this->app->singleton(\App\Services\ProgressTrackingService::class);
         $this->app->singleton(\App\Services\CapstoneGradingService::class, function ($app) {
             return new \App\Services\CapstoneGradingService($app->make('ai.driver.openai'));

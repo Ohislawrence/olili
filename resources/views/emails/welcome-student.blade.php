@@ -56,7 +56,7 @@ You can enroll for courses for:
 3. Use the Oli tutor and ask questions that relates to topics in the course
 4. Enjoy learning and complete each topic before moving ahead.
 
-You acan instantly generate:
+You can instantly generate:
 - Flashcards and learning summaries
 
 So you can focus on learning—not setup.

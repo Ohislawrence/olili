@@ -5,6 +5,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ExamBoard extends Model
@@ -57,4 +58,20 @@ class ExamBoard extends Model
     {
         return in_array($subject, $this->getAvailableSubjects());
     }
+
+    public function examPreps(): HasMany
+    {
+        return $this->hasMany(ExamPrep::class, 'exam_board_id');
+    }
+
+    /**
+     * Get the subjects for this exam board
+     */
+    public function subjects(): BelongsToMany
+    {
+        return $this->belongsToMany(Subject::class, 'exam_board_subject')
+            ->withTimestamps();
+    }
+
+
 }
