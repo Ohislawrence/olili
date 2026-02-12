@@ -160,7 +160,7 @@ class ExamPrepGenerationService
         }
 
         // Clean and parse the response
-        $cleanedContent = $this->cleanJsonResponse($response);
+        $cleanedContent = $response; //$this->cleanJsonResponse($response);
 
         // Verify we have valid JSON before decoding
         if (!$this->isValidJson($cleanedContent)) {
