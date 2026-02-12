@@ -471,7 +471,7 @@ class ExamPrepController extends Controller
         if ($enrolled === 0) return 0;
 
         $completed = $examPrep->attempts()->count();
-        return round(($completed / $enrolled) * 100, 1);
+        return $enrolled > 0 ? round(($completed / $enrolled) * 100, 1) : 0;
     }
 
     /**
