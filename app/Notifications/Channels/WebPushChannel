@@ -1,0 +1,21 @@
+<?php
+
+namespace App\Notifications\Channels;
+
+use Illuminate\Notifications\Notification;
+
+class WebPushChannel
+{
+    public function send($notifiable, Notification $notification)
+    {
+        // Your web push logic here
+        if (!method_exists($notification, 'toWebPush')) {
+            return;
+        }
+
+        $data = $notification->toWebPush($notifiable);
+
+        // Implement your web push sending logic
+        // This could use web-push-php or another library
+    }
+}

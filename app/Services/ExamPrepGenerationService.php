@@ -142,7 +142,7 @@ class ExamPrepGenerationService
         try {
             $response = $this->aiService->chat($messages, [
                 'temperature' => 0.7,
-                'max_tokens' => 4000,
+                'max_tokens' => 6000,
             ], 'exam_prep_complete_generation');
 
             // Clean and parse the response
@@ -295,39 +295,59 @@ Return ONLY the JSON object, no additional text.";
     }
 
     /**
-     * Validate and format the complete response
-     */
-    protected function validateCompleteResponse(array $data, ExamPrep $examPrep, array $distribution): array
-    {
-        // Extract and validate name
-        $name = isset($data['name']) && is_string($data['name']) && !empty(trim($data['name']))
-            ? trim($data['name'])
-            : $examPrep->name;
+ * Validate and format the complete response
+ */
+protected function validateCompleteResponse(array $data, ExamPrep $examPrep, array $distribution): array
+{
+    // Log the raw response for debugging
+    Log::info('Validating AI response', [
+        'exam_prep_id' => $examPrep->id,
+        'response_keys' => array_keys($data),
+        'has_name' => isset($data['name']),
+        'has_description' => isset($data['description']),
+        'has_questions' => isset($data['questions']),
+        'questions_count' => isset($data['questions']) ? count($data['questions']) : 0
+    ]);
 
-        // Extract and validate description
-        $description = isset($data['description']) && is_string($data['description']) && !empty(trim($data['description']))
-            ? trim($data['description'])
-            : $this->generateFallbackDescription($examPrep);
+    // More lenient name validation
+    $name = isset($data['name']) && is_string($data['name']) && !empty(trim($data['name']))
+        ? trim($data['name'])
+        : $examPrep->name;
 
-        // Clean up description
-        $description = preg_replace('/^["\']+|["\']+$/', '', $description);
-        $description = preg_replace('/\s+/', ' ', $description);
-        if (strlen($description) > 500) {
-            $description = substr($description, 0, 497) . '...';
-        }
+    // More lenient description validation
+    $description = isset($data['description']) && is_string($data['description']) && !empty(trim($data['description']))
+        ? trim($data['description'])
+        : $this->generateFallbackDescription($examPrep);
 
-        // Extract and validate questions
-        $questions = [];
-        if (isset($data['questions']) && is_array($data['questions'])) {
-            foreach ($data['questions'] as $question) {
-                $validatedQuestion = $this->validateSingleQuestion($question);
-                if ($validatedQuestion) {
-                    $questions[] = $validatedQuestion;
-                }
+    // Clean up description
+    $description = preg_replace('/^["\']+|["\']+$/', '', $description);
+    $description = preg_replace('/\s+/', ' ', $description);
+
+    // Extract and validate questions with better error handling
+    $questions = [];
+    if (isset($data['questions']) && is_array($data['questions'])) {
+        foreach ($data['questions'] as $index => $question) {
+            $validatedQuestion = $this->validateSingleQuestion($question);
+            if ($validatedQuestion) {
+                $questions[] = $validatedQuestion;
+            } else {
+                Log::warning('Question validation failed', [
+                    'exam_prep_id' => $examPrep->id,
+                    'question_index' => $index,
+                    'question' => $question
+                ]);
             }
         }
+    }
 
-        // Ensure we have the right number of questions per difficulty
+    // If we got at least some questions, use them
+    if (count($questions) > 0) {
+        Log::info('Successfully validated questions', [
+            'exam_prep_id' => $examPrep->id,
+            'validated_count' => count($questions)
+        ]);
+
+        // Balance questions to match distribution
         $questions = $this->balanceQuestionsByDifficulty($questions, $distribution);
 
         return [
@@ -336,6 +356,15 @@ Return ONLY the JSON object, no additional text.";
             'questions' => $questions
         ];
     }
+
+    // No valid questions, log and fallback
+    Log::warning('No valid questions in AI response, using fallback', [
+        'exam_prep_id' => $examPrep->id,
+        'response_preview' => json_encode($data)
+    ]);
+
+    return $this->fallbackGeneration($examPrep, $distribution);
+}
 
     /**
      * Validate a single question
@@ -542,26 +571,28 @@ Return ONLY the JSON object, no additional text.";
     protected function cleanJsonResponse(string $response): string
     {
         // Remove markdown code blocks
-        $response = preg_replace('/```json\s*/', '', $response);
+        $response = preg_replace('/```json\s*/i', '', $response);
         $response = preg_replace('/```\s*$/', '', $response);
         $response = preg_replace('/```\s*/', '', $response);
 
-        // Find JSON object
-        $startPos = strpos($response, '{');
-        $endPos = strrpos($response, '}');
-
-        if ($startPos !== false && $endPos !== false && $endPos > $startPos) {
-            $response = substr($response, $startPos, $endPos - $startPos + 1);
+        // Remove any text before first { and after last }
+        if (preg_match('/\{.*\}/s', $response, $matches)) {
+            $response = $matches[0];
         }
 
         // Fix common JSON issues
         $response = trim($response);
+
+        // Remove trailing commas
         $response = preg_replace('/,\s*}/', '}', $response);
         $response = preg_replace('/,\s*]/', ']', $response);
 
-        // Fix unescaped quotes in JSON keys
-        $response = preg_replace_callback('/"([^"\\\\]*)"(?=\s*:)/', function($matches) {
-            return '"' . addslashes($matches[1]) . '"';
+        // Fix single quotes
+        $response = str_replace("'", '"', $response);
+
+        // Fix unescaped quotes in strings
+        $response = preg_replace_callback('/:"([^"\\\\]*)"(?=\s*[,}])/', function($matches) {
+            return ':"' . addslashes($matches[1]) . '"';
         }, $response);
 
         return $response;

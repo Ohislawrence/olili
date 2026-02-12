@@ -6,6 +6,8 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Services\LoginTrackerService;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\Channels\WebPushChannel;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -42,5 +44,9 @@ class AppServiceProvider extends ServiceProvider
         if (app()->environment('production')) {
             URL::forceHttps();
         }
+
+        Notification::extend('web-push', function ($app) {
+            return new WebPushChannel();
+        });
     }
 }

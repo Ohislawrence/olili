@@ -216,9 +216,9 @@
             </div>
 
             <div style="display: flex; justify-content: center; flex-wrap: wrap; margin: 30px 0;">
-                <a href="{{ route('courses.show', $course->id) }}" class="btn">Resume Course →</a>
-                <a href="{{ route('courses.modules.index', $course->id) }}" class="btn btn-secondary">View Modules</a>
-                <a href="{{ route('courses.quizzes.index', $course->id) }}" class="btn btn-secondary">Take a Quiz</a>
+                <a href="{{ route('student.courses.learn', $course->id) }}" class="btn">Resume Course →</a>
+                <a href="{{ route('student.flashcards.index') }}" class="btn btn-secondary">Create Flashcards</a>
+                <a href="{{ route('student.exam-preps.index') }}" class="btn btn-secondary">Exam Prep Quiz</a>
             </div>
 
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 30px 0;">
@@ -242,9 +242,9 @@
                     <br>We're here to help you succeed in your learning journey!
                 </p>
                 <p style="margin: 10px 0;">
-                    <a href="{{ route('profile.notifications') }}" style="color: #667eea; text-decoration: none;">Adjust notification preferences</a> |
-                    <a href="{{ route('courses.index') }}" style="color: #667eea; text-decoration: none;">Browse Courses</a> |
-                    <a href="{{ route('dashboard') }}" style="color: #667eea; text-decoration: none;">Dashboard</a>
+                    <a href="{{ route('student.notifications.index') }}" style="color: #667eea; text-decoration: none;">Notification</a> |
+                    <a href="{{ route('student.catalog.browse') }}" style="color: #667eea; text-decoration: none;">Browse Courses</a> |
+                    <a href="{{ route('student.dashboard') }}" style="color: #667eea; text-decoration: none;">Dashboard</a>
                 </p>
                 <p style="font-size: 12px; color: #a0aec0; margin-top: 20px;">
                     © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.<br>
