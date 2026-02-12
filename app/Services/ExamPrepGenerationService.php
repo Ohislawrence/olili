@@ -130,48 +130,84 @@ class ExamPrepGenerationService
      * Generate a complete set of questions with description in one API call
      */
     protected function generateQuestionSetWithDescription(ExamPrep $examPrep): array
-    {
-        $distribution = $this->determineQuestionDistribution($examPrep);
-        $prompt = $this->buildCompletePrompt($examPrep, $distribution);
+{
+    $distribution = $this->determineQuestionDistribution($examPrep);
+    $prompt = $this->buildCompletePrompt($examPrep, $distribution);
 
-        $messages = $this->formatMessagesForProvider(
-            "You are an expert educational assessment designer and content creator. Create high-quality exam preparation materials including a compelling title, engaging description, and well-crafted questions.",
-            $prompt
-        );
+    $messages = $this->formatMessagesForProvider(
+        "You are an expert educational assessment designer and content creator. Create high-quality exam preparation materials including a compelling title, engaging description, and well-crafted questions.",
+        $prompt
+    );
 
-        try {
-            $response = $this->aiService->chat($messages, [
-                'temperature' => 0.7,
-                'max_tokens' => 6000,
-            ], 'exam_prep_complete_generation');
+    try {
+        $response = $this->aiService->chat($messages, [
+            'temperature' => 0.7,
+            'max_tokens' => 4000,
+        ], 'exam_prep_complete_generation');
 
-            // Clean and parse the response
-            $cleanedContent = $this->cleanJsonResponse($response);
-            $generatedData = json_decode($cleanedContent, true);
+        // Log the raw response for debugging
+        Log::info('Raw AI response received', [
+            'exam_prep_id' => $examPrep->id,
+            'response_length' => strlen($response),
+            'response_start' => substr($response, 0, 500),
+            'response_end' => substr($response, -500)
+        ]);
 
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                Log::warning('Invalid JSON in AI response for complete generation', [
-                    'error' => json_last_error_msg(),
-                    'response_preview' => substr($response, 0, 200)
-                ]);
-
-                // Fallback: generate questions separately and use fallback description
-                return $this->fallbackGeneration($examPrep, $distribution);
-            }
-
-            // Validate and format the response
-            return $this->validateCompleteResponse($generatedData, $examPrep, $distribution);
-
-        } catch (\Exception $e) {
-            Log::error('Failed to generate complete question set with description', [
-                'exam_prep_id' => $examPrep->id,
-                'error' => $e->getMessage()
-            ]);
-
-            // Fallback to separate generation
+        // Check if response is empty
+        if (empty(trim($response))) {
+            Log::error('Empty response from AI service');
             return $this->fallbackGeneration($examPrep, $distribution);
         }
+
+        // Clean and parse the response
+        $cleanedContent = $this->cleanJsonResponse($response);
+
+        // Verify we have valid JSON before decoding
+        if (!$this->isValidJson($cleanedContent)) {
+            Log::warning('Invalid JSON after cleaning', [
+                'cleaned_preview' => substr($cleanedContent, 0, 500)
+            ]);
+            return $this->fallbackGeneration($examPrep, $distribution);
+        }
+
+        $generatedData = json_decode($cleanedContent, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            Log::warning('JSON decode failed', [
+                'error' => json_last_error_msg(),
+                'cleaned_preview' => substr($cleanedContent, 0, 500)
+            ]);
+            return $this->fallbackGeneration($examPrep, $distribution);
+        }
+
+        // Validate and format the response
+        return $this->validateCompleteResponse($generatedData, $examPrep, $distribution);
+
+    } catch (\Exception $e) {
+        Log::error('Failed to generate complete question set with description', [
+            'exam_prep_id' => $examPrep->id,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        return $this->fallbackGeneration($examPrep, $distribution);
     }
+}
+
+protected function isValidJson(string $string): bool
+{
+    if (empty($string)) {
+        return false;
+    }
+
+    $firstChar = substr(trim($string), 0, 1);
+    if (!in_array($firstChar, ['{', '['])) {
+        return false;
+    }
+
+    json_decode($string);
+    return json_last_error() === JSON_ERROR_NONE;
+}
+
 
     /**
      * Build complete prompt that includes description and name generation
@@ -570,30 +606,45 @@ protected function validateCompleteResponse(array $data, ExamPrep $examPrep, arr
      */
     protected function cleanJsonResponse(string $response): string
     {
-        // Remove markdown code blocks
-        $response = preg_replace('/```json\s*/i', '', $response);
-        $response = preg_replace('/```\s*$/', '', $response);
-        $response = preg_replace('/```\s*/', '', $response);
+        Log::debug('Raw AI response preview', [
+            'response_start' => substr($response, 0, 200),
+            'response_length' => strlen($response)
+        ]);
 
-        // Remove any text before first { and after last }
-        if (preg_match('/\{.*\}/s', $response, $matches)) {
+        // Remove markdown code blocks and any surrounding text
+        $response = preg_replace('/^[\s\S]*?```(?:json)?\s*/i', '', $response);
+        $response = preg_replace('/```[\s\S]*?$/', '', $response);
+
+        // Remove any non-JSON text before first { or [
+        if (preg_match('/[{\[].*[}\]]/s', $response, $matches)) {
             $response = $matches[0];
         }
 
         // Fix common JSON issues
         $response = trim($response);
 
-        // Remove trailing commas
+        // Remove BOM and invisible characters
+        $response = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $response);
+
+        // Fix trailing commas
         $response = preg_replace('/,\s*}/', '}', $response);
         $response = preg_replace('/,\s*]/', ']', $response);
 
-        // Fix single quotes
-        $response = str_replace("'", '"', $response);
+        // Replace single quotes with double quotes for property names and string values
+        $response = preg_replace('/(?<!\\)\'(.*?)(?<!\\)\'/', '"$1"', $response);
 
-        // Fix unescaped quotes in strings
-        $response = preg_replace_callback('/:"([^"\\\\]*)"(?=\s*[,}])/', function($matches) {
-            return ':"' . addslashes($matches[1]) . '"';
+        // Fix unescaped quotes inside strings
+        $response = preg_replace_callback('/:"(.*?)"(?=\s*[,}])/', function($matches) {
+            $value = str_replace('"', '\\"', $matches[1]);
+            return ':"' . $value . '"';
         }, $response);
+
+        // Remove any whitespace between property names and colons
+        $response = preg_replace('/"\s*:\s*/', '":', $response);
+
+        Log::debug('Cleaned JSON preview', [
+            'cleaned_start' => substr($response, 0, 200)
+        ]);
 
         return $response;
     }
