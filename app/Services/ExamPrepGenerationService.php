@@ -142,7 +142,7 @@ class ExamPrepGenerationService
     try {
         $response = $this->aiService->chat($messages, [
             'temperature' => 0.7,
-            'max_tokens' => 4000,
+            'max_tokens' => 8000,
         ], 'exam_prep_complete_generation');
 
         // Log the raw response for debugging
@@ -160,7 +160,7 @@ class ExamPrepGenerationService
         }
 
         // Clean and parse the response
-        $cleanedContent = $response; //$this->cleanJsonResponse($response);
+        $cleanedContent = $this->cleanJsonResponse($response);
 
         // Verify we have valid JSON before decoding
         if (!$this->isValidJson($cleanedContent)) {
@@ -602,45 +602,30 @@ protected function validateCompleteResponse(array $data, ExamPrep $examPrep, arr
     }
 
     /**
-     * Clean JSON response from AI
+     * Clean JSON response from AI - FIXED for your specific response format
      */
     protected function cleanJsonResponse(string $response): string
     {
-        Log::debug('Raw AI response preview', [
+        Log::debug('Raw AI response before cleaning', [
             'response_start' => substr($response, 0, 200),
             'response_length' => strlen($response)
         ]);
 
-        // Remove markdown code blocks and any surrounding text
-        $response = preg_replace('/^[\s\S]*?```(?:json)?\s*/i', '', $response);
-        $response = preg_replace('/```[\s\S]*?$/', '', $response);
-
-        // Remove any non-JSON text before first { or [
-        if (preg_match('/[{\[].*[}\]]/s', $response, $matches)) {
+        // Remove everything before the first {
+        if (preg_match('/\{.*/s', $response, $matches)) {
             $response = $matches[0];
         }
 
-        // Fix common JSON issues
+        // Remove markdown code blocks if they exist
+        $response = preg_replace('/^```json\s*/i', '', $response);
+        $response = preg_replace('/^```\s*/', '', $response);
+        $response = preg_replace('/```\s*$/', '', $response);
+
+        // Fix escaped quotes (remove backslashes before quotes)
+        $response = stripslashes($response);
+
+        // Remove any trailing whitespace
         $response = trim($response);
-
-        // Remove BOM and invisible characters
-        $response = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $response);
-
-        // Fix trailing commas
-        $response = preg_replace('/,\s*}/', '}', $response);
-        $response = preg_replace('/,\s*]/', ']', $response);
-
-        // Replace single quotes with double quotes for property names and string values
-        $response = preg_replace('/(?<!\\)\'(.*?)(?<!\\)\'/', '"$1"', $response);
-
-        // Fix unescaped quotes inside strings
-        $response = preg_replace_callback('/:"(.*?)"(?=\s*[,}])/', function($matches) {
-            $value = str_replace('"', '\\"', $matches[1]);
-            return ':"' . $value . '"';
-        }, $response);
-
-        // Remove any whitespace between property names and colons
-        $response = preg_replace('/"\s*:\s*/', '":', $response);
 
         Log::debug('Cleaned JSON preview', [
             'cleaned_start' => substr($response, 0, 200)
