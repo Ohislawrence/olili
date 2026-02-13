@@ -323,6 +323,7 @@ class ExamPrep extends Model
                 'question_text' => $question->question_text,
                 'options' => $question->options,
                 'question_type' => $question->question_type,
+                'correct_answer' => $question->correct_answer, // ADD THIS LINE
                 'points' => $question->points,
                 'difficulty' => $question->difficulty,
                 'metadata' => $question->metadata,
@@ -374,7 +375,7 @@ class ExamPrep extends Model
                     'course_outline_id' => $quiz->course_outline_id,
                     'question_text' => $question['question'],
                     'options' => $question['options'] ?? [],
-                    'correct_answer' => $question['correct_answer'],
+                    'correct_answer' => $question['correct_answer'], // MAKE SURE THIS IS SET
                     'question_type' => $question['type'] ?? 'multiple_choice',
                     'points' => $question['points'] ?? 1,
                     'difficulty' => $question['difficulty'] ?? 'medium',
