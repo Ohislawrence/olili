@@ -277,6 +277,8 @@ Route::middleware([
     //email
     Route::get('/email', [EmailController::class, 'index'])->name('email.index');
     Route::post('/email/send', [EmailController::class, 'send'])->name('email.send');
+    Route::post('/email/segment-count', [EmailController::class, 'getSegmentCount'])->name('email.segment-count');
+    Route::get('/email/users/search', [UserController::class, 'search'])->name('users.search');
 
     // Notification routes
     Route::prefix('notifications')->group(function () {

@@ -110,12 +110,15 @@ class ExamPrepAttempt extends Model
         $totalPoints = 0;
         $breakdown = [];
 
-        foreach ($this->questions as $index => $question) {
+        // Use the questions stored in the attempt
+        $questions = $this->questions ?? [];
+
+        foreach ($questions as $index => $question) {
             $questionPoints = $question['points'] ?? 1;
             $totalPoints += $questionPoints;
 
             $userAnswer = $userAnswers[$index] ?? null;
-            $correctAnswer = $question['correct_answer'] ?? null;
+            $correctAnswer = $question['correct_answer'] ?? null; // FIX: Get from question array
 
             $isCorrect = $this->isAnswerCorrect(
                 $userAnswer,
@@ -131,7 +134,7 @@ class ExamPrepAttempt extends Model
                 'question_index' => $index,
                 'question_text' => $question['question_text'],
                 'user_answer' => $userAnswer,
-                'correct_answer' => $correctAnswer,
+                'correct_answer' => $correctAnswer, // Include correct answer in breakdown
                 'is_correct' => $isCorrect,
                 'points' => $questionPoints,
                 'points_earned' => $isCorrect ? $questionPoints : 0,

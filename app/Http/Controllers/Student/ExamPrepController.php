@@ -238,6 +238,19 @@ class ExamPrepController extends Controller
             return redirect()->route('student.exam-preps.show', $examPrep);
         }
 
+        // Ensure JSON fields are decoded
+        $attempt->questions = is_string($attempt->questions)
+            ? json_decode($attempt->questions, true)
+            : $attempt->questions;
+
+        $attempt->answers = is_string($attempt->answers)
+            ? json_decode($attempt->answers, true)
+            : $attempt->answers;
+
+        $attempt->results_breakdown = is_string($attempt->results_breakdown)
+            ? json_decode($attempt->results_breakdown, true)
+            : $attempt->results_breakdown;
+
         return Inertia::render('Student/ExamPreps/Results', [
             'examPrep' => $examPrep->load(['examBoard', 'subject']),
             'attempt' => $attempt->load('user'),

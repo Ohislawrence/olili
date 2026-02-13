@@ -606,33 +606,24 @@ protected function validateCompleteResponse(array $data, ExamPrep $examPrep, arr
      */
     protected function cleanJsonResponse(string $response): string
     {
-        Log::debug('Raw AI response before cleaning', [
-            'response_start' => substr($response, 0, 200),
-            'response_length' => strlen($response)
-        ]);
+        // 1. Remove Markdown code block wrappers
+        $response = preg_replace('/^```json\s+/i', '', $response);
+        $response = preg_replace('/^```\s+/', '', $response);
+        $response = preg_replace('/\s+```$/', '', $response);
 
-        // Remove everything before the first {
-        if (preg_match('/\{.*/s', $response, $matches)) {
-            $response = $matches[0];
+        // 2. Extract only the portion from the first { to the last }
+        // This handles cases where AI adds conversational text before or after the JSON
+        $firstBrace = strpos($response, '{');
+        $lastBrace = strrpos($response, '}');
+
+        if ($firstBrace !== false && $lastBrace !== false) {
+            $response = substr($response, $firstBrace, ($lastBrace - $firstBrace) + 1);
         }
 
-        // Remove markdown code blocks if they exist
-        $response = preg_replace('/^```json\s*/i', '', $response);
-        $response = preg_replace('/^```\s*/', '', $response);
-        $response = preg_replace('/```\s*$/', '', $response);
-
-        // Fix escaped quotes (remove backslashes before quotes)
-        $response = stripslashes($response);
-
-        // Remove any trailing whitespace
-        $response = trim($response);
-
-        Log::debug('Cleaned JSON preview', [
-            'cleaned_start' => substr($response, 0, 200)
-        ]);
-
-        return $response;
+        return trim($response);
     }
+
+
 
     /**
      * Generate fallback questions

@@ -4,7 +4,7 @@
     <Head title="Email Management" />
 
     <div class="py-6">
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Header -->
         <div class="mb-8">
           <div class="flex justify-between items-center">
@@ -43,7 +43,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   Send To
                 </label>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <button
                     type="button"
                     @click="form.type = 'role'"
@@ -54,7 +54,22 @@
                       <UserGroupIcon class="h-5 w-5 text-gray-400 mr-3" />
                       <div>
                         <div class="font-medium text-gray-900">By Role</div>
-                        <div class="text-sm text-gray-500">Send to all users with a specific role</div>
+                        <div class="text-sm text-gray-500">Send to users with a role</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    @click="form.type = 'segment'"
+                    class="p-4 border rounded-lg text-left transition-colors duration-150"
+                    :class="form.type === 'segment' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'"
+                  >
+                    <div class="flex items-center">
+                      <ChartBarIcon class="h-5 w-5 text-gray-400 mr-3" />
+                      <div>
+                        <div class="font-medium text-gray-900">User Segment</div>
+                        <div class="text-sm text-gray-500">Send based on behavior</div>
                       </div>
                     </div>
                   </button>
@@ -84,7 +99,7 @@
                       <UsersIcon class="h-5 w-5 text-gray-400 mr-3" />
                       <div>
                         <div class="font-medium text-gray-900">Multiple Users</div>
-                        <div class="text-sm text-gray-500">Send to selected users</div>
+                        <div class="text-sm text-gray-500">Select specific users</div>
                       </div>
                     </div>
                   </button>
@@ -106,6 +121,117 @@
                     {{ role }}
                   </option>
                 </select>
+              </div>
+
+              <!-- Segment Selection -->
+              <div v-if="form.type === 'segment'" class="space-y-4">
+                <div>
+                  <label for="segment_type" class="block text-sm font-medium text-gray-700 mb-2">
+                    Select User Segment
+                  </label>
+                  <select
+                    id="segment_type"
+                    v-model="form.segment_type"
+                    @change="getSegmentCount"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select a segment</option>
+                    <option value="no_course_enrollment">Never Enrolled in Any Course</option>
+                    <option value="no_course_completion">Enrolled But Never Completed Any Course</option>
+                    <option value="no_exam_attempt">Never Attempted Exam Prep</option>
+                    <option value="incomplete_courses">Started But Not Completed Specific Course</option>
+                    <option value="recent_inactive">Inactive Users (No Activity)</option>
+                    <option value="high_achievers">High Achievers (Score > X%)</option>
+                    <option value="struggling_students">Struggling Students (Score < X%)</option>
+                  </select>
+                </div>
+
+                <!-- Segment-specific fields -->
+                <div v-if="form.segment_type === 'incomplete_courses'">
+                  <label for="course_id" class="block text-sm font-medium text-gray-700 mb-2">
+                    Select Course
+                  </label>
+                  <select
+                    id="course_id"
+                    v-model="form.course_id"
+                    @change="getSegmentCount"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select a course</option>
+                    <option v-for="course in courses" :key="course.id" :value="course.id">
+                      {{ course.title }}
+                    </option>
+                  </select>
+                </div>
+
+                <div v-if="form.segment_type === 'no_exam_attempt'">
+                  <label for="exam_prep_id" class="block text-sm font-medium text-gray-700 mb-2">
+                    Select Exam Prep
+                  </label>
+                  <select
+                    id="exam_prep_id"
+                    v-model="form.exam_prep_id"
+                    @change="getSegmentCount"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select an exam prep</option>
+                    <option v-for="exam in examPreps" :key="exam.id" :value="exam.id">
+                      {{ exam.name }}
+                    </option>
+                  </select>
+                </div>
+
+                <div v-if="form.segment_type === 'recent_inactive'">
+                  <label for="days_inactive" class="block text-sm font-medium text-gray-700 mb-2">
+                    Inactive for (days)
+                  </label>
+                  <input
+                    id="days_inactive"
+                    v-model="form.days_inactive"
+                    type="number"
+                    min="1"
+                    max="365"
+                    @change="getSegmentCount"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div v-if="form.segment_type === 'high_achievers'">
+                  <label for="min_score" class="block text-sm font-medium text-gray-700 mb-2">
+                    Minimum Score (%)
+                  </label>
+                  <input
+                    id="min_score"
+                    v-model="form.min_score"
+                    type="number"
+                    min="0"
+                    max="100"
+                    @change="getSegmentCount"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div v-if="form.segment_type === 'struggling_students'">
+                  <label for="max_score" class="block text-sm font-medium text-gray-700 mb-2">
+                    Maximum Score (%)
+                  </label>
+                  <input
+                    id="max_score"
+                    v-model="form.max_score"
+                    type="number"
+                    min="0"
+                    max="100"
+                    @change="getSegmentCount"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <!-- Segment Count Display -->
+                <div v-if="segmentCount !== null" class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p class="text-blue-800">
+                    <span class="font-bold">{{ segmentCount }}</span> users match this segment
+                  </p>
+                </div>
               </div>
 
               <!-- User Selection -->
@@ -173,7 +299,7 @@
                   type="text"
                   required
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="'Hello ' + {{ name }}}' + ', important update!'"
+                  placeholder="Hello {{ name }}, important update!"
                 />
               </div>
 
@@ -275,7 +401,7 @@
 
 <script setup>
 import { Head, useForm, router } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import {
   PaperAirplaneIcon,
   ArrowPathIcon,
@@ -285,30 +411,69 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   SparklesIcon,
+  ChartBarIcon,
 } from '@heroicons/vue/24/outline'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import UserSearch from '@/Components/Admin/UserSearch.vue'
 import UserMultiSelect from '@/Components/Admin/UserMultiSelect.vue'
-//import RichTextEditor from '@/Components/Admin/RichTextEditorEmail.vue'
 import RichTextEditor from '@/Components/RichTextEditor.vue'
 
 const props = defineProps({
   roles: Array,
+  courses: Array,
+  examPreps: Array,
   errors: Object,
 })
 
 const sending = ref(false)
+const segmentCount = ref(null)
 
 const form = useForm({
   type: 'role',
   role: '',
+  segment_type: '',
   user_id: null,
   user_ids: [],
+  course_id: '',
+  exam_prep_id: '',
+  days_inactive: 30,
+  min_score: 80,
+  max_score: 50,
   subject: '',
   message: '',
   from_email: '',
   from_name: '',
 })
+
+const getSegmentCount = async () => {
+  if (!form.segment_type) {
+    segmentCount.value = null
+    return
+  }
+
+  try {
+    const response = await fetch(route('admin.email.segment-count'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+      },
+      body: JSON.stringify({
+        segment_type: form.segment_type,
+        course_id: form.course_id,
+        exam_prep_id: form.exam_prep_id,
+        days_inactive: form.days_inactive,
+        min_score: form.min_score,
+        max_score: form.max_score,
+      }),
+    })
+
+    const data = await response.json()
+    segmentCount.value = data.count
+  } catch (error) {
+    console.error('Failed to get segment count:', error)
+  }
+}
 
 const sendEmail = () => {
   sending.value = true
@@ -326,26 +491,12 @@ const sendEmail = () => {
 const resetForm = () => {
   form.reset()
   form.type = 'role'
+  segmentCount.value = null
 }
 
 const insertVariable = (variable) => {
   const currentMessage = form.message || ''
-  // Insert at cursor position if we can determine it
-  const textarea = document.querySelector('.rich-text-editor-email textarea')
-  if (textarea && textarea === document.activeElement) {
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const newText = currentMessage.substring(0, start) + variable + currentMessage.substring(end)
-    form.message = newText
-
-    // Set cursor position after inserted variable
-    nextTick(() => {
-      textarea.focus()
-      textarea.setSelectionRange(start + variable.length, start + variable.length)
-    })
-  } else {
-    form.message = currentMessage + variable
-  }
+  form.message = currentMessage + variable
 }
 
 const insertTemplate = () => {
@@ -356,7 +507,7 @@ const insertTemplate = () => {
   </div>
 
   <div style="padding: 40px 30px; background-color: #ffffff; border: 1px solid #e5e7eb;">
-    <h2 style="color: #1f2937; margin-top: 0;">Hello {name},</h2>
+    <h2 style="color: #1f2937; margin-top: 0;">Hello {{name}},</h2>
 
     <div style="color: #4b5563; line-height: 1.6; font-size: 16px;">
       <!-- Your content here -->
@@ -428,7 +579,7 @@ const previewEmail = () => {
           ${previewData.message.replace(/\{\{(\w+)\}\}/g, '<span class="variable">{{$1}}</span>')}
         </div>
         <div class="preview-footer">
-          <p>Note: Variables like <span class="variable">{name}</span> will be replaced with actual user data</p>
+          <p>Note: Variables like <span class="variable">{{name}}</span> will be replaced with actual user data</p>
         </div>
       </div>
     </body>
@@ -436,4 +587,9 @@ const previewEmail = () => {
   `)
   newWindow.document.close()
 }
+
+// Watch for segment type changes to reset count
+watch(() => form.segment_type, () => {
+  segmentCount.value = null
+})
 </script>

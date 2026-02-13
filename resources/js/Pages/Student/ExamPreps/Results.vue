@@ -245,22 +245,77 @@ const props = defineProps({
   nextAttemptNumber: Number,
 })
 
+// Helper function to safely parse questions
+const parseQuestions = (questions) => {
+  if (!questions) return []
+
+  // If it's already an array, return it
+  if (Array.isArray(questions)) return questions
+
+  // If it's a string, try to parse it
+  if (typeof questions === 'string') {
+    try {
+      return JSON.parse(questions)
+    } catch (e) {
+      console.error('Failed to parse questions:', e)
+      return []
+    }
+  }
+
+  return []
+}
+
 // Computed properties
 const totalPoints = computed(() => {
-  return props.attempt.questions?.reduce((sum, q) => sum + (q.points || 1), 0) || 0
+  const questions = parseQuestions(props.attempt.questions)
+  return questions.reduce((sum, q) => sum + (parseInt(q.points) || 1), 0)
 })
 
 const correctAnswers = computed(() => {
-  return props.attempt.results_breakdown?.filter(r => r.is_correct).length || 0
+  // If results_breakdown is available, use it
+  if (props.attempt.results_breakdown) {
+    const breakdown = typeof props.attempt.results_breakdown === 'string'
+      ? JSON.parse(props.attempt.results_breakdown)
+      : props.attempt.results_breakdown
+    return breakdown?.filter(r => r.is_correct).length || 0
+  }
+
+  // Fallback: calculate from questions and answers
+  const questions = parseQuestions(props.attempt.questions)
+  const answers = parseAnswers(props.attempt.answers)
+
+  return questions.filter((q, index) => {
+    const userAnswer = answers[index]
+    const correctAnswer = q.correct_answer
+    return userAnswer && correctAnswer && userAnswer.toString() === correctAnswer.toString()
+  }).length
 })
 
 const incorrectAnswers = computed(() => {
-  return props.attempt.results_breakdown?.filter(r => !r.is_correct && r.user_answer).length || 0
+  const questions = parseQuestions(props.attempt.questions)
+  const answers = parseAnswers(props.attempt.answers)
+  const totalAnswered = Object.keys(answers || {}).length
+  return totalAnswered - correctAnswers.value
 })
 
 const skippedQuestions = computed(() => {
-  return props.attempt.results_breakdown?.filter(r => !r.user_answer).length || 0
+  const questions = parseQuestions(props.attempt.questions)
+  const answers = parseAnswers(props.attempt.answers)
+  return questions.length - Object.keys(answers || {}).length
 })
+
+// Helper to parse answers
+const parseAnswers = (answers) => {
+  if (!answers) return {}
+  if (typeof answers === 'object') return answers
+  try {
+    return JSON.parse(answers)
+  } catch (e) {
+    return {}
+  }
+}
+
+
 
 // Helper functions
 const formatDate = (dateString) => {
@@ -279,7 +334,6 @@ const formatTime = (seconds) => {
   const remainingSeconds = seconds % 60
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
 }
-
 // Retake exam
 const retakeExam = async () => {
   await router.visit(route('student.exam-preps.instructions', props.examPrep.id))

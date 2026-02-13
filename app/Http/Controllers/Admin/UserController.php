@@ -1490,4 +1490,94 @@ class UserController extends Controller
         ];
     }
 
+
+    public function search(Request $request)
+    {
+        $request->validate([
+            'search' => 'nullable|string|max:255',
+            'role' => 'nullable|string|exists:roles,name',
+            'exclude' => 'nullable|array',
+            'exclude.*' => 'integer|exists:users,id',
+            'limit' => 'nullable|integer|min:1|max:100',
+        ]);
+
+        $query = User::query()
+            ->with('roles') // Eager load roles
+            ->where('is_active', true); // Only show active users
+
+        // Apply search filter - only on existing columns
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+
+                // Only add username if the column exists
+                // You can check if the column exists dynamically, but it's better to know your schema
+                // $q->orWhere('username', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by role
+        if ($request->filled('role')) {
+            $query->whereHas('roles', function ($q) use ($request) {
+                $q->where('name', $request->role);
+            });
+        }
+
+        // Exclude specific users
+        if ($request->filled('exclude')) {
+            $query->whereNotIn('id', $request->exclude);
+        }
+
+        // Order by name
+        $query->orderBy('name');
+
+        // Limit results
+        $limit = $request->input('limit', 20);
+        $users = $query->limit($limit)->get();
+
+        // Format response for the multi-select component
+        return response()->json([
+            'data' => $users->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->roles->first()?->name ?? 'No Role',
+                    'avatar' => $user->profile_photo_url ?? null,
+                ];
+            })
+        ]);
+    }
+
+    /**
+     * Get user details by IDs (for initial load)
+     */
+    public function getByIds(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:users,id',
+        ]);
+
+        $users = User::whereIn('id', $request->ids)
+            ->with('roles')
+            ->get();
+
+        return response()->json([
+            'data' => $users->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->roles->first()?->name ?? 'No Role',
+                    'avatar' => $user->profile_photo_url ?? null,
+                ];
+            })
+        ]);
+    }
+
+
+
 }
