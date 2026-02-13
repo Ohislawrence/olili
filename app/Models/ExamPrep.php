@@ -294,4 +294,134 @@ class ExamPrep extends Model
             ->get();
     }
 
+    public function generateQuestions(): array
+    {
+        $questions = [];
+
+        // If we have pre-selected questions in exam_prep_questions table
+        if ($this->questions()->exists()) {
+            $pool = $this->questions()->get();
+
+            if ($this->randomize_questions) {
+                $pool = $pool->shuffle();
+            }
+
+            // Apply question distribution if specified
+            if ($this->question_distribution) {
+                $questions = $this->applyQuestionDistribution($pool);
+            } else {
+                $questions = $pool->take($this->total_questions);
+            }
+        } else {
+            // Generate questions from quiz pool based on criteria
+            $questions = $this->generateQuestionsFromPool();
+        }
+
+        return $questions->map(function ($question) {
+            return [
+                'id' => $question->id,
+                'question_text' => $question->question_text,
+                'options' => $question->options,
+                'question_type' => $question->question_type,
+                'points' => $question->points,
+                'difficulty' => $question->difficulty,
+                'metadata' => $question->metadata,
+            ];
+        })->toArray();
+    }
+
+    private function generateQuestionsFromPool()
+    {
+        // Start with quizzes from the exam board's courses
+        $query = Quiz::whereHas('courseOutline.module.course', function ($q) {
+            $q->where('exam_board_id', $this->exam_board_id);
+
+            if ($this->subject_id) {
+                $q->where('subject', $this->subject);
+            }
+
+            if ($this->course_id) {
+                $q->where('id', $this->course_id);
+            }
+        })->where('is_active', true);
+
+        // Apply additional criteria
+        if ($this->question_criteria) {
+            foreach ($this->question_criteria as $criterion => $value) {
+                switch ($criterion) {
+                    case 'difficulty':
+                        $query->where('questions->difficulty', $value);
+                        break;
+                    case 'question_type':
+                        $query->where('questions->type', $value);
+                        break;
+                    case 'topic':
+                        // You would need to join with course_outlines or modules
+                        break;
+                }
+            }
+        }
+
+        // Get all questions from matching quizzes
+        $allQuestions = [];
+        $quizzes = $query->get();
+
+        foreach ($quizzes as $quiz) {
+            foreach ($quiz->questions as $index => $question) {
+                $allQuestions[] = (object) [
+                    'id' => "quiz_{$quiz->id}_q{$index}",
+                    'quiz_id' => $quiz->id,
+                    'course_outline_id' => $quiz->course_outline_id,
+                    'question_text' => $question['question'],
+                    'options' => $question['options'] ?? [],
+                    'correct_answer' => $question['correct_answer'],
+                    'question_type' => $question['type'] ?? 'multiple_choice',
+                    'points' => $question['points'] ?? 1,
+                    'difficulty' => $question['difficulty'] ?? 'medium',
+                    'metadata' => $question['metadata'] ?? [],
+                ];
+            }
+        }
+
+        // Shuffle if needed
+        if ($this->randomize_questions) {
+            shuffle($allQuestions);
+        }
+
+        // Take required number of questions
+        return collect($allQuestions)->take($this->total_questions);
+    }
+
+    private function applyQuestionDistribution($pool)
+    {
+        $selectedQuestions = collect();
+
+        if ($this->question_distribution) {
+            foreach ($this->question_distribution as $criteria => $count) {
+                $subset = $pool->where('difficulty', $criteria)
+                    ->take($count);
+
+                $selectedQuestions = $selectedQuestions->merge($subset);
+            }
+        }
+
+        // If we need more questions, fill with random ones
+        if ($selectedQuestions->count() < $this->total_questions) {
+            $remaining = $this->total_questions - $selectedQuestions->count();
+            $remainingPool = $pool->whereNotIn('id', $selectedQuestions->pluck('id'));
+
+            if ($this->randomize_questions) {
+                $remainingPool = $remainingPool->shuffle();
+            }
+
+            $selectedQuestions = $selectedQuestions->merge(
+                $remainingPool->take($remaining)
+            );
+        }
+
+        return $selectedQuestions;
+    }
+
+
+
 }

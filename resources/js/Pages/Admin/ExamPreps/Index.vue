@@ -340,12 +340,11 @@ const filters = ref({
 
 // Computed stats
 const stats = computed(() => {
-  const data = props.examPreps.data || []
   return {
-    total: data.length,
-    active: data.filter(e => e.status === 'active').length,
-    totalQuestions: data.reduce((sum, e) => sum + (e.total_questions || 0), 0),
-    totalAttempts: data.reduce((sum, e) => sum + (e.attempts_count || 0), 0),
+    total: props.examPreps.total || 0,
+    active: props.examPreps.data?.filter(e => e.status === 'active').length || 0,
+    totalQuestions: props.examPreps.total_questions_sum || 0,
+    totalAttempts: props.examPreps.total_attempts_sum || 0,
   }
 })
 
