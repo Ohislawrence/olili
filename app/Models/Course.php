@@ -199,8 +199,17 @@ class Course extends Model
         return $this->current_enrollment >= $this->enrollment_limit;
     }
 
-    public function canEnroll(User $user): bool
+    public function canEnroll($user): bool
     {
+        // Handle if user is passed as ID or null
+        if (is_numeric($user)) {
+            $user = User::find($user);
+        }
+
+        if (!$user || !($user instanceof User)) {
+            return false;
+        }
+
         // Check if course is available
         if (!$this->isPublic() || $this->status !== 'active') {
             return false;

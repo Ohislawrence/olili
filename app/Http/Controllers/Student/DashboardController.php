@@ -28,6 +28,7 @@ class DashboardController extends Controller
     {
         try {
             $student = auth()->user();
+
             $studentProfile = $student->studentProfile;
 
             $stats = $this->getStudentStats($student);
@@ -48,7 +49,7 @@ class DashboardController extends Controller
                 'recent_activity' => $recentActivity,
                 'upcoming_deadlines' => $upcomingDeadlines,
                 'learning_analytics' => $learningAnalytics,
-                'recently_dropped_courses' => $recentlyDroppedCourses, // Add this
+                'recently_dropped_courses' => $recentlyDroppedCourses,
                 'student_profile' => $studentProfile,
                 'current_subscription' => $currentSubscription,
             ]);
@@ -456,7 +457,7 @@ class DashboardController extends Controller
             ->with('course')
             ->limit(3)
             ->get()
-            ->map(function ($enrollment) {
+            ->map(function ($enrollment, $student) {
                 return [
                     'title' => $enrollment->course->title,
                     'dropped_at' => $enrollment->dropped_at->diffForHumans(),

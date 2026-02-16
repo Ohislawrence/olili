@@ -1,39 +1,44 @@
-<!-- resources/js/Pages/Student/ExamPreps/Exam.vue -->
 <template>
   <StudentLayout>
     <Head :title="`Exam: ${examPrep.name}`" />
 
     <div class="h-screen flex flex-col bg-gradient-to-br from-slate-50 to-emerald-50">
-      <!-- Exam Header -->
+      <!-- Exam Header - Mobile Optimized -->
       <div class="bg-white border-b border-gray-200 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="py-4">
+        <div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+          <div class="py-3 sm:py-4">
+            <!-- Top Row with Timer and Title -->
             <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-4">
-                <div>
-                  <h1 class="text-lg font-semibold text-gray-900">{{ examPrep.name }}</h1>
-                  <p class="text-sm text-gray-500">Question {{ currentQuestionIndex + 1 }} of {{ totalQuestions }}</p>
-                </div>
+              <div class="flex-1 min-w-0">
+                <h1 class="text-sm sm:text-lg font-semibold text-gray-900 truncate pr-2">
+                  {{ examPrep.name }}
+                </h1>
+                <p class="text-xs sm:text-sm text-gray-500">
+                  Q{{ currentQuestionIndex + 1 }}/{{ totalQuestions }}
+                </p>
               </div>
 
               <!-- Timer -->
-              <div class="text-right">
-                <div class="text-2xl font-bold text-gray-900" :class="{'text-red-600': timeRemaining < 300}">
+              <div class="text-right flex-shrink-0">
+                <div
+                  class="text-xl sm:text-2xl font-bold text-gray-900 tabular-nums"
+                  :class="{'text-red-600': timeRemaining < 300}"
+                >
                   {{ formatTime(timeRemaining) }}
                 </div>
-                <div class="text-sm text-gray-500">Time Remaining</div>
+                <div class="text-xs sm:text-sm text-gray-500">Remaining</div>
               </div>
             </div>
 
             <!-- Progress Bar -->
-            <div class="mt-4">
-              <div class="flex justify-between text-sm text-gray-600 mb-1">
+            <div class="mt-2 sm:mt-4">
+              <div class="flex justify-between text-xs text-gray-600 mb-1">
                 <span>Progress</span>
                 <span>{{ Math.round(((currentQuestionIndex + 1) / totalQuestions) * 100) }}%</span>
               </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="w-full bg-gray-200 rounded-full h-1.5 sm:h-2">
                 <div
-                  class="bg-emerald-500 h-2 rounded-full transition-all duration-300"
+                  class="bg-emerald-500 h-1.5 sm:h-2 rounded-full transition-all duration-300"
                   :style="{ width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%` }"
                 ></div>
               </div>
@@ -42,37 +47,40 @@
         </div>
       </div>
 
-      <!-- Main Content -->
-      <div class="flex-1 overflow-y-auto">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Main Content - Scrollable -->
+      <div class="flex-1 overflow-y-auto overscroll-contain">
+        <div class="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
           <!-- Current Question -->
-          <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 mb-8">
-            <div class="flex items-center justify-between mb-6">
-              <div class="flex items-center space-x-3">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-emerald-100 text-emerald-800">
-                  Question {{ currentQuestionIndex + 1 }}
+          <div class="bg-white rounded-lg sm:rounded-xl border border-gray-200 shadow-sm p-4 sm:p-8 mb-4 sm:mb-8">
+            <!-- Question Header -->
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-4 sm:mb-6">
+              <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold bg-emerald-100 text-emerald-800">
+                  Q{{ currentQuestionIndex + 1 }}
                 </span>
-                <span class="text-sm text-gray-500">
-                  {{ currentQuestion.points }} point{{ currentQuestion.points > 1 ? 's' : '' }}
+                <span class="text-xs sm:text-sm text-gray-500">
+                  {{ currentQuestion.points }} pt{{ currentQuestion.points > 1 ? 's' : '' }}
                 </span>
               </div>
-              <div class="text-sm text-gray-500">
-                {{ currentQuestion.difficulty?.toUpperCase() || 'MEDIUM' }}
+              <div class="text-xs sm:text-sm text-gray-500 capitalize bg-gray-100 px-2 py-1 rounded-full">
+                {{ currentQuestion.difficulty || 'Medium' }}
               </div>
             </div>
 
             <!-- Question Text -->
-            <div class="mb-8">
-              <h3 class="text-xl font-semibold text-gray-900 mb-4">{{ currentQuestion.question_text }}</h3>
+            <div class="mb-6 sm:mb-8">
+              <h3 class="text-base sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4 leading-relaxed">
+                {{ currentQuestion.question_text }}
+              </h3>
 
               <!-- Multiple Choice Options -->
-              <div v-if="currentQuestion.question_type === 'multiple_choice'" class="space-y-3">
+              <div v-if="currentQuestion.question_type === 'multiple_choice'" class="space-y-2 sm:space-y-3">
                 <button
                   v-for="(option, index) in currentQuestion.options"
                   :key="index"
                   @click="selectAnswer(option)"
                   :class="[
-                    'w-full text-left p-4 border rounded-xl transition-all duration-200',
+                    'w-full text-left p-3 sm:p-4 border rounded-lg sm:rounded-xl transition-all duration-200 min-h-[44px]',
                     selectedAnswer === option
                       ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-200'
                       : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-25'
@@ -81,7 +89,7 @@
                   <div class="flex items-center">
                     <div
                       :class="[
-                        'w-6 h-6 rounded-full border-2 flex items-center justify-center mr-3 flex-shrink-0',
+                        'w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0',
                         selectedAnswer === option
                           ? 'border-emerald-500 bg-emerald-500 text-white'
                           : 'border-gray-300'
@@ -89,46 +97,49 @@
                     >
                       <CheckIcon v-if="selectedAnswer === option" class="h-3 w-3" />
                     </div>
-                    <span class="text-gray-700">{{ option }}</span>
+                    <span class="text-sm sm:text-base text-gray-700 break-words flex-1">{{ option }}</span>
                   </div>
                 </button>
               </div>
 
               <!-- True/False Options -->
-              <div v-if="currentQuestion.question_type === 'true_false'" class="grid grid-cols-2 gap-4">
+              <div v-if="currentQuestion.question_type === 'true_false'" class="grid grid-cols-2 gap-2 sm:gap-4">
                 <button
                   v-for="option in ['True', 'False']"
                   :key="option"
                   @click="selectAnswer(option)"
                   :class="[
-                    'p-4 border rounded-xl transition-all duration-200 text-center',
+                    'p-3 sm:p-4 border rounded-lg sm:rounded-xl transition-all duration-200 text-center min-h-[44px]',
                     selectedAnswer === option
                       ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-200'
                       : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-25'
                   ]"
                 >
-                  <span class="font-medium text-gray-700">{{ option }}</span>
+                  <span class="text-sm sm:text-base font-medium text-gray-700">{{ option }}</span>
                 </button>
               </div>
 
               <!-- Short Answer -->
-              <div v-if="currentQuestion.question_type === 'short_answer'" class="space-y-4">
+              <div v-if="currentQuestion.question_type === 'short_answer'" class="space-y-3">
                 <textarea
                   v-model="selectedAnswer"
                   rows="4"
-                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none"
+                  class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none"
                   placeholder="Type your answer here..."
                   @input="saveAnswer"
                 ></textarea>
-                <p class="text-sm text-gray-500">Press Enter or save your answer before moving to the next question.</p>
+                <p class="text-xs sm:text-sm text-gray-500 flex items-center">
+                  <InformationCircleIcon class="h-4 w-4 mr-1 flex-shrink-0" />
+                  Press Enter or save before moving to next question
+                </p>
               </div>
 
               <!-- Multiple Answer -->
-              <div v-if="currentQuestion.question_type === 'multiple_answer'" class="space-y-3">
+              <div v-if="currentQuestion.question_type === 'multiple_answer'" class="space-y-2 sm:space-y-3">
                 <div
                   v-for="(option, index) in currentQuestion.options"
                   :key="index"
-                  class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
+                  class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 min-h-[44px]"
                 >
                   <input
                     :id="`option-${index}`"
@@ -136,9 +147,9 @@
                     :value="option"
                     type="checkbox"
                     @change="saveMultipleAnswers"
-                    class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                    class="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded flex-shrink-0"
                   />
-                  <label :for="`option-${index}`" class="ml-3 text-gray-700 cursor-pointer">
+                  <label :for="`option-${index}`" class="ml-2 sm:ml-3 text-sm sm:text-base text-gray-700 cursor-pointer break-words flex-1">
                     {{ option }}
                   </label>
                 </div>
@@ -146,34 +157,35 @@
             </div>
 
             <!-- Answer Status -->
-            <div v-if="isAnswered" class="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+            <div v-if="isAnswered" class="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
               <div class="flex items-center">
-                <CheckCircleIcon class="h-5 w-5 text-emerald-600 mr-2" />
-                <span class="text-emerald-700 font-medium">Answer saved</span>
+                <CheckCircleIcon class="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 mr-2 flex-shrink-0" />
+                <span class="text-xs sm:text-sm text-emerald-700 font-medium">Answer saved</span>
               </div>
             </div>
           </div>
 
-          <!-- Navigation -->
-          <div class="flex justify-between items-center">
+          <!-- Navigation Buttons -->
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4 sm:mb-8">
             <button
               @click="previousQuestion"
               :disabled="currentQuestionIndex === 0 || submitting"
-              class="inline-flex items-center px-6 py-3 border border-emerald-300 text-emerald-700 font-medium rounded-lg hover:bg-emerald-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              class="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 border border-emerald-300 text-emerald-700 text-sm font-medium rounded-lg hover:bg-emerald-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
             >
               <ChevronLeftIcon class="h-4 w-4 mr-2" />
               Previous
             </button>
 
-            <div class="flex items-center space-x-4">
+            <div class="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
               <!-- Mark for Review -->
               <button
                 v-if="!isAnswered"
                 @click="markForReview"
-                class="inline-flex items-center px-4 py-2 border border-amber-300 text-amber-700 font-medium rounded-lg hover:bg-amber-50 transition-colors"
+                class="flex-1 inline-flex items-center justify-center px-3 sm:px-4 py-2.5 border border-amber-300 text-amber-700 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors min-h-[44px]"
               >
                 <BookmarkIcon class="h-4 w-4 mr-2" />
-                Mark for Review
+                <span class="hidden xs:inline">Mark for Review</span>
+                <span class="xs:hidden">Review</span>
               </button>
 
               <!-- Next/Submit Button -->
@@ -181,7 +193,7 @@
                 v-if="currentQuestionIndex < totalQuestions - 1"
                 @click="nextQuestion"
                 :disabled="submitting"
-                class="inline-flex items-center px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+                class="flex-1 inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 min-h-[44px]"
               >
                 Next
                 <ChevronRightIcon class="h-4 w-4 ml-2" />
@@ -191,42 +203,27 @@
                 v-else
                 @click="submitExam"
                 :disabled="submitting"
-                class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium rounded-lg transition-colors shadow-sm hover:shadow-md disabled:opacity-50"
+                class="flex-1 inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm disabled:opacity-50 min-h-[44px]"
               >
                 <CheckIcon class="h-4 w-4 mr-2" />
-                {{ submitting ? 'Submitting...' : 'Submit Exam' }}
+                {{ submitting ? 'Submitting...' : 'Submit' }}
               </button>
-              <div v-if="submitError" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div class="flex items-center">
-                    <ExclamationTriangleIcon class="h-5 w-5 text-red-600 mr-3" />
-                    <div class="flex-1">
-                    <h4 class="text-sm font-semibold text-red-800">Submission Failed</h4>
-                    <p class="text-sm text-red-700 mt-1">{{ submitError }}</p>
-                    </div>
-                    <button
-                    @click="retrySubmit"
-                    class="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                    >
-                    Retry Submit
-                    </button>
-                </div>
-                </div>
             </div>
           </div>
 
           <!-- Question Navigation Grid -->
-          <div class="mt-8 bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-            <h4 class="text-lg font-semibold text-gray-900 mb-4">Question Navigation</h4>
-            <div class="grid grid-cols-5 md:grid-cols-10 gap-2">
+          <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm mb-4">
+            <h4 class="text-sm sm:text-base font-semibold text-gray-900 mb-3">Quick Navigation</h4>
+            <div class="grid grid-cols-6 sm:grid-cols-10 gap-1.5 sm:gap-2">
               <button
                 v-for="(question, index) in questions"
                 :key="index"
                 @click="goToQuestion(index)"
                 :class="[
-                  'w-10 h-10 rounded-lg flex items-center justify-center text-sm font-medium transition-all duration-200',
+                  'w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center text-xs sm:text-sm font-medium transition-all duration-200',
                   index === currentQuestionIndex
                     ? 'bg-emerald-500 text-white ring-2 ring-emerald-200'
-                    : userAnswers[index] !== undefined
+                    : userAnswers[index] !== undefined && userAnswers[index] !== null && userAnswers[index] !== ''
                     ? 'bg-emerald-100 text-emerald-800'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 ]"
@@ -234,64 +231,83 @@
                 {{ index + 1 }}
               </button>
             </div>
-            <div class="mt-4 flex items-center space-x-4 text-sm text-gray-600">
+
+            <!-- Legend - Mobile Optimized -->
+            <div class="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-600">
               <div class="flex items-center">
-                <div class="w-3 h-3 rounded bg-emerald-500 mr-2"></div>
+                <div class="w-3 h-3 rounded bg-emerald-500 mr-1.5"></div>
                 <span>Current</span>
               </div>
               <div class="flex items-center">
-                <div class="w-3 h-3 rounded bg-emerald-100 mr-2"></div>
+                <div class="w-3 h-3 rounded bg-emerald-100 mr-1.5"></div>
                 <span>Answered</span>
               </div>
               <div class="flex items-center">
-                <div class="w-3 h-3 rounded bg-gray-100 mr-2"></div>
+                <div class="w-3 h-3 rounded bg-gray-100 mr-1.5"></div>
                 <span>Not Answered</span>
               </div>
             </div>
           </div>
 
           <!-- Warning Messages -->
-          <div v-if="timeRemaining < 300" class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div class="flex items-center">
-              <ExclamationTriangleIcon class="h-5 w-5 text-red-600 mr-3" />
+          <div v-if="timeRemaining < 300" class="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div class="flex items-start">
+              <ExclamationTriangleIcon class="h-4 w-4 sm:h-5 sm:w-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
               <div>
-                <h4 class="text-sm font-semibold text-red-800">Time Warning</h4>
-                <p class="text-sm text-red-700 mt-1">
-                  Less than 5 minutes remaining! Please submit your exam before time runs out.
+                <h4 class="text-xs sm:text-sm font-semibold text-red-800">Time Warning</h4>
+                <p class="text-xs text-red-700 mt-0.5">
+                  Less than 5 minutes remaining! Please submit soon.
                 </p>
               </div>
+            </div>
+          </div>
+
+          <!-- Error Message -->
+          <div v-if="submitError" class="mt-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div class="flex items-start">
+              <ExclamationTriangleIcon class="h-4 w-4 sm:h-5 sm:w-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
+              <div class="flex-1">
+                <h4 class="text-xs sm:text-sm font-semibold text-red-800">Submission Failed</h4>
+                <p class="text-xs text-red-700 mt-0.5">{{ submitError }}</p>
+              </div>
+              <button
+                @click="retrySubmit"
+                class="ml-2 px-3 py-1.5 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700 whitespace-nowrap min-h-[36px]"
+              >
+                Retry
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Bottom Bar -->
-      <div class="bg-white border-t border-gray-200 py-3 px-4">
+      <!-- Bottom Bar - Mobile Optimized -->
+      <div class="bg-white border-t border-gray-200 py-2 px-3 sm:py-3 sm:px-4">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
-          <div class="text-sm text-gray-600">
-            <span class="font-medium">{{ answeredCount }}</span> of {{ totalQuestions }} questions answered
+          <div class="text-xs sm:text-sm text-gray-600">
+            <span class="font-medium">{{ answeredCount }}</span>/{{ totalQuestions }} answered
           </div>
-          <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-2 sm:space-x-4">
             <button
-              @click="exitExam"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+              @click="showExitModal = true"
+              class="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 text-gray-700 text-xs sm:text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors min-h-[36px] sm:min-h-[44px]"
             >
-              Exit Exam
+              Exit
             </button>
             <button
               @click="submitExam"
               :disabled="submitting"
-              class="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium rounded-lg transition-colors shadow-sm hover:shadow-md disabled:opacity-50"
+              class="inline-flex items-center px-4 sm:px-6 py-1.5 sm:py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors shadow-sm disabled:opacity-50 min-h-[36px] sm:min-h-[44px]"
             >
-              <CheckIcon class="h-4 w-4 mr-2" />
-              Submit Exam
+              <CheckIcon class="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              Submit
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Exit Confirmation Modal -->
+    <!-- Exit Confirmation Modal - Mobile Optimized -->
     <Transition
       enter-active-class="duration-300 ease-out"
       enter-from-class="opacity-0"
@@ -302,27 +318,28 @@
     >
       <div
         v-if="showExitModal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
         @click.self="showExitModal = false"
       >
-        <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+        <div class="bg-white rounded-xl p-4 sm:p-6 max-w-md w-full mx-4">
           <div class="text-center">
-            <ExclamationTriangleIcon class="h-12 w-12 text-amber-500 mx-auto mb-4" />
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Exit Exam?</h3>
-            <p class="text-gray-600 mb-6">
-              If you exit now, your progress will be saved but the timer will continue running.
-              You can return to complete the exam before time runs out.
+            <div class="mx-auto h-12 w-12 bg-amber-100 rounded-full flex items-center justify-center mb-3">
+              <ExclamationTriangleIcon class="h-6 w-6 text-amber-600" />
+            </div>
+            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-2">Exit Exam?</h3>
+            <p class="text-sm text-gray-600 mb-4">
+              Your progress is saved. The timer will continue running.
             </p>
-            <div class="flex space-x-3">
+            <div class="flex flex-col xs:flex-row gap-2">
               <button
                 @click="showExitModal = false"
-                class="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                class="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors min-h-[44px]"
               >
                 Continue Exam
               </button>
               <Link
                 :href="route('student.exam-preps.show', examPrep.id)"
-                class="flex-1 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-medium rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-colors text-center"
+                class="flex-1 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-medium rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-colors text-center min-h-[44px]"
               >
                 Exit Exam
               </Link>
@@ -346,12 +363,22 @@ import {
   BookmarkIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
+  InformationCircleIcon,
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
-  examPrep: Object,
-  attempt: Object,
-  currentQuestionIndex: Number,
+  examPrep: {
+    type: Object,
+    required: true
+  },
+  attempt: {
+    type: Object,
+    required: true
+  },
+  currentQuestionIndex: {
+    type: Number,
+    default: 0
+  },
 })
 
 // Reactive state
@@ -364,6 +391,8 @@ const timeRemaining = ref(props.examPrep.time_limit_minutes * 60)
 const submitting = ref(false)
 const showExitModal = ref(false)
 const timerInterval = ref(null)
+const autoSaveInterval = ref(null)
+const submitError = ref(null)
 
 // Computed properties
 const totalQuestions = computed(() => questions.value.length)
@@ -378,20 +407,19 @@ const answeredCount = computed(() => {
   ).length
 })
 
-// Initialize answers
+// Initialize
 onMounted(() => {
   startTimer()
   loadCurrentAnswer()
-  // Auto-save progress every 30 seconds
-  autoSaveInterval = setInterval(autoSaveProgress, 30000)
+  autoSaveInterval.value = setInterval(autoSaveProgress, 30000)
 })
 
 onUnmounted(() => {
   if (timerInterval.value) {
     clearInterval(timerInterval.value)
   }
-  if (autoSaveInterval) {
-    clearInterval(autoSaveInterval)
+  if (autoSaveInterval.value) {
+    clearInterval(autoSaveInterval.value)
   }
 })
 
@@ -407,9 +435,9 @@ const startTimer = () => {
 }
 
 const formatTime = (seconds) => {
-  const minutes = Math.floor(seconds / 60)
-  const remainingSeconds = seconds % 60
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+  const mins = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
 // Answer handling
@@ -418,7 +446,7 @@ const loadCurrentAnswer = () => {
   if (currentQuestion.value.question_type === 'multiple_answer') {
     selectedAnswers.value = answer || []
   } else {
-    selectedAnswer.value = answer
+    selectedAnswer.value = answer || null
   }
 }
 
@@ -430,6 +458,9 @@ const selectAnswer = (answer) => {
 
 const saveAnswer = async () => {
   try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+    if (!csrfToken) return
+
     await fetch(route('student.exam-preps.save-answer', {
       examPrep: props.examPrep.id,
       attempt: props.attempt.id
@@ -437,7 +468,7 @@ const saveAnswer = async () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        'X-CSRF-TOKEN': csrfToken,
         'Accept': 'application/json'
       },
       body: JSON.stringify({
@@ -483,10 +514,11 @@ const goToQuestion = (index) => {
 }
 
 // Auto-save
-let autoSaveInterval = null
-
 const autoSaveProgress = async () => {
   try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+    if (!csrfToken) return
+
     await fetch(route('student.exam-preps.save-answer', {
       examPrep: props.examPrep.id,
       attempt: props.attempt.id
@@ -494,7 +526,7 @@ const autoSaveProgress = async () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        'X-CSRF-TOKEN': csrfToken,
         'Accept': 'application/json'
       },
       body: JSON.stringify({
@@ -515,9 +547,13 @@ const submitExam = async () => {
   if (submitting.value) return
 
   submitting.value = true
+  submitError.value = null
 
   try {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+    if (!csrfToken) {
+      throw new Error('CSRF token not found')
+    }
 
     const response = await fetch(route('student.exam-preps.submit', {
       examPrep: props.examPrep.id,
@@ -539,7 +575,6 @@ const submitExam = async () => {
     const data = await response.json()
 
     if (data.success) {
-      // Redirect to results page
       window.location.href = route('student.exam-preps.results', {
         examPrep: props.examPrep.id,
         attempt: props.attempt.id
@@ -549,28 +584,86 @@ const submitExam = async () => {
     }
   } catch (error) {
     console.error('Exam submission failed:', error)
-
-    // Show user-friendly error message
-    alert('Failed to submit exam: ' + error.message + '\nPlease try again or contact support.')
-
-    // Re-enable submit button
+    submitError.value = error.message
     submitting.value = false
-
-    // Restart timer if it was stopped
-    if (timerInterval.value) {
-      startTimer()
-    }
   }
 }
 
-// Also add a retry function
-const retrySubmit = async () => {
-  if (confirm('Submit exam again?')) {
-    await submitExam()
-  }
+const retrySubmit = () => {
+  submitError.value = null
+  submitExam()
 }
 
 const exitExam = () => {
   showExitModal.value = true
 }
 </script>
+
+<style scoped>
+/* Touch-friendly tap targets */
+@media (max-width: 640px) {
+  button,
+  [role="button"],
+  select,
+  input,
+  textarea {
+    min-height: 44px;
+  }
+
+  /* Better touch targets for option buttons */
+  .border.rounded-lg {
+    min-height: 44px;
+  }
+
+  /* Prevent zoom on input focus for iOS */
+  input[type="text"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* Tabular numbers for timer */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom scrollbar for content area */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f1f5f9;
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: #cbd5e0;
+  border-radius: 6px;
+}
+
+/* Extra small devices */
+@media (min-width: 480px) {
+  .xs\:inline {
+    display: inline;
+  }
+  .xs\:hidden {
+    display: none;
+  }
+  .xs\:flex-row {
+    flex-direction: row;
+  }
+}
+
+/* Prevent text overflow */
+.break-words {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+</style>
