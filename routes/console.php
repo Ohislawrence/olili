@@ -42,6 +42,7 @@ Schedule::command(CheckOverdueCourses::class)
     ->appendOutputTo(storage_path('logs/overdue-courses.log'));
 
 // 2:00 PM - Afternoon reminder batch (for users in different timezones)
+/**
 Schedule::command(CheckDueSoonCourses::class, ['--only-immediate'])
     ->dailyAt('14:00')
     ->timezone(config('app.timezone', 'UTC'))
@@ -49,7 +50,7 @@ Schedule::command(CheckDueSoonCourses::class, ['--only-immediate'])
     ->onOneServer()
     ->description('Afternoon due soon reminders')
     ->appendOutputTo(storage_path('logs/afternoon-reminders.log'));
-
+*/
 // ================= WEEKLY EMAILS =================
 
 // Send weekly progress emails every Monday at 8:00 AM UTC

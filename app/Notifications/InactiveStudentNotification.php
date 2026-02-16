@@ -19,7 +19,7 @@ class InactiveStudentNotification extends Notification implements ShouldQueue
 
     public function via($notifiable): array
     {
-        $channels = ['mail', 'database'];
+        $channels = [ 'database']; //i removed mail
 
         if (method_exists($notifiable, 'routeNotificationForWebPush') &&
             $notifiable->routeNotificationForWebPush()) {

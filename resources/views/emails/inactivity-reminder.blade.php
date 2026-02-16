@@ -155,10 +155,6 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1 style="margin: 0; font-size: 28px;">📚 Let's Get Back On Track!</h1>
-            <p style="opacity: 0.9; margin-top: 10px;">You've been inactive for {{ $daysInactive }} {{ Str::plural('day', $daysInactive) }}</p>
-        </div>
 
         <div class="content">
             <h2 style="color: #2d3748; margin-top: 0;">Hi {{ $user->name }},</h2>
