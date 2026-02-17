@@ -9,12 +9,14 @@ Disallow: /settings/
 Disallow: /login
 Disallow: /register
 Disallow: /logout
-Disallow: /*?*
-Disallow: /*.pdf$
-Disallow: /*.doc$
-Disallow: /*.docx$
-Disallow: /*.xls$
-Disallow: /*.xlsx$
+
+# Disallow: /*?*
+# Block sensitive parameters only (adjust as needed)
+Disallow: /*?session=
+Disallow: /*?token=
+Disallow: /*?auth=
+
+
 
 # Crawl-delay: 10
 

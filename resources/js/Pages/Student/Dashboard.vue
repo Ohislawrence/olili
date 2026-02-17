@@ -207,12 +207,12 @@
                         <div class="mb-4">
                           <div class="flex items-center justify-between text-sm mb-1">
                             <span class="font-medium text-gray-700">Overall Progress</span>
-                            <span class="text-emerald-600 font-semibold">{{ active_course.progress?.overall_completion_percentage || 0 }}%</span>
+                            <span class="text-emerald-600 font-semibold">{{ parseFloat(active_course.progress?.overall_completion_percentage || 0).toFixed(2) }}%</span>
                           </div>
                           <div class="w-full bg-gray-200 rounded-full h-2.5">
                             <div
                               class="bg-emerald-600 h-2.5 rounded-full transition-all duration-500"
-                              :style="{ width: `${active_course.progress?.overall_completion_percentage || 0}%` }"
+                              :style="{ width: `${parseFloat(active_course.progress?.overall_completion_percentage || 0).toFixed(2)}%` }"
                             ></div>
                           </div>
                         </div>
