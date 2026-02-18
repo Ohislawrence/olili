@@ -250,25 +250,22 @@ class CourseController extends Controller
             ->where('status', 'dropped')
             ->first();
 
-        // Handle last viewed topic safely
+        // Handle last viewed topic safely - set to null if no enrollment exists
         $lastViewedTopic = null;
         if ($enrollment) {
             $lastViewedTopic = $this->progressService->lastViewedTopic($enrollment);
         } elseif ($droppedEnrollment) {
             $lastViewedTopic = $this->progressService->lastViewedTopic($droppedEnrollment);
-        } else {
-            // User has no enrollment history - redirect to preview
-            return redirect()->route('student.courses.preview', $course->id);
         }
+        // If both are null, $lastViewedTopic remains null (no error)
 
         $isEnrolled = $enrollment !== null;
         $wasDropped = $droppedEnrollment !== null;
 
-        // Load basic course info for both enrolled and non-enrolled students
+        // Load basic course info for all users (enrolled or not)
         $course->load(['examBoard', 'creator', 'modules.topics', 'enrollments']);
 
-        // Get course progress for both enrolled and non-enrolled students
-        // For non-enrolled, we'll show empty stats or basic course info
+        // Get course progress based on enrollment status
         if ($isEnrolled) {
             $courseProgress = $this->progressService->calculateCourseProgress($course, $student->id);
             $nextTopic = $this->getNextTopic($course, $enrollment);
@@ -316,7 +313,7 @@ class CourseController extends Controller
             'is_enrolled' => $isEnrolled,
             'isFull' => $course->isFull(),
             'was_dropped' => $wasDropped,
-            'lastViewedTopic' => $lastViewedTopic,
+            'lastViewedTopic' => $lastViewedTopic, // Will be null for non-enrolled users
             'dropped_enrollment' => $wasDropped ? [
                 'id' => $droppedEnrollment->id,
                 'dropped_at' => $droppedEnrollment->dropped_at,
