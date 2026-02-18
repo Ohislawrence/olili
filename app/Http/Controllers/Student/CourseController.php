@@ -250,14 +250,18 @@ class CourseController extends Controller
             ->where('status', 'dropped')
             ->first();
 
-        if($enrollment == null){
-            $lastViewedTopic = $this->progressService->lastViewedTopic($droppedEnrollment);
-        }else{
+        // Handle last viewed topic safely
+        $lastViewedTopic = null;
+        if ($enrollment) {
             $lastViewedTopic = $this->progressService->lastViewedTopic($enrollment);
+        } elseif ($droppedEnrollment) {
+            $lastViewedTopic = $this->progressService->lastViewedTopic($droppedEnrollment);
+        } else {
+            // User has no enrollment history - redirect to preview
+            return redirect()->route('student.courses.preview', $course->id);
         }
-        //$isFull = $course->enrollment_limit == $course->enrolledCount();
-        $isEnrolled = $enrollment !== null;
 
+        $isEnrolled = $enrollment !== null;
         $wasDropped = $droppedEnrollment !== null;
 
         // Load basic course info for both enrolled and non-enrolled students
