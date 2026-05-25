@@ -19,7 +19,6 @@
         "laravel/jetstream": "^5.3",
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "*",
-        "laravel/telescope": "*",
         "laravel/tinker": "^2.10.1",
         "socialiteproviders/facebook": "*",
         "socialiteproviders/github": "*",
