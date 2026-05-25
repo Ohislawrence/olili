@@ -45,7 +45,7 @@ class NewCoursePublished extends Notification implements ShouldQueue
             ->line('**Subject:** ' . $this->course->subject)
             ->line('**Level:** ' . ucfirst($this->course->level))
             ->line('Start learning today and advance your skills!')
-            ->action('View Course Details', route('student.catalog.show', $this->course->slug))
+            ->action('View Course Details', route('student.catalog.show', $this->course))
             ->line('Happy learning!');
     }
 
@@ -61,7 +61,7 @@ class NewCoursePublished extends Notification implements ShouldQueue
             'course_title' => $this->course->title,
             'subject' => $this->course->subject,
             'message' => 'New course available: ' . $this->course->title,
-            'url' => route('student.catalog.show', $this->course->slug),
+            'url' => route('student.catalog.show', $this->course),
             'type' => 'new_course_published'
         ];
     }

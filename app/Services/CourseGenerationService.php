@@ -95,12 +95,13 @@ class CourseGenerationService
             // Use the existing AI service
             $response = $this->aiService->chat($messages, [
                 'temperature' => 0.7,
-                'max_tokens' => 4000,
+                'max_tokens' => 8000, // Increased for large course outlines
             ], 'admin_course_generation');
 
             Log::debug('Admin AI Response received', [
                 'response_length' => strlen($response),
-                'response_preview' => substr($response, 0, 200)
+                'response_preview' => substr($response, 0, 200),
+                'response_tail' => substr($response, -200)
             ]);
 
             // Clean and parse response - using the simple method that worked before
@@ -111,9 +112,11 @@ class CourseGenerationService
                 Log::error('Failed to parse AI response or missing modules', [
                     'json_error' => json_last_error_msg(),
                     'has_course' => isset($structure['course']),
-                    'has_modules' => isset($structure['modules'])
+                    'has_modules' => isset($structure['modules']),
+                    'clean_response_length' => strlen($cleanResponse),
+                    'clean_response_tail' => substr($cleanResponse, -100)
                 ]);
-                throw new \Exception('Failed to generate valid course structure from AI');
+                throw new \Exception('Failed to generate valid course structure from AI: ' . json_last_error_msg());
             }
 
             Log::debug('Parsed structure successfully', [
@@ -273,6 +276,8 @@ CRITICAL INSTRUCTIONS FOR PUBLIC COURSE:
 10. Do NOT create module-level or topic-level quiz objects. Only set has_quiz flags and create ONE course-level quiz in the quizzes array.
 11. Avoid assuming prior professional experience unless stated in prerequisites.
 12. Capstone project must be achievable by a student who completes all modules.
+13. Keep descriptions and previews concise (2-3 sentences max) to ensure the full JSON structure remains within token limits.
+14. Ensure all string values are properly escaped for JSON.
 
 SPECIFIC REQUIREMENTS:
 - Topics should use "has_quiz": true/false (not "type" field)
@@ -281,7 +286,7 @@ SPECIFIC REQUIREMENTS:
 - Ensure topics build logically from basic to advanced
 - "quizzes" should cover everything that has been learnt, so it can be 1 general quiz
 
-IMPORTANT: Your response must be valid JSON that can be parsed by json_decode(). Do not truncate the response.
+IMPORTANT: Your response must be valid JSON that can be parsed by json_decode(). Do not truncate the response. If the content is large, prioritize completing the JSON structure over being extremely verbose in descriptions.
 
 PROMPT;
     }
@@ -429,9 +434,13 @@ PROMPT;
 
     private function cleanJsonResponse(string $response): string
     {
-        // Remove markdown code blocks
-        $response = preg_replace('/```json\s*/', '', $response);
-        $response = preg_replace('/```\s*/', '', $response);
+        // Remove markdown code blocks if present
+        if (preg_match('/```json\s*(.*?)\s*```/s', $response, $matches)) {
+            $response = $matches[1];
+        } else {
+            $response = preg_replace('/```json\s*/', '', $response);
+            $response = preg_replace('/```\s*/', '', $response);
+        }
 
         // Remove any text before the first {
         $pos = strpos($response, '{');
@@ -445,7 +454,13 @@ PROMPT;
             $response = substr($response, 0, $pos + 1);
         }
 
-        return trim($response);
+        // Final trimming
+        $response = trim($response);
+
+        // Handle potential trailing commas in arrays/objects which break json_decode
+        $response = preg_replace('/,\s*([\]\}])/', '$1', $response);
+
+        return $response;
     }
 
     protected function generateEvaluationCriteria(): array

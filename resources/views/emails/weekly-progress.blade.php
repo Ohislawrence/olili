@@ -64,7 +64,7 @@
 
             <div class="footer">
                 <p>This is an automated weekly update from {{ config('app.name') }}.</p>
-                <p>To adjust your email preferences, visit your <a href="{{ route('profile.edit') }}">account settings</a>.</p>
+                <p>To adjust your email preferences, visit your <a href="{{ $user->hasRole('student') ? route('student.profile.edit') : route('dashboard') }}">account settings</a>.</p>
                 <p>© {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
             </div>
         </div>

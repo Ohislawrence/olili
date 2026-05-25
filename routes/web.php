@@ -82,6 +82,15 @@ Route::get('/dashboard', function () {
     return redirect()->route('login');
 })->middleware(['auth'])->name('dashboard');
 
+Route::get('/profile/edit', function () {
+    if (auth()->check()) {
+        if (auth()->user()->hasRole('student')) {
+            return redirect()->route('student.profile.edit');
+        }
+    }
+    return redirect()->route('dashboard');
+})->middleware(['auth'])->name('profile.edit');
+
 Route::get('/register', [RegisterController::class, 'create'])
     ->middleware(['guest'])
     ->name('register');
