@@ -67,8 +67,10 @@ class QuizController extends Controller
         try {
             $user = Auth::user();
 
+            \Log::info('Submitting quiz attempt: ' . $attempt->id . ' for user: ' . $user->id . ' (Attempt Owner: ' . $attempt->user_id . ')');
+
             // Verify the attempt belongs to the current user
-            if ($attempt->user_id !== $user->id) {
+            if ((int) $attempt->user_id !== (int) $user->id) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthorized access to quiz attempt.'
