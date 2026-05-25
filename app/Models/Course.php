@@ -12,12 +12,27 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use App\Services\CourseCodeService;
 use App\Services\ProgressTrackingService;
 use Carbon\Carbon;
+use App\Jobs\NotifyStudentsOfNewCourse;
 
 class Course extends Model
 {
     use HasFactory;
 
     protected $with = ['specializations'];
+
+    protected static function booted()
+    {
+        static::updated(function ($course) {
+            // Check if status changed to 'active' and was previously 'draft' or 'archived'
+            if ($course->wasChanged('status') && $course->status === 'active') {
+                // If it's a public course, notify students
+                if ($course->is_public && $course->visibility === 'public') {
+                    NotifyStudentsOfNewCourse::dispatch($course);
+                }
+            }
+        });
+    }
+
     protected $fillable = [
         'code',
         'exam_board_id',
