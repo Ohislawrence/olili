@@ -11,18 +11,5 @@ class CoursePolicy
 {
     use HandlesAuthorization;
 
-    public function view(User $user, Course $course)
-    {
-        return $course->student_profile_id === $user->studentProfile->id;
-    }
 
-    public function update(User $user, Course $course)
-    {
-        return $course->student_profile_id === $user->studentProfile->id;
-    }
-
-    public function delete(User $user, Course $course)
-    {
-        return $course->student_profile_id === $user->studentProfile->id;
-    }
 }

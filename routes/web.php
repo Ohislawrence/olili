@@ -19,6 +19,12 @@ use App\Mail\WelcomeStudentMail;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Student\CertificateController;
+use App\Http\Controllers\SitemapController;
+
+
+use Intervention\Image\Format;
+use Intervention\Image\Laravel\Facades\Image;
+
 
 // Public routes
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
@@ -40,9 +46,19 @@ Route::get('/cookies', [FrontpageController::class, 'pricing'])->name('cookies')
 Route::get('/accessibility', [FrontpageController::class, 'pricing'])->name('accessibility');
 Route::get('/gdpr', [FrontpageController::class, 'pricing'])->name('gdpr');
 
+//landing pages
+Route::get('/pass/weac', [FrontpageController::class, 'waeclanding'])->name('waeclanding');
+Route::get('/pass/jamb', [FrontpageController::class, 'jamblanding'])->name('jamblanding');
+Route::get('/specializations', [FrontpageController::class, 'specializations'])->name('specializations.index');
+//Exam prep
+Route::get('/exam-preparation', [FrontpageController::class, 'examPreps'])->name('exam-preps.index');
+
 // Courses routes
 Route::get('/course', [FrontpageController::class, 'coursesIndex'])->name('courses.index');
 Route::get('/course/{id}/{slug?}', [FrontpageController::class, 'courseShow'])->name('courses.show');
+
+
+//Route::get('/exam-preparation/{examPrep:slug}', [FrontpageController::class, 'showExamPrep'])->name('students.exam-preps.show');
 
 Route::get('/enterprise', [FrontpageController::class, 'enterprise'])->name('enterprise');
 
@@ -130,7 +146,7 @@ Route::get('/testing', [TestingController::class, 'test'])->name('test.testing')
 Route::post('/webhook/paystack', [PaymentController::class, 'handleWebhook'])->name('webhook.paystack');
 
 // Payment routes
-Route::prefix('payment')->name('payment.')->group(function () {
+Route::middleware(['auth'])->prefix('payment')->name('payment.')->group(function () {
     // Pricing and subscription management
     Route::get('/pricing', [PaymentController::class, 'pricing'])->name('pricing');
     Route::get('/history', [PaymentController::class, 'history'])->name('history');
@@ -139,11 +155,6 @@ Route::prefix('payment')->name('payment.')->group(function () {
     // Payment initialization
     Route::post('/subscription', [PaymentController::class, 'initializeSubscription'])->name('subscription.initialize');
     Route::post('/one-time', [PaymentController::class, 'initializeOneTimePayment'])->name('one-time.initialize');
-
-    // Payment callbacks
-    Route::get('/callback', [PaymentController::class, 'handleCallback'])->name('callback');
-    Route::get('/success', [PaymentController::class, 'success'])->name('success');
-    Route::get('/failure', [PaymentController::class, 'failure'])->name('failure');
 
     // Subscription management
     Route::post('/subscription/cancel', [PaymentController::class, 'cancelSubscription'])->name('subscription.cancel');
@@ -155,6 +166,11 @@ Route::prefix('payment')->name('payment.')->group(function () {
     Route::get('/subscription/status', [PaymentController::class, 'subscriptionStatus'])->name('subscription.status');
 });
 
+// Payment callbacks
+Route::get('payment/callback', [PaymentController::class, 'handleCallback'])->name('payment.callback');
+Route::get('payment/success', [PaymentController::class, 'success'])->name('payment.success');
+Route::get('payment/failure', [PaymentController::class, 'failure'])->name('payment.failure');
+
 // Social authentication routes
 Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->name('social.redirect');
 Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->name('social.callback');
@@ -165,18 +181,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/auth/{provider}/link', [SocialAuthController::class, 'linkAccount'])->name('social.link');
 });
 
-// Test email queue
-Route::get('/test-queue-email', function () {
-    $user = App\Models\User::first();
-
-    if (!$user) {
-        return "No user found!";
-    }
-
-    Mail::to($user->email)->queue(new WelcomeStudentMail($user));
-
-    return "Email queued! Check your queue worker.";
-});// routes/web.php (if you need web routes too)
 
 //cert view public
 Route::get('/certificates/verify/{hash}', [CertificateController::class, 'verify'])->name('certificates.verify');
@@ -189,38 +193,50 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 });
 
 
-Route::get('/test-push', function () {
+if (app()->environment('local')) {
+    Route::get('/error-test/{code}', function ($code) {
+        abort($code);
+    })->where('code', '[0-9]+');
+    Route::get('fake/login', [PushSubscriptionController::class, 'create'])->name('search');
+
+    Route::get('/test-push', function () {
+        $user = auth()->user();
+
+        if (!$user) {
+            return 'Please login first';
+        }
+
+        if (!$user->hasPushSubscription()) {
+            return 'User has no push subscriptions';
+        }
+
+        // Send test notification
+        $service = new \App\Services\WebPush\WebPushService();
+        $notification = $service->createNotification(
+            'Test Notification',
+            'This is a test notification from your custom web push implementation!',
+            url('/'),
+            '/icons/icon-192x192.png'
+        );
+
+        $result = $service->sendToUser($user, $notification);
+
+        return response()->json([
+            'message' => 'Test notification sent',
+            'results' => $result,
+        ]);
+    });
+}
 
 
-    $user = auth()->user();
 
-    if (!$user) {
-        return 'Please login first';
-    }
-
-    if (!$user->hasPushSubscription()) {
-        return 'User has no push subscriptions';
-    }
-
-    // Send test notification
-    $service = new \App\Services\WebPush\WebPushService();
-    $notification = $service->createNotification(
-        'Test Notification',
-        'This is a test notification from your custom web push implementation!',
-        url('/'),
-        '/icons/icon-192x192.png'
-    );
-
-    $result = $service->sendToUser($user, $notification);
-
-    return response()->json([
-        'message' => 'Test notification sent',
-        'results' => $result,
-    ]);
-});
 
 
 // Another routes
 require __DIR__.'/admin.php';
 require __DIR__.'/student.php';
+require __DIR__.'/organisation.php';
 require __DIR__.'/api.php';
+
+//sitemap
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');

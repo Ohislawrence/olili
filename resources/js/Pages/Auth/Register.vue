@@ -19,7 +19,7 @@
                 class="h-16 w-auto object-contain"
                 />
             </div>
-            </div>
+        </div>
 
       <h2 class="mt-6 text-center text-3xl font-bold text-gray-900">
         Join Olilearn Platform

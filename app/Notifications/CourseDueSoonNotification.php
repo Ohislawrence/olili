@@ -19,29 +19,72 @@ class CourseDueSoonNotification extends Notification implements ShouldQueue
 
     public function via($notifiable): array
     {
-        return ['mail', 'database'];
+        $channels = ['mail', 'database'];
+
+        if (method_exists($notifiable, 'routeNotificationForWebPush') &&
+            $notifiable->routeNotificationForWebPush()) {
+            $channels[] = 'web-push';
+        }
+
+        return $channels;
     }
 
     public function toMail($notifiable): MailMessage
     {
+        $urgency = $this->daysRemaining <= 3 ? 'urgent' : 'reminder';
+        $emoji = $this->daysRemaining <= 3 ? '⏰' : '📅';
+
         return (new MailMessage)
-            ->subject("Course Due Soon: {$this->course->title}")
-            ->line("Your course '{$this->course->title}' is due in {$this->daysRemaining} days.")
-            ->line("Please continue working on it to complete before the deadline.")
-            ->action('Continue Course', url("/courses/{$this->course->id}"))
-            ->line('Thank you for using Olilearn!')
-            ->salutation('Best Regards,\nThe ' . config('app.name') . ' Team');
+            ->subject("{$emoji} Course Due in {$this->daysRemaining} Days: {$this->course->title}")
+            ->greeting("Hello {$notifiable->name},")
+            ->line("Your course **{$this->course->title}** is due in **{$this->daysRemaining} " .
+                   ($this->daysRemaining === 1 ? 'day' : 'days') . "**.")
+            ->line("Current Progress: **" . $this->getUserProgress($notifiable) . "%**")
+            ->line($this->getMotivationalMessage())
+            ->action('Continue Course', route('courses.show', ['id' => $this->course->id, 'slug' => $this->course->slug]))
+            ->line("You can do it! Just a little more to go.")
+            ->salutation('Best regards,<br>' . config('app.name'));
     }
 
     public function toArray($notifiable): array
     {
         return [
+            'type' => 'course_due_soon',
             'course_id' => $this->course->id,
             'course_title' => $this->course->title,
-            'due_date' => $this->course->target_completion_date,
+            'course_code' => $this->course->code,
+            'due_date' => $this->course->target_completion_date?->toDateTimeString(),
             'days_remaining' => $this->daysRemaining,
-            'message' => "Course '{$this->course->title}' is due in {$this->daysRemaining} days.",
-            'type' => 'course_due_soon',
+            'progress_percentage' => $this->getUserProgress($notifiable),
+            'message' => $this->getNotificationMessage(),
+            'action_url' => route('courses.show', ['id' => $this->course->id, 'slug' => $this->course->slug]),
+            'timestamp' => now()->toDateTimeString(),
         ];
+    }
+
+    private function getUserProgress($notifiable): float
+    {
+        $enrollment = $notifiable->enrollments()
+            ->where('course_id', $this->course->id)
+            ->first();
+
+        return $enrollment ? (float) $enrollment->progress_percentage : 0.0;
+    }
+
+    private function getMotivationalMessage(): string
+    {
+        if ($this->daysRemaining <= 1) {
+            return "Final stretch! Complete your course today to stay on track.";
+        } elseif ($this->daysRemaining <= 3) {
+            return "Time to push through! You're so close to finishing.";
+        } else {
+            return "Keep up the momentum! Plan your study sessions for this week.";
+        }
+    }
+
+    private function getNotificationMessage(): string
+    {
+        $daysText = $this->daysRemaining === 1 ? '1 day' : "{$this->daysRemaining} days";
+        return "Course '{$this->course->title}' is due in {$daysText}. Complete it on time!";
     }
 }

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Jobs\GenerateCourseContentJob;
 use App\Jobs\GenerateCourseQuizzesJob;
+use App\Models\Subject;
 use App\Models\User;
 
 class CourseGenerationService
@@ -44,6 +45,7 @@ class CourseGenerationService
                 'title' => $courseData['title'],
                 'slug' => Str::slug($courseData['title']),
                 'subject' => $courseData['subject'],
+                'subject_id' => $courseData['subject_id'],
                 'description' => $courseData['description'] ?? '',
                 'level' => $courseData['level'] ?? 'intermediate',
                 'learning_objectives' => $courseData['learning_objectives'] ?? [],
@@ -58,7 +60,9 @@ class CourseGenerationService
                 'visibility' => $courseData['visibility'] ?? 'private',
                 'created_by_user_id' => $createdByUserId,
                 'created_by' => $courseData['created_by'] ?? 'admin',
-                'needs_content_generation' => true, // Flag to indicate content needs to be generated
+                'needs_content_generation' => true,
+                'has_certificate' => $courseData['has_certificate'] ?? false,
+                'tags' => $courseData['tags'],
             ]);
 
             // Generate course outline using AI
@@ -175,7 +179,7 @@ class CourseGenerationService
 
     protected function validateCourseData(array $courseData): void
     {
-        if (empty($courseData['title']) || empty($courseData['subject'])) {
+        if (empty($courseData['title']) || empty($courseData['subject_id'])) {
             throw new \InvalidArgumentException('Course title and subject are required.');
         }
     }

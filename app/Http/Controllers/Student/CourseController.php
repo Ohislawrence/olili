@@ -17,6 +17,7 @@ use App\Services\ContentGenerationService;
 use App\Services\CourseNotificationService;
 use App\Services\ProgressTrackingService;
 use Illuminate\Http\Request;
+use App\Notifications\CourseEnrollmentNotification;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
 
@@ -108,17 +109,20 @@ class CourseController extends Controller
 
     public function browse(Request $request)
     {
+        // Get current student
+        $student = auth()->user();
+
         // Show available courses for enrollment
         $query = Course::availableForEnrollment()
             ->with(['examBoard', 'creator'])
-            ->withCount('enrollments');
+            ->withCount(['enrollments', 'modules']);
 
         // Search
         if ($request->has('search') && $request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('title', 'like', "%{$request->search}%")
-                  ->orWhere('subject', 'like', "%{$request->search}%")
-                  ->orWhere('description', 'like', "%{$request->search}%");
+                ->orWhere('subject', 'like', "%{$request->search}%")
+                ->orWhere('description', 'like', "%{$request->search}%");
             });
         }
 
@@ -139,29 +143,21 @@ class CourseController extends Controller
 
         $courses = $query->latest()->paginate(12);
 
-        // Get current student's enrollments (excluding dropped)
-        $student = auth()->user();
-        $enrolledCourseIds = $student->courseEnrollments()
-            ->where('status', '!=', 'dropped') // Exclude dropped courses
+        // Get enrolled course IDs (excluding dropped)
+        $enrolledCourseIds = $student->enrollments()
+            ->where('status', '!=', 'dropped')
             ->pluck('course_id')
             ->toArray();
 
-        // Get enrolled courses with progress for enrolled students
+        // Get enrolled courses with progress
         $enrolledCourses = [];
-        foreach ($student->courseEnrollments as $enrollment) {
-            // Skip dropped enrollments
-            if ($enrollment->status === 'dropped') {
-                continue;
-            }
-
+        foreach ($student->enrollments()->where('status', '!=', 'dropped')->get() as $enrollment) {
             $lastViewedTopic = $this->progressService->lastViewedTopic($enrollment);
-
-            // Use ProgressTrackingService to get enrollment progress
             $progress = $this->progressService->getEnrollmentProgress($enrollment);
 
             $enrolledCourses[$enrollment->course_id] = [
                 'id' => $enrollment->id,
-                'progress_percentage' => $progress['overall_completion_percentage'],
+                'progress_percentage' => $progress['overall_completion_percentage'] ?? 0,
                 'status' => $enrollment->status,
                 'lastTopic' => $lastViewedTopic,
             ];
@@ -169,7 +165,6 @@ class CourseController extends Controller
 
         // Get available subjects for filter
         $subjects = Course::distinct()->orderBy('subject')->pluck('subject');
-
         $examBoards = ExamBoard::active()->get();
 
         $levels = [
@@ -195,9 +190,9 @@ class CourseController extends Controller
         $student = auth()->user();
 
         // Check if student is enrolled
-        $enrollment = $student->courseEnrollments()
-            ->where('course_id', $course->id)
-            ->first();
+        $enrollment = CourseEnrollment::where('user_id', $student->id)
+                ->where('course_id', $course->id)
+                ->first();
 
         // If enrolled, redirect to course show page
 
@@ -245,12 +240,9 @@ class CourseController extends Controller
         $student = auth()->user();
 
         // Check if student is enrolled (excluding dropped enrollments)
-        $enrollment = $student->courseEnrollments()
-            ->where('course_id', $course->id)
-            ->where('status', '!=', 'dropped')
-            ->first();
-
-        $lastViewedTopic = $this->progressService->lastViewedTopic($enrollment);
+        $enrollment = CourseEnrollment::where('user_id', $student->id)
+                ->where('course_id', $course->id)->where('status', '!=', 'dropped')
+                ->first();
 
         // If student has dropped this course, we should allow them to see it
         $droppedEnrollment = $student->courseEnrollments()
@@ -258,11 +250,22 @@ class CourseController extends Controller
             ->where('status', 'dropped')
             ->first();
 
+        // Handle last viewed topic safely
+        $lastViewedTopic = null;
+        if ($enrollment) {
+            $lastViewedTopic = $this->progressService->lastViewedTopic($enrollment);
+        } elseif ($droppedEnrollment) {
+            $lastViewedTopic = $this->progressService->lastViewedTopic($droppedEnrollment);
+        } else {
+            // User has no enrollment history - redirect to preview
+            return redirect()->route('student.courses.preview', $course->id);
+        }
+
         $isEnrolled = $enrollment !== null;
         $wasDropped = $droppedEnrollment !== null;
 
         // Load basic course info for both enrolled and non-enrolled students
-        $course->load(['examBoard', 'creator', 'modules.topics']);
+        $course->load(['examBoard', 'creator', 'modules.topics', 'enrollments']);
 
         // Get course progress for both enrolled and non-enrolled students
         // For non-enrolled, we'll show empty stats or basic course info
@@ -305,10 +308,13 @@ class CourseController extends Controller
         // Check if the student can enroll (considering course capacity, etc.)
         $canEnroll = $course->canEnroll($student);
 
+        $progress = $courseProgress['overall_completion_percentage'];
+
         return Inertia::render('Student/Courses/Show', [
             'course' => $course,
             'can_enroll' => $canEnroll,
             'is_enrolled' => $isEnrolled,
+            'isFull' => $course->isFull(),
             'was_dropped' => $wasDropped,
             'lastViewedTopic' => $lastViewedTopic,
             'dropped_enrollment' => $wasDropped ? [
@@ -323,11 +329,11 @@ class CourseController extends Controller
                 'estimated_duration_minutes' => $nextTopic->estimated_duration_minutes,
                 'module_id' => $nextTopic->module_id,
             ] : null,
-            'course_stats' => $courseProgress, // Always pass valid course stats
+            'course_stats' => $courseProgress,
             'enrollment' => $isEnrolled ? [
                 'id' => $enrollment->id,
                 'status' => $enrollment->status,
-                'progress_percentage' => $enrollment->progress_percentage,
+                'progress_percentage' => $progress,
                 'enrolled_at' => $enrollment->enrolled_at,
                 'started_at' => $enrollment->started_at,
                 'completed_at' => $enrollment->completed_at,
@@ -347,7 +353,7 @@ class CourseController extends Controller
 
         if ($existingEnrollment) {
             return redirect()->route('student.courses.learn', $course->id)
-                ->with('info', 'You are already enrolled in this course.');
+                ->with('message', 'You are already enrolled in this course.');
         }
 
         // Check if student previously dropped this course
@@ -364,9 +370,14 @@ class CourseController extends Controller
                 //'progress_percentage' => 0, // Reset progress or keep previous?
                 // You can decide whether to keep previous progress
             ]);
+            $student->notify(new CourseEnrollmentNotification(
+                $course->id,
+                $droppedEnrollment->id,
+                'Welcome back! Your enrollment has been reactivated.'
+            ));
 
             return redirect()->route('student.courses.learn', $course->id)
-                ->with('success', 'Successfully re-enrolled in the course! Your previous progress has been restored.');
+                ->with('message', 'Successfully re-enrolled in the course! Your previous progress has been restored.');
         }
 
         // Enroll in course (new enrollment)
@@ -374,8 +385,11 @@ class CourseController extends Controller
 
         if (!$enrollment) {
             return redirect()->back()
-                ->with('error', 'Unable to enroll in this course. Please check if the course is available and has space.');
+                ->with('message', 'Unable to enroll in this course. Please check if the course is available and has space.');
         }
+
+
+        $student->notify(new CourseEnrollmentNotification($course->id, $enrollment->id));
 
         return redirect()->route('student.courses.learn', $course->id)
             ->with('success', 'Successfully enrolled in the course!');

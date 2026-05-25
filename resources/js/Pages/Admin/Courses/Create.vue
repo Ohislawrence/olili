@@ -131,21 +131,24 @@
                     Subject *
                   </label>
                   <div class="mt-1">
-                    <input
-                      id="subject"
-                      v-model="form.subject"
-                      type="text"
-                      required
-                      list="subjects"
-                      class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
-                      placeholder="e.g., Computer Science, Mathematics"
-                    />
-                    <datalist id="subjects">
-                      <option v-for="subject in subjects" :key="subject" :value="subject" />
-                    </datalist>
+                    <select
+                        v-model="form.subject_id"
+                        required
+                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
+                        >
+                        <option value="" disabled>Select a subject</option>
+
+                        <option
+                            v-for="(name, id) in subjects"
+                            :key="id"
+                            :value="id"
+                        >
+                            {{ name }}
+                        </option>
+                    </select>
                   </div>
                   <p v-if="form.errors.subject" class="mt-1 text-sm text-red-600">
-                    {{ form.errors.subject }}
+                    {{ form.errors.subject_id }}
                   </p>
                 </div>
 
@@ -180,6 +183,8 @@
                   <h2 class="text-lg font-semibold text-gray-900">Course Details</h2>
                   <p class="mt-1 text-sm text-gray-500">Configure course settings and requirements</p>
                 </div>
+
+
 
                 <!-- Level -->
                 <div>
@@ -302,6 +307,162 @@
                   </p>
                 </div>
               </div>
+
+              <!-- Price & Payment Section -->
+            <div class="space-y-6">
+            <div class="border-b border-gray-200 pb-4">
+                <h2 class="text-lg font-semibold text-gray-900">Price & Certificate</h2>
+                <p class="mt-1 text-sm text-gray-500">Configure pricing and certification options</p>
+            </div>
+
+            <!-- Is Paid Course -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-3">
+                Course Type
+                </label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <label
+                    :class="[
+                    'relative flex cursor-pointer rounded-lg border p-4 focus:outline-none',
+                    !form.is_paid
+                        ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500'
+                        : 'border-gray-300'
+                    ]"
+                >
+                    <input
+                    type="radio"
+                    :value="false"
+                    v-model="form.is_paid"
+                    class="sr-only"
+                    />
+                    <div class="flex flex-1 items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        </div>
+                    </div>
+                    <div class="ml-3 flex-1">
+                        <span class="flex items-center text-sm font-medium text-gray-900">
+                        Free Course
+                        <CheckCircleIcon
+                            v-if="!form.is_paid"
+                            class="ml-2 h-5 w-5 text-emerald-600"
+                        />
+                        </span>
+                        <span class="mt-1 text-xs text-gray-500">
+                        Course is available for free
+                        </span>
+                    </div>
+                    </div>
+                </label>
+
+                <label
+                    :class="[
+                    'relative flex cursor-pointer rounded-lg border p-4 focus:outline-none',
+                    form.is_paid
+                        ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500'
+                        : 'border-gray-300'
+                    ]"
+                >
+                    <input
+                    type="radio"
+                    :value="true"
+                    v-model="form.is_paid"
+                    class="sr-only"
+                    />
+                    <div class="flex flex-1 items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                        </svg>
+                        </div>
+                    </div>
+                    <div class="ml-3 flex-1">
+                        <span class="flex items-center text-sm font-medium text-gray-900">
+                        Paid Course
+                        <CheckCircleIcon
+                            v-if="form.is_paid"
+                            class="ml-2 h-5 w-5 text-emerald-600"
+                        />
+                        </span>
+                        <span class="mt-1 text-xs text-gray-500">
+                        Course requires payment to enroll
+                        </span>
+                    </div>
+                    </div>
+                </label>
+                </div>
+            </div>
+
+            <!-- Price Input (shown only when is_paid is true) -->
+            <div v-if="form.is_paid">
+                <label for="price" class="block text-sm font-medium text-gray-700 mb-1">
+                Course Price (₦)
+                </label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span class="text-gray-500 sm:text-sm">₦</span>
+                </div>
+                <input
+                    id="price"
+                    v-model="form.price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    class="block w-full pl-10 pr-12 py-2.5 rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+                    placeholder="0.00"
+                />
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <span class="text-gray-500 sm:text-sm">NGN</span>
+                </div>
+                </div>
+                <p v-if="form.errors.price" class="mt-1 text-sm text-red-600">
+                {{ form.errors.price }}
+                </p>
+                <p class="mt-1 text-sm text-gray-500">
+                Set the price in Nigerian Naira. Recommended: ₦2,500 - ₦25,000
+                </p>
+            </div>
+
+            <!-- Certificate Option -->
+            <div>
+                <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    <input
+                    id="has_certificate"
+                    v-model="form.has_certificate"
+                    type="checkbox"
+                    class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                    />
+                </div>
+                <div class="ml-3">
+                    <label for="has_certificate" class="text-sm font-medium text-gray-700">
+                    Include Certificate of Completion
+                    </label>
+                    <p class="text-sm text-gray-500">
+                    Students who complete the course will receive a downloadable certificate
+                    </p>
+                </div>
+                </div>
+                <div v-if="form.has_certificate" class="mt-4 ml-7 bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                <div class="flex items-start">
+                    <svg class="h-5 w-5 text-emerald-500 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                    <h4 class="text-sm font-medium text-emerald-800">Certificate Included</h4>
+                    <p class="mt-1 text-sm text-emerald-700">
+                        Students will receive a verified digital certificate upon course completion.
+                        The certificate will include the course title, student name, completion date, and a unique verification code.
+                    </p>
+                    </div>
+                </div>
+                </div>
+            </div>
+            </div>
 
               <!-- Course Content Section -->
               <div class="space-y-6">
@@ -463,6 +624,74 @@
                     What knowledge or skills should students have before taking this course?
                   </p>
                 </div>
+
+                <!-- Tags Section -->
+<div>
+  <label class="block text-sm font-medium text-gray-700 mb-2">
+    Course Tags
+  </label>
+  <div class="mt-1">
+    <!-- Selected Tags Display -->
+    <div v-if="form.tags.length > 0" class="flex flex-wrap gap-2 mb-3">
+      <span
+        v-for="(tag, index) in form.tags"
+        :key="index"
+        class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800"
+      >
+        {{ tag }}
+        <button
+          type="button"
+          @click="removeTag(index)"
+          class="ml-1.5 inline-flex items-center justify-center text-emerald-500 hover:text-emerald-700"
+        >
+          <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </span>
+    </div>
+
+    <!-- Tag Input -->
+    <div class="flex gap-2">
+      <input
+        v-model="tagInput"
+        type="text"
+        @keydown.enter.prevent="addTag"
+        class="flex-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3"
+        placeholder="Add a tag (press Enter to add)"
+      />
+      <button
+        type="button"
+        @click="addTag"
+        class="inline-flex items-center px-4 py-2.5 border border-emerald-300 shadow-sm text-sm font-medium rounded-lg text-emerald-700 bg-white hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200"
+      >
+        <PlusIcon class="h-4 w-4 mr-1" />
+        Add
+      </button>
+    </div>
+
+    <!-- Popular Tags Suggestions -->
+    <div class="mt-3">
+      <p class="text-xs text-gray-500 mb-2">Popular tags:</p>
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="popularTag in popularTags"
+          :key="popularTag"
+          type="button"
+          @click="addPopularTag(popularTag)"
+          class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200"
+        >
+          {{ popularTag }}
+        </button>
+      </div>
+    </div>
+
+    <p class="mt-2 text-sm text-gray-500">
+      Add relevant tags to help students find your course. Use keywords like "programming", "mathematics", "waec", etc.
+    </p>
+  </div>
+</div>
+
               </div>
             </div>
 
@@ -565,7 +794,7 @@ const props = defineProps({
 
 const form = reactive({
   title: '',
-  subject: '',
+  subject_id: '',
   description: '',
   exam_board_id: null,
   level: 'intermediate',
@@ -576,6 +805,10 @@ const form = reactive({
   learning_objectives: [''],
   prerequisites: [''],
   thumbnail: null,
+  price: 0,
+  is_paid: false,
+  tags: [],
+  has_certificate: true,
   errors: {},
   processing: false,
 })
@@ -672,6 +905,34 @@ const minDate = computed(() => {
 
 // Smart progress simulation
 let simulationInterval = null
+
+// Add to reactive refs
+const tagInput = ref('')
+const popularTags = ref([
+  'programming', 'mathematics', 'science', 'waec', 'jamb', 'neco',
+  'computer-science', 'web-development', 'data-science', 'business',
+  'english', 'physics', 'chemistry', 'biology', 'accounting', 'law',
+  'professional', 'certification', 'exam-prep', 'skill-building'
+])
+
+// Add these methods
+const addTag = () => {
+  const tag = tagInput.value.trim()
+  if (tag && !form.tags.includes(tag) && form.tags.length < 10) {
+    form.tags.push(tag)
+    tagInput.value = ''
+  }
+}
+
+const addPopularTag = (tag) => {
+  if (!form.tags.includes(tag) && form.tags.length < 10) {
+    form.tags.push(tag)
+  }
+}
+
+const removeTag = (index) => {
+  form.tags.splice(index, 1)
+}
 
 const startSmartSimulation = () => {
   isGenerating.value = true
@@ -790,19 +1051,22 @@ const submit = async () => {
 
     // Add all form fields
     Object.keys(form).forEach(key => {
-      if (key === 'thumbnail' && form[key]) {
+    if (key === 'thumbnail' && form[key]) {
         formData.append(key, form[key])
-      } else if (key === 'learning_objectives' || key === 'prerequisites') {
+    } else if (key === 'learning_objectives' || key === 'prerequisites' || key === 'tags') {
         // Handle arrays
         const filteredArray = form[key].filter(item => item.trim() !== '')
         if (filteredArray.length > 0) {
-          filteredArray.forEach((item, index) => {
+        filteredArray.forEach((item, index) => {
             formData.append(`${key}[${index}]`, item)
-          })
+        })
         }
-      } else if (key !== 'errors' && key !== 'processing' && form[key] !== null && form[key] !== '') {
+    } else if (key === 'is_paid' || key === 'has_certificate') {
+        // Handle booleans
+        formData.append(key, form[key] ? 1 : 0)
+    } else if (key !== 'errors' && key !== 'processing' && form[key] !== null && form[key] !== '') {
         formData.append(key, form[key])
-      }
+    }
     })
 
     // Submit the form
@@ -853,18 +1117,20 @@ const saveAsDraft = async () => {
 
     // Add basic fields for draft
     Object.keys(form).forEach(key => {
-      if (key === 'thumbnail' && form[key]) {
+    if (key === 'thumbnail' && form[key]) {
         formData.append(key, form[key])
-      } else if (key === 'learning_objectives' || key === 'prerequisites') {
+    } else if (key === 'learning_objectives' || key === 'prerequisites' || key === 'tags') {
         const filteredArray = form[key].filter(item => item.trim() !== '')
         if (filteredArray.length > 0) {
-          filteredArray.forEach((item, index) => {
+        filteredArray.forEach((item, index) => {
             formData.append(`${key}[${index}]`, item)
-          })
+        })
         }
-      } else if (key !== 'errors' && key !== 'processing' && form[key] !== null && form[key] !== '') {
+    } else if (key === 'is_paid' || key === 'has_certificate') {
+        formData.append(key, form[key] ? 1 : 0)
+    } else if (key !== 'errors' && key !== 'processing' && form[key] !== null && form[key] !== '') {
         formData.append(key, form[key])
-      }
+    }
     })
 
     // Add draft flag

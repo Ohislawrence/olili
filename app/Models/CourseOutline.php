@@ -31,6 +31,8 @@ class CourseOutline extends Model
         'content_generated_at',
         'needs_quiz_generation',
         'quiz_generated_at',
+        'id' => 'integer',
+        'module_id' => 'integer',
     ];
 
     protected $casts = [

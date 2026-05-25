@@ -1097,4 +1097,68 @@ class User extends Authenticatable
             ->orderBy('issue_date', 'desc');
     }
 
+    public function examPrepAttempts()
+    {
+        return $this->hasMany(ExamPrepAttempt::class);
+    }
+
+    public function enrolledExamPreps()
+    {
+        return $this->belongsToMany(ExamPrep::class, 'exam_prep_enrollments')
+            ->withPivot(['enrolled_at', 'status', 'last_attempt_at', 'best_score'])
+            ->withTimestamps();
+    }
+
+    // Check if user is enrolled in an exam prep
+    public function isEnrolledInExamPrep($examPrepId)
+    {
+        return $this->enrolledExamPreps()
+            ->where('exam_prep_id', $examPrepId)
+            ->exists();
+    }
+
+    // Get user's best score for an exam prep
+    public function getBestScoreForExamPrep($examPrepId)
+    {
+        return $this->examPrepAttempts()
+            ->where('exam_prep_id', $examPrepId)
+            ->max('percentage') ?? 0;
+    }
+
+    // Get user's attempt count for an exam prep
+    public function getAttemptCountForExamPrep($examPrepId)
+    {
+        return $this->examPrepAttempts()
+            ->where('exam_prep_id', $examPrepId)
+            ->count();
+    }
+
+    // Get all exam preps user can attempt
+    public function getAvailableExamPreps()
+    {
+        return ExamPrep::where('status', 'active')
+            ->where('is_public', true)
+            ->where(function ($query) {
+                // Not enrolled yet
+                $query->whereDoesntHave('enrolledUsers', function ($q) {
+                    $q->where('user_id', $this->id);
+                })
+                // Or enrolled but not completed max attempts
+                ->orWhereHas('enrolledUsers', function ($q) {
+                    $q->where('user_id', $this->id)
+                      ->where(function ($subq) {
+                          $subq->whereNull('best_score')
+                               ->orWhere('best_score', '<', 100);
+                      });
+                });
+            })
+            ->get();
+    }
+
+    public function flashcardSets(): HasMany
+    {
+        return $this->hasMany(FlashcardSet::class);
+    }
+
+
 }

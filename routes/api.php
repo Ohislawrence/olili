@@ -7,8 +7,7 @@ use App\Http\Controllers\Admin\BlogPostController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Api\WebPushController;
-
-
+use App\Http\Controllers\FrontpageController;
 
 Route::middleware(['auth:sanctum'])->group(function () {
     // Real-time chat
@@ -43,3 +42,7 @@ Route::get('/api/featured-blog-posts', [BlogPostController::class, 'featured']);
 Route::middleware(['auth:sanctum'])->group(function () {
 
 });
+
+Route::get('/courses/search', [FrontpageController::class, 'search'])->name('api.courses.search');
+
+// In CourseController.php

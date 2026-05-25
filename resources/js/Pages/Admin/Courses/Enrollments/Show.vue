@@ -280,7 +280,7 @@
                   class="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700"
                 >
                   <TrashIcon class="h-4 w-4 mr-2" />
-                  Drop Enrollment
+                  View Enrollments
                 </button>
               </div>
             </div>

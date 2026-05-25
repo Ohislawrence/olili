@@ -86,10 +86,10 @@
                         <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     </div>
                     </div>
-                    <p v-if="isTyping" class="text-xs text-emerald-200 mt-1 flex items-center">
+                    <div v-if="isTyping" class="text-xs text-emerald-200 mt-1 flex items-center">
                     <div class="animate-spin rounded-full h-3 w-3 border-b-2 border-emerald-200 mr-1"></div>
                     Updating context...
-                    </p>
+                    </div>
                 </div>
                 </div>
 

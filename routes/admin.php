@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\SystemSettingsController;
 use App\Http\Controllers\Admin\SubscriptionPlanController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\BlogPostController;
+use App\Http\Controllers\Admin\CertificateController;
 use App\Http\Controllers\Admin\CommunityController as AdminCommunityController;
 use App\Http\Controllers\Admin\CourseOutlineController;
 use Illuminate\Support\Facades\Route;
@@ -18,7 +19,11 @@ use App\Http\Controllers\Admin\EmailController;
 use App\Http\Controllers\Admin\NotificationController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Admin\CoursesController;
+use App\Http\Controllers\Admin\SpecializationController;
+use App\Http\Controllers\Admin\CourseSearchController;
 use App\Http\Controllers\Admin\EnrollmentController;
+use App\Http\Controllers\Admin\MassEnrollmentController;
+use App\Http\Controllers\Admin\ExamPrepController;
 use Inertia\Inertia;
 
 
@@ -54,15 +59,56 @@ Route::middleware([
 
     // Certificate Management Routes
     Route::prefix('certificates')->name('certificates.')->group(function () {
-        Route::get('/create', [UserController::class, 'showCertificate'])->name('create');
-        Route::get('/{certificate}', [UserController::class, 'showCertificate'])->name('show');
         Route::post('/generate', [UserController::class, 'generateCertificate'])->name('generate');
         Route::post('/batch-generate', [UserController::class, 'batchGenerateCertificates'])->name('batch-generate');
-        Route::patch('/{certificate}/status', [UserController::class, 'updateCertificateStatus'])->name('update-status');
-        Route::delete('/{certificate}', [UserController::class, 'deleteCertificate'])->name('delete');
-        Route::post('/{certificate}/send', [UserController::class, 'sendCertificate'])->name('send');
-        Route::post('/users/{user}/export', [UserController::class, 'exportCertificates'])->name('export');
-        Route::get('/{certificate}/preview', [UserController::class, 'previewCertificate'])->name('preview');
+        Route::post('/{certificate}/regenerate-image', [UserController::class, 'regenerateCertificateImage'])->name('regenerate-image');
+        Route::get('/{certificate}/download', [UserController::class, 'downloadCertificate'])->name('download');
+        Route::get('/{certificate}/download-image', [UserController::class, 'downloadCertificateImage'])->name('download-image');
+
+        // Generate certificate
+        Route::get('/create/generate', [CertificateController::class, 'create'])->name('generate');
+        Route::get('/generate', [CertificateController::class, 'create'])->name('create');
+        Route::post('/generate', [CertificateController::class, 'store'])->name('store');
+
+        // View certificate
+        Route::get('/{certificate}', [CertificateController::class, 'show'])->name('show');
+
+        // Update certificate
+        Route::patch('/{certificate}/status', [CertificateController::class, 'updateStatus'])->name('update-status');
+        Route::patch('/{certificate}/renew', [CertificateController::class, 'renew'])->name('renew');
+
+        // Send certificate
+        Route::post('/{certificate}/send', [CertificateController::class, 'send'])->name('send');
+
+        // Regenerate image
+        Route::post('/{certificate}/regenerate-image', [CertificateController::class, 'regenerateImage'])->name('regenerate-image');
+
+        // Download
+        Route::get('/{certificate}/download', [CertificateController::class, 'download'])->name('download');
+        Route::get('/{certificate}/download-image', [CertificateController::class, 'downloadImage'])->name('download-image');
+
+        // Delete
+        Route::delete('/{certificate}', [CertificateController::class, 'destroy'])->name('delete');
+
+        // Bulk actions
+        Route::post('/batch-generate', [CertificateController::class, 'batchGenerate'])->name('batch-generate');
+        Route::get('/users/{user}/check-eligible', [CertificateController::class, 'checkEligible'])->name('check-eligible');
+        Route::post('/bulk-send', [CertificateController::class, 'bulkSend'])->name('bulk-send');
+        Route::post('/bulk-regenerate', [CertificateController::class, 'bulkRegenerate'])->name('bulk-regenerate');
+        Route::post('/users/{user}/bulk-regenerate-all', [CertificateController::class, 'bulkRegenerateAll'])->name('bulk-regenerate-all');
+        Route::post('/users/{user}/bulk-send-all', [CertificateController::class, 'bulkSendAll'])->name('bulk-send-all');
+        Route::get('/users/{user}/bulk-export-pdf', [CertificateController::class, 'bulkExportPdf'])->name('bulk-export-pdf');
+        Route::get('/bulk-download-pdf', [CertificateController::class, 'bulkDownloadPdf'])->name('bulk-download-pdf');
+        Route::get('/bulk-download-images', [CertificateController::class, 'bulkDownloadImages'])->name('bulk-download-images');
+        Route::post('/users/{user}/export', [CertificateController::class, 'export'])->name('export');
+
+        //Route::get('/create', [UserController::class, 'showCertificate'])->name('create'); //watch
+        //Route::get('/{certificate}', [UserController::class, 'showCertificate'])->name('show');//watch
+        //Route::patch('/{certificate}/status', [UserController::class, 'updateCertificateStatus'])->name('update-status'); //
+        //Route::delete('/{certificate}', [UserController::class, 'deleteCertificate'])->name('delete'); //
+        //Route::post('/{certificate}/send', [UserController::class, 'sendCertificate'])->name('send'); //
+        //Route::post('/users/{user}/export', [UserController::class, 'exportCertificates'])->name('export'); //
+        //Route::get('/{certificate}/preview', [UserController::class, 'previewCertificate'])->name('preview'); //
     });
 
     // Course Management
@@ -80,6 +126,7 @@ Route::middleware([
     Route::post('courses/{course}/publish', [CourseController::class, 'publish'])->name('courses.publish');
     Route::post('courses/{course}/unpublish', [CourseController::class, 'unpublish'])->name('courses.unpublish');
     Route::get('/courses/outline/{course}/outline', [CourseController::class, 'outline'])->name('courses.outline');
+
         //modules
     Route::get('/courses/modules/{course}/outline/mod', [CourseController::class, 'outline'])->name('quizzes.create');
     Route::get('/courses/modules/{course}/outline/mo', [CourseController::class, 'outline'])->name('courses.modules.edit');
@@ -142,6 +189,20 @@ Route::middleware([
         Route::post('/import', [EnrollmentController::class, 'import'])->name('import');
         Route::get('/export', [EnrollmentController::class, 'export'])->name('export');
         Route::get('/export-template', [EnrollmentController::class, 'exportTemplate'])->name('export-template');
+    });
+
+    //mass enrollment
+    Route::prefix('assign/courses')->group(function () {
+        Route::get('/mass-enrollment', [MassEnrollmentController::class, 'index'])
+            ->name('courses.mass-enrollment.index');
+        Route::post('/mass-enrollment', [MassEnrollmentController::class, 'store'])
+            ->name('courses.mass-enrollment.store');
+        Route::get('/{course}/mass-enrollment/eligible-students', [MassEnrollmentController::class, 'getEligibleStudents'])
+            ->name('courses.mass-enrollment.get-eligible-students');
+        Route::get('/{course}/mass-enrollment/stats', [MassEnrollmentController::class, 'getEnrollmentStats'])
+            ->name('courses.mass-enrollment.stats');
+        Route::post('/mass-enrollment/upload-csv', [MassEnrollmentController::class, 'uploadCsv'])
+            ->name('courses.mass-enrollment.upload-csv');
     });
 
 
@@ -216,6 +277,8 @@ Route::middleware([
     //email
     Route::get('/email', [EmailController::class, 'index'])->name('email.index');
     Route::post('/email/send', [EmailController::class, 'send'])->name('email.send');
+    Route::post('/email/segment-count', [EmailController::class, 'getSegmentCount'])->name('email.segment-count');
+    Route::get('/email/users/search', [UserController::class, 'search'])->name('users.search');
 
     // Notification routes
     Route::prefix('notifications')->group(function () {
@@ -251,6 +314,58 @@ Route::middleware([
     Route::put('catalog/enrollments/{enrollment}', [CoursesController::class, 'update'])->name('catalog.update.enrollment');
     Route::post('/catelog/courses/{course}/regenerate', [CoursesController::class, 'regenerate'])->name('catalog.courses.regenerate');
 
+    // Exam Prep Routes
+    Route::prefix('exam-preps')->name('exam-preps.')->group(function () {
+        Route::get('/', [ExamPrepController::class, 'index'])->name('index');
+        Route::get('/create', [ExamPrepController::class, 'create'])->name('create');
+        Route::post('/', [ExamPrepController::class, 'store'])->name('store');
+        Route::get('/{examPrep}', [ExamPrepController::class, 'show'])->name('show');
+        Route::get('/{examPrep}/edit', [ExamPrepController::class, 'edit'])->name('edit');
+        Route::put('/{examPrep}', [ExamPrepController::class, 'update'])->name('update');
+        Route::delete('/{examPrep}', [ExamPrepController::class, 'destroy'])->name('destroy');
+
+        // Additional routes for exam prep management
+        Route::post('/{examPrep}/generate-questions', [ExamPrepController::class, 'generateQuestions'])->name('generate-questions');
+        Route::post('/{examPrep}/publish', [ExamPrepController::class, 'publish'])->name('publish');
+        Route::post('/{examPrep}/archive', [ExamPrepController::class, 'archive'])->name('archive');
+        Route::get('/{examPrep}/statistics', [ExamPrepController::class, 'statistics'])->name('statistics');
+        Route::get('/{examPrep}/attempts', [ExamPrepController::class, 'attempts'])->name('attempts');
+    });
+
+    // Specializations CRUD
+    Route::get('/specializations', [SpecializationController::class, 'index'])->name('specializations.index');
+    Route::get('/specializations/create', [SpecializationController::class, 'create'])->name('specializations.create');
+    Route::post('/specializations', [SpecializationController::class, 'store'])->name('specializations.store');
+    Route::get('/specializations/{specialization}', [SpecializationController::class, 'show'])->name('specializations.show');
+    Route::get('/specializations/{specialization}/edit', [SpecializationController::class, 'edit'])->name('specializations.edit');
+    Route::put('/specializations/{specialization}', [SpecializationController::class, 'update'])->name('specializations.update');
+    Route::delete('/specializations/{specialization}', [SpecializationController::class, 'destroy'])->name('specializations.destroy');
+
+    // Specialization Actions
+    Route::post('/specializations/{specialization}/publish', [SpecializationController::class, 'publish'])->name('specializations.publish');
+    Route::post('/specializations/{specialization}/unpublish', [SpecializationController::class, 'unpublish'])->name('specializations.unpublish');
+    Route::post('/specializations/{specialization}/toggle-featured', [SpecializationController::class, 'toggleFeatured'])->name('specializations.toggle-featured');
+
+    // Course Management
+    Route::post('/specializations/{specialization}/courses', [SpecializationController::class, 'addCourse'])->name('specializations.add-course');
+    Route::delete('/specializations/{specialization}/courses/{course}', [SpecializationController::class, 'removeCourse'])->name('specializations.remove-course');
+    Route::put('/specializations/{specialization}/courses/{course}', [SpecializationController::class, 'updateCourseSettings'])->name('specializations.update-course-settings');
+    Route::put('/specializations/{specialization}/courses-order', [SpecializationController::class, 'updateCourseOrder'])->name('specializations.update-course-order');
+
+    // Resource Management
+    Route::post('/specializations/{specialization}/resources', [SpecializationController::class, 'addResource'])->name('specializations.add-resource');
+    Route::put('/specializations/{specialization}/resources/{resource}', [SpecializationController::class, 'updateResource'])->name('specializations.update-resource');
+    Route::delete('/specializations/{specialization}/resources/{resource}', [SpecializationController::class, 'deleteResource'])->name('specializations.delete-resource');
+    Route::put('/specializations/{specialization}/resources-order', [SpecializationController::class, 'reorderResources'])->name('specializations.reorder-resources');
+
+    // Enrollment Management
+    Route::get('/specializations/{specialization}/enrollments', [SpecializationController::class, 'enrollments'])->name('specializations.enrollments');
+    Route::post('/specializations/{specialization}/bulk-enroll', [SpecializationController::class, 'bulkEnroll'])->name('specializations.bulk-enroll');
+
+    // Course Search (for adding courses to specializations)
+    Route::get('/courses/search/specialize', [CourseSearchController::class, 'search'])->name('courses.search');
+
+
 
     /**
     // Community Management
@@ -283,7 +398,7 @@ Route::middleware([
 
  */
     // user search route
-    Route::get('/users/search', function (Request $request) {
+    Route::get('/users/search/all', function (Request $request) {
         try {
             $search = $request->get('search', '');
             $limit = $request->get('limit', 20);
@@ -319,9 +434,9 @@ Route::middleware([
             \Log::error('User search error: ' . $e->getMessage());
             return response()->json([], 500);
         }
-    })->name('users.search');
+    })->name('users.search.all');
 
-    Route::get('/users/by-role/{role}', function ($role) {
+    Route::get('/users/by-role/all/{role}', function ($role) {
         try {
             $validRoles = ['admin', 'student', 'tutor', 'organization'];
 

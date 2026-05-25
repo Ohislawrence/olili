@@ -17,6 +17,7 @@ class Course extends Model
 {
     use HasFactory;
 
+    protected $with = ['specializations'];
     protected $fillable = [
         'code',
         'exam_board_id',
@@ -24,6 +25,7 @@ class Course extends Model
         'slug',
         'thumbnail_url',
         'subject',
+        'subject_id',
         'description',
         'syllabus',
         'level',
@@ -60,6 +62,8 @@ class Course extends Model
         'quiz_generation_started_at',
         'quiz_generation_retry_count',
         'est_completion_time',
+        'has_certificate',
+
     ];
 
     protected $casts = [
@@ -77,13 +81,13 @@ class Course extends Model
         'price' => 'decimal:2',
         'visibility' => 'string',
         'needs_content_generation' => 'boolean',
-    'content_generated_at' => 'datetime',
-    'quiz_generated_at' => 'datetime',
-    'content_generation_started_at' => 'datetime',
-    'quiz_generation_started_at' => 'datetime',
-    'content_generation_summary' => 'array',
-    'quiz_generation_summary' => 'array',
-    ];
+        'content_generated_at' => 'datetime',
+        'quiz_generated_at' => 'datetime',
+        'content_generation_started_at' => 'datetime',
+        'quiz_generation_started_at' => 'datetime',
+        'content_generation_summary' => 'array',
+        'quiz_generation_summary' => 'array',
+        ];
 
     // Relationships
     public function modules(): HasMany
@@ -108,6 +112,12 @@ class Course extends Model
         return $this->belongsTo(ExamBoard::class);
     }
 
+    public function subject(): BelongsTo
+    {
+        return $this->belongsTo(Subject::class, 'subject_id');
+    }
+
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_user_id');
@@ -128,6 +138,11 @@ class Course extends Model
     public function enrolled()
     {
         return $this->enrollments()->whereIn('status', ['enrolled']);
+    }
+
+    public function enrolledCount()
+    {
+        return $this->enrollments()->whereIn('status', ['enrolled','active'])->count();
     }
 
     public function activeEnrollments()
@@ -184,8 +199,17 @@ class Course extends Model
         return $this->current_enrollment >= $this->enrollment_limit;
     }
 
-    public function canEnroll(User $user): bool
+    public function canEnroll($user): bool
     {
+        // Handle if user is passed as ID or null
+        if (is_numeric($user)) {
+            $user = User::find($user);
+        }
+
+        if (!$user || !($user instanceof User)) {
+            return false;
+        }
+
         // Check if course is available
         if (!$this->isPublic() || $this->status !== 'active') {
             return false;
@@ -197,7 +221,7 @@ class Course extends Model
         }
 
         // Check if user is already enrolled
-        if ($this->enrollments()->where('user_id', $user->id)->exists()) {
+        if ($this->enrollments()->where('status', '!=', 'dropped')->where('user_id', $user->id)->exists()) {
             return false;
         }
 
@@ -211,22 +235,34 @@ class Course extends Model
         return true;
     }
 
-    public function enrollStudent(User $user): ?CourseEnrollment
+    public function enrollStudent(User $user, bool $isMassEnrollment = false): ?CourseEnrollment
     {
-        if (!$this->canEnroll($user)) {
+        // For mass enrollment, skip some checks
+        if (!$isMassEnrollment && !$this->canEnroll($user)) {
             return null;
         }
+
         $numberOfWeeks = $this->estimated_duration_hours / 6;
         $expectedCompletionDate = Carbon::now()->addWeeks(ceil($numberOfWeeks));
 
         try {
             \DB::beginTransaction();
 
+            // Check if already enrolled (not dropped)
+            $existingEnrollment = $this->enrollments()
+                ->where('user_id', $user->id)
+                ->where('status', '!=', 'dropped')
+                ->first();
+
+            if ($existingEnrollment) {
+                return null; // Already enrolled
+            }
+
             // Create enrollment record
             $enrollment = CourseEnrollment::create([
                 'course_id' => $this->id,
                 'user_id' => $user->id,
-                'student_profile_id' => $user->studentProfile->id,
+                'student_profile_id' => $user->studentProfile?->id,
                 'status' => 'enrolled',
                 'enrolled_at' => now(),
                 'total_modules' => $this->modules()->count(),
@@ -365,5 +401,10 @@ class Course extends Model
         return $this->hasMany(ProgressTracking::class);
     }
 
-
+    public function specializations()
+    {
+        return $this->belongsToMany(Specialization::class, 'specialization_courses')
+            ->withPivot(['order', 'is_required', 'category', 'recommended_weeks', 'notes'])
+            ->orderByPivot('order');
+    }
 }

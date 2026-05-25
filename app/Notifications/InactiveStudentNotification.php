@@ -19,27 +19,54 @@ class InactiveStudentNotification extends Notification implements ShouldQueue
 
     public function via($notifiable): array
     {
-        return ['mail', 'database'];
+        $channels = [ 'database']; //i removed mail
+
+        if (method_exists($notifiable, 'routeNotificationForWebPush') &&
+            $notifiable->routeNotificationForWebPush()) {
+            $channels[] = 'web-push';
+        }
+
+        return $channels;
     }
 
     public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject("Reminder: Continue Your Course - {$this->course->title}")
-            ->line("We noticed you haven't made progress on your course '{$this->course->title}' for {$this->daysInactive} days.")
-            ->line("Don't forget to continue your learning journey!")
-            ->action('Continue Learning', url("/courses/{$this->course->id}"))
-            ->line('Stay motivated and keep learning!');
+            ->subject("We Miss You! {$this->daysInactive} Days Inactive in {$this->course->title}")
+            ->greeting("Hey {$notifiable->name},")
+            ->line("We noticed you haven't made progress on **{$this->course->title}** for {$this->daysInactive} " .
+                   ($this->daysInactive === 1 ? 'day' : 'days') . ".")
+            ->line("Current Progress: **" . $this->getUserProgress($notifiable) . "%**")
+            ->line("Remember why you started! Every small step brings you closer to your goal.")
+            ->action('Jump Back In', route('courses.show', ['id' => $this->course->id, 'slug' => $this->course->slug]))
+            ->line("Need help getting started? Try:")
+            ->line("- Review the last topic you completed")
+            ->line("- Take a quick quiz to refresh your memory")
+            ->line("- Watch a short video lesson")
+            ->salutation('You got this!<br>' . config('app.name'));
     }
 
     public function toArray($notifiable): array
     {
         return [
+            'type' => 'student_inactive',
             'course_id' => $this->course->id,
             'course_title' => $this->course->title,
+            'course_code' => $this->course->code,
             'days_inactive' => $this->daysInactive,
-            'message' => "You haven't progressed in '{$this->course->title}' for {$this->daysInactive} days.",
-            'type' => 'inactive_student',
+            'progress_percentage' => $this->getUserProgress($notifiable),
+            'message' => "You've been inactive for {$this->daysInactive} days in '{$this->course->title}'",
+            'action_url' => route('courses.show', ['id' => $this->course->id, 'slug' => $this->course->slug]),
+            'timestamp' => now()->toDateTimeString(),
         ];
+    }
+
+    private function getUserProgress($notifiable): float
+    {
+        $enrollment = $notifiable->enrollments()
+            ->where('course_id', $this->course->id)
+            ->first();
+
+        return $enrollment ? (float) $enrollment->progress_percentage : 0.0;
     }
 }

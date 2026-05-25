@@ -40,6 +40,8 @@ class SubscriptionPlanController extends Controller
             'features' => 'required|array',
             'max_courses' => 'required|integer|min:-1',
             'max_ai_requests_per_month' => 'required|integer|min:-1',
+            'max_flashcard' => 'required|integer|min:-1',
+            'max_exam_prep' => 'required|integer|min:-1',
             'ai_grading' => 'boolean',
             'priority_support' => 'boolean',
             'is_active' => 'boolean',

@@ -1,3 +1,4 @@
+[file name]: GuestLayout.vue
 <template>
   <div class="font-sans bg-white min-h-screen flex flex-col">
     <!-- Header -->
@@ -17,10 +18,153 @@
             </Link>
           </div>
 
+          <!-- Explore Dropdown -->
+        <div class="hidden lg:flex items-center relative group">
+        <button
+            @click="toggleExploreDropdown"
+            @mouseenter="showExploreDropdown = true"
+            @mouseleave="startExploreHideTimer"
+            class="flex items-center space-x-1.5 text-gray-700 hover:text-emerald-600 text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-all duration-200"
+            aria-label="Explore courses by category"
+        >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+            <span>Explore</span>
+        </button>
 
+        <!-- Explore Mega Menu -->
+        <div
+            v-if="showExploreDropdown"
+            @mouseenter="showExploreDropdown = true; clearExploreHideTimer()"
+            @mouseleave="startExploreHideTimer()"
+            class="absolute top-full left-0 mt-2 w-[800px] bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 animate-slide-down overflow-hidden"
+        >
+            <div class="grid grid-cols-4 divide-x divide-gray-100">
+            <!-- Academic Exams Column -->
+            <div class="p-6">
+                <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center mr-3">
+                    🎓
+                </span>
+                Academic Exams
+                </h3>
+                <ul class="space-y-3">
+                <li v-for="exam in academicExams" :key="exam.id">
+                    <Link
+                    :href="exam.route"
+                    @click="closeExploreDropdown"
+                    class="text-sm text-gray-700 hover:text-emerald-600 hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors flex items-center group"
+                    >
+                    <span class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover:bg-emerald-500 mr-3 transition-colors"></span>
+                    {{ exam.name }}
+                    <span v-if="exam.count" class="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                        {{ exam.count }}
+                    </span>
+                    </Link>
+                </li>
+                </ul>
+            </div>
 
-          <!-- Centered Search Bar (Desktop) -->
-          <div class="hidden lg:flex flex-1 max-w-xl mx-8">
+            <!-- Professional Certifications Column -->
+            <div class="p-6">
+                <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center mr-3">
+                    📜
+                </span>
+                Professional
+                </h3>
+                <ul class="space-y-3">
+                <li v-for="cert in professionalCerts" :key="cert.id">
+                    <Link
+                    :href="cert.route"
+                    @click="closeExploreDropdown"
+                    class="text-sm text-gray-700 hover:text-emerald-600 hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors flex items-center group"
+                    >
+                    <span class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover:bg-emerald-500 mr-3 transition-colors"></span>
+                    {{ cert.name }}
+                    <span v-if="cert.count" class="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                        {{ cert.count }}
+                    </span>
+                    </Link>
+                </li>
+                </ul>
+            </div>
+
+            <!-- Career Skills Column -->
+            <div class="p-6">
+                <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center mr-3">
+                    💼
+                </span>
+                Career Skills
+                </h3>
+                <ul class="space-y-3">
+                <li v-for="skill in careerSkills" :key="skill.id">
+                    <Link
+                    :href="skill.route"
+                    @click="closeExploreDropdown"
+                    class="text-sm text-gray-700 hover:text-emerald-600 hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors flex items-center group"
+                    >
+                    <span class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover:bg-emerald-500 mr-3 transition-colors"></span>
+                    {{ skill.name }}
+                    <span v-if="skill.count" class="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                        {{ skill.count }}
+                    </span>
+                    </Link>
+                </li>
+                </ul>
+            </div>
+
+            <!-- Popular Subjects Column -->
+            <div class="p-6">
+                <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center mr-3">
+                    📚
+                </span>
+                Popular Subjects
+                </h3>
+                <ul class="space-y-3">
+                <li v-for="subject in popularSubjects" :key="subject.id">
+                    <Link
+                    :href="subject.route"
+                    @click="closeExploreDropdown"
+                    class="text-sm text-gray-700 hover:text-emerald-600 hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors flex items-center group"
+                    >
+                    <span class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover:bg-emerald-500 mr-3 transition-colors"></span>
+                    {{ subject.name }}
+                    <span v-if="subject.count" class="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                        {{ subject.count }}
+                    </span>
+                    </Link>
+                </li>
+                </ul>
+            </div>
+            </div>
+
+            <!-- Bottom CTA -->
+            <div class="bg-gradient-to-r from-emerald-50 to-blue-50 border-t border-gray-100 p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                <svg class="w-5 h-5 text-emerald-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <span class="text-sm text-gray-700">All courses include AI tutor support</span>
+                </div>
+                <Link
+                :href="route('courses.index')"
+                @click="closeExploreDropdown"
+                class="text-sm font-medium text-emerald-600 hover:text-emerald-700"
+                >
+                View all courses →
+                </Link>
+            </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Centered Search Bar (Desktop) -->
+        <div class="hidden lg:flex flex-1 max-w-xl mx-8">
             <div class="relative w-full group">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg class="h-4 w-4 text-gray-400 group-hover:text-emerald-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -29,15 +173,16 @@
               </div>
               <input
                 type="text"
-                v-model="globalSearch"
+                v-model="searchQuery"
                 placeholder="Search courses, topics, skills..."
                 class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 hover:bg-white hover:border-gray-300"
-                @keyup.enter="handleGlobalSearch"
-                @focus="showSearchSuggestions = true"
-                @blur="setTimeout(() => showSearchSuggestions = false, 200)"
+                @keyup.enter="performSearch"
+                @input="handleSearchInput"
+                @focus="showSuggestions = true"
+                @blur="onSearchBlur"
               />
               <button
-                @click="handleGlobalSearch"
+                @click="performSearch"
                 class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-emerald-600 transition-colors p-1.5 rounded-lg hover:bg-emerald-50"
                 aria-label="Search"
               >
@@ -46,25 +191,71 @@
                 </svg>
               </button>
 
-              <!-- Search Suggestions -->
+              <!-- Search Suggestions Dropdown -->
               <div
-                v-if="showSearchSuggestions && globalSearch.trim() && popularSearches.length > 0"
-                class="absolute top-full mt-1 w-full bg-white rounded-xl border border-gray-200 shadow-lg py-2 z-50"
+                v-if="showSuggestions && (filteredCourses.length > 0 || filteredPopularSearches.length > 0)"
+                class="absolute top-full mt-1 w-full bg-white rounded-xl border border-gray-200 shadow-lg py-2 z-50 max-h-96 overflow-y-auto"
               >
-                <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Popular Searches
+                <!-- Courses Section -->
+                <div v-if="filteredCourses.length > 0">
+                  <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                    Courses
+                  </div>
+                  <div
+                    v-for="course in filteredCourses"
+                    :key="course.id"
+                    @click="goToCourse(course)"
+                    @mousedown.prevent
+                    class="px-3 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer flex items-start group"
+                  >
+                    <div class="flex-shrink-0 mr-3 mt-0.5">
+                      <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="font-medium text-gray-900 group-hover:text-emerald-700 truncate">{{ course.title }}</div>
+                      <div class="flex items-center mt-1 space-x-2">
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ course.level }}</span>
+                        <span class="text-xs text-gray-500">{{ course.subject }}</span>
+                        <span v-if="course.is_free" class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Free</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
+                <!-- Popular Searches Section -->
+                <div v-if="filteredPopularSearches.length > 0">
+                  <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider border-t border-gray-100">
+                    Popular Searches
+                  </div>
+                  <div
+                    v-for="search in filteredPopularSearches"
+                    :key="search"
+                    @click="selectPopularSearch(search)"
+                    @mousedown.prevent
+                    class="px-3 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer flex items-center group"
+                  >
+                    <svg class="w-4 h-4 mr-3 text-gray-400 group-hover:text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    {{ search }}
+                  </div>
+                </div>
+
+                <!-- View All Results -->
                 <div
-                  v-for="search in popularSearches"
-                  :key="search"
-                  @click="selectSearchSuggestion(search)"
+                  v-if="searchQuery.trim() && filteredCourses.length > 0"
+                  @click="performSearch"
                   @mousedown.prevent
-                  class="px-3 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer flex items-center group"
+                  class="px-3 py-3 text-sm font-medium text-emerald-600 hover:bg-emerald-50 cursor-pointer border-t border-gray-100 flex items-center justify-center group"
                 >
-                  <svg class="w-4 h-4 mr-3 text-gray-400 group-hover:text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  View all results for "{{ searchQuery }}"
+                  <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
-                  {{ search }}
                 </div>
               </div>
             </div>
@@ -83,20 +274,88 @@
               </svg>
             </button>
 
-            <!-- Desktop Auth Buttons -->
+            <!-- Desktop Auth Buttons / User Menu -->
             <div class="hidden lg:flex items-center space-x-4">
-              <Link
-                :href="route('login')"
-                class="text-gray-700 hover:text-emerald-600 text-sm font-medium transition-colors px-4 py-2 rounded-lg hover:bg-gray-50"
-              >
-                Sign In
-              </Link>
-              <Link
-                :href="route('register')"
-                class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5"
-              >
-                Start Learning Free
-              </Link>
+              <!-- Guest State: Show Sign In/Register buttons -->
+              <template v-if="!$page.props.auth.user">
+                <Link
+                  :href="route('login')"
+                  class="text-gray-700 hover:text-emerald-600 text-sm font-medium transition-colors px-4 py-2 rounded-lg hover:bg-gray-50"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  :href="route('register')"
+                  class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5"
+                >
+                  Start Learning Free
+                </Link>
+              </template>
+
+              <!-- Authenticated State: Show notification and profile dropdown -->
+              <template v-else>
+                <!-- Right-side controls -->
+                <div class="flex items-center space-x-2">
+                  <!-- Notifications -->
+                  <Link
+                    :href="route('student.notifications.index')"
+                    class="relative p-2.5 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50/80 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transform hover:scale-105 group"
+                  >
+                    <BellIcon class="h-5 w-5 transform group-hover:shake-animation" />
+                    <span
+                      v-if="unreadNotificationCount > 0"
+                      class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow-sm"
+                    ></span>
+                  </Link>
+
+                  <!-- Profile Dropdown -->
+                  <Dropdown align="right" width="48">
+                    <template #trigger>
+                      <button class="flex text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all duration-300 transform hover:scale-105 group">
+                        <img
+                          class="h-9 w-9 rounded-full object-cover border-2 border-emerald-200 ring-2 ring-white shadow-sm group-hover:shadow-md transition-all duration-300"
+                          :src="$page.props.auth.user.profile_photo_url"
+                          :alt="$page.props.auth.user.name"
+                        />
+                      </button>
+                    </template>
+
+                    <template #content>
+                      <div class="px-4 py-3 border-b border-gray-100/50 bg-gradient-to-r from-gray-50 to-white">
+                        <p class="text-sm font-semibold text-gray-900">{{ $page.props.auth.user.name }}</p>
+                        <p class="text-sm text-gray-500 mt-0.5">{{ $page.props.auth.user.email }}</p>
+                      </div>
+
+                      <div class="py-1 bg-white">
+                        <DropdownLink
+                          :href="route('student.profile.show')"
+                          class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50/80 hover:text-emerald-700 transition-all duration-200 group"
+                        >
+                          Profile
+                        </DropdownLink>
+                        <DropdownLink
+                          :href="route('payment.pricing')"
+                          class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50/80 hover:text-emerald-700 transition-all duration-200 group"
+                        >
+                          Billing
+                        </DropdownLink>
+                      </div>
+
+                      <div class="border-t border-gray-100/50" />
+
+                      <form @submit.prevent="logout">
+                        <DropdownLink
+                          as="button"
+                          class="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50/80 hover:text-red-700 transition-all duration-200 group"
+                        >
+                          <ArrowRightOnRectangleIcon class="h-4 w-4 mr-3 text-gray-400 transform group-hover:scale-110 transition-transform duration-300" />
+                          Log Out
+                        </DropdownLink>
+                      </form>
+                    </template>
+                  </Dropdown>
+                </div>
+              </template>
             </div>
 
             <!-- Mobile Menu Button -->
@@ -126,13 +385,16 @@
             </div>
             <input
               type="text"
-              v-model="globalSearch"
+              v-model="searchQuery"
               placeholder="Search courses..."
               class="w-full pl-10 pr-12 py-3 text-sm rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-              @keyup.enter="handleGlobalSearch"
+              @keyup.enter="performSearch"
+              @input="handleSearchInput"
+              @focus="showSuggestions = true"
+              @blur="onSearchBlur"
             />
             <button
-              @click="handleGlobalSearch"
+              @click="performSearch"
               class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-emerald-600 transition-colors"
               aria-label="Search"
             >
@@ -141,6 +403,74 @@
               </svg>
             </button>
           </div>
+
+          <!-- Mobile Search Suggestions -->
+          <div
+            v-if="showSuggestions && (filteredCourses.length > 0 || filteredPopularSearches.length > 0)"
+            class="mt-4 bg-white rounded-xl border border-gray-200 shadow-lg py-2 max-h-80 overflow-y-auto"
+          >
+            <!-- Courses Section -->
+            <div v-if="filteredCourses.length > 0">
+              <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                Courses
+              </div>
+              <div
+                v-for="course in filteredCourses"
+                :key="course.id"
+                @click="goToCourse(course)"
+                @mousedown.prevent
+                class="px-3 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer flex items-start group"
+              >
+                <div class="flex-shrink-0 mr-3 mt-0.5">
+                  <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="font-medium text-gray-900 group-hover:text-emerald-700 truncate">{{ course.title }}</div>
+                  <div class="flex flex-wrap items-center mt-1 space-x-2">
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 mb-1">{{ course.level }}</span>
+                    <span class="text-xs text-gray-500 mb-1">{{ course.subject }}</span>
+                    <span v-if="course.is_free" class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 mb-1">Free</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Popular Searches Section -->
+            <div v-if="filteredPopularSearches.length > 0">
+              <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider border-t border-gray-100">
+                Popular Searches
+              </div>
+              <div
+                v-for="search in filteredPopularSearches"
+                :key="search"
+                @click="selectPopularSearch(search)"
+                @mousedown.prevent
+                class="px-3 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer flex items-center group"
+              >
+                <svg class="w-4 h-4 mr-3 text-gray-400 group-hover:text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                {{ search }}
+              </div>
+            </div>
+
+            <!-- View All Results -->
+            <div
+              v-if="searchQuery.trim() && filteredCourses.length > 0"
+              @click="performSearch"
+              @mousedown.prevent
+              class="px-3 py-3 text-sm font-medium text-emerald-600 hover:bg-emerald-50 cursor-pointer border-t border-gray-100 flex items-center justify-center group"
+            >
+              View all results for "{{ searchQuery }}"
+              <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </div>
+          </div>
         </div>
 
         <!-- Mobile Menu -->
@@ -148,6 +478,47 @@
           v-if="showMobileMenu"
           class="lg:hidden py-4 border-t border-gray-100 animate-slide-down bg-white/95 backdrop-blur-sm"
         >
+        <button
+  @click="toggleMobileExplore"
+  class="block w-full text-left px-3 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors flex items-center justify-between"
+>
+  <span class="flex items-center">
+    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+    </svg>
+    Explore Categories
+  </span>
+  <svg class="w-5 h-5 transform transition-transform" :class="{ 'rotate-180': showMobileExplore }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+  </svg>
+</button>
+
+<!-- Mobile explore dropdown -->
+<div v-if="showMobileExplore" class="pl-8 space-y-1 mt-2">
+  <!-- Academic Exams -->
+  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Academic Exams</div>
+  <Link
+    v-for="exam in academicExams"
+    :key="exam.id"
+    :href="exam.route"
+    @click="showMobileMenu = false"
+    class="block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+  >
+    {{ exam.name }}
+  </Link>
+
+  <!-- Professional Certs -->
+  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-4 mb-2">Professional</div>
+  <Link
+    v-for="cert in professionalCerts"
+    :key="cert.id"
+    :href="cert.route"
+    @click="showMobileMenu = false"
+    class="block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+  >
+    {{ cert.name }}
+  </Link>
+</div>
           <div class="space-y-1">
             <Link
               v-for="item in navItems"
@@ -165,20 +536,67 @@
             </Link>
           </div>
           <div class="mt-6 pt-6 border-t border-gray-100 space-y-4">
-            <Link
-              :href="route('login')"
-              @click="showMobileMenu = false"
-              class="block w-full text-center text-gray-700 hover:text-emerald-600 text-base font-medium py-2.5 rounded-lg border border-gray-200 hover:border-emerald-200 transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link
-              :href="route('register')"
-              @click="showMobileMenu = false"
-              class="block w-full text-center bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-base font-medium py-3 rounded-xl shadow-sm hover:shadow-md transition-all"
-            >
-              Start Learning Free
-            </Link>
+            <!-- Mobile Auth Links (only show for guests) -->
+            <template v-if="!$page.props.auth.user">
+              <Link
+                :href="route('login')"
+                @click="showMobileMenu = false"
+                class="block w-full text-center text-gray-700 hover:text-emerald-600 text-base font-medium py-2.5 rounded-lg border border-gray-200 hover:border-emerald-200 transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                :href="route('register')"
+                @click="showMobileMenu = false"
+                class="block w-full text-center bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-base font-medium py-3 rounded-xl shadow-sm hover:shadow-md transition-all"
+              >
+                Start Learning Free
+              </Link>
+            </template>
+
+            <!-- Mobile Authenticated Menu (only show for logged in users) -->
+            <template v-else>
+              <div class="space-y-1">
+                <Link
+                  :href="route('student.notifications.index')"
+                  @click="showMobileMenu = false"
+                  class="block px-3 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors flex items-center"
+                >
+                  <BellIcon class="h-5 w-5 mr-3" />
+                  Notifications
+                  <span
+                    v-if="unreadNotificationCount > 0"
+                    class="ml-2 w-3 h-3 bg-red-500 rounded-full"
+                  ></span>
+                </Link>
+                <Link
+                  :href="route('student.profile.show')"
+                  @click="showMobileMenu = false"
+                  class="block px-3 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors flex items-center"
+                >
+                  <UserCircleIcon class="h-5 w-5 mr-3" />
+                  Profile
+                </Link>
+                <Link
+                  :href="route('payment.pricing')"
+                  @click="showMobileMenu = false"
+                  class="block px-3 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors flex items-center"
+                >
+                  <CreditCardIcon class="h-5 w-5 mr-3" />
+                  Billing
+                </Link>
+                <form @submit.prevent="logout" class="w-full">
+                  <button
+                    type="submit"
+                    @click="showMobileMenu = false"
+                    class="block w-full text-left px-3 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors flex items-center"
+                  >
+                    <ArrowRightOnRectangleIcon class="h-5 w-5 mr-3" />
+                    Log Out
+                  </button>
+                </form>
+              </div>
+            </template>
           </div>
         </div>
       </div>
@@ -250,7 +668,7 @@
                 </div>
               </Link>
               <p class="text-gray-600 text-sm leading-relaxed max-w-md mb-6">
-                Transforming education through AI-powered personalized learning. We help learners worldwide achieve their goals with smart, adaptive courses and expert guidance.
+                Empowering learners with AI-driven personalized education, adaptive courses, and expert guidance to transform goals into achievements
               </p>
               <div class="flex space-x-4">
                 <a
@@ -326,10 +744,10 @@
                 <svg class="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                 </svg>
-                <span>Trusted by 10,000+ learners in Nigeria</span>
+                <span>Trusted by 10,000+ learners across Africa</span>
               </div>
               <div class="flex items-center space-x-2">
-                <img src="/images/secure-payment.svg" alt="Secure Payment" class="h-6" />
+                <img src="/images/secure-payment.png" alt="Secure Payment" class="h-6" />
                 <span class="text-xs text-gray-500">Secure Payment</span>
               </div>
             </div>
@@ -354,26 +772,248 @@
 
 <script setup>
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { ref, computed, onMounted, onUnmounted, h } from 'vue';
+import { ref, computed, onMounted, onUnmounted, h, watch } from 'vue';
+import { debounce } from 'lodash-es';
+import Dropdown from '@/Components/Dropdown.vue';
+import DropdownLink from '@/Components/DropdownLink.vue';
+import { BellIcon, UserCircleIcon, CreditCardIcon, ArrowRightOnRectangleIcon } from '@heroicons/vue/24/outline';
+
+// Search state
+const searchQuery = ref('');
+const showSuggestions = ref(false);
+const isSearching = ref(false);
+
+const showExploreDropdown = ref(false);
+let exploreHideTimer = null;
+
+const showMobileExplore = ref(false);
+
+const toggleMobileExplore = () => {
+  showMobileExplore.value = !showMobileExplore.value;
+};
+
+// Course data
+const courses = ref([]);
+const popularSearches = ref([
+  'Python Programming',
+  'Data Science',
+  'Web Development',
+  'Machine Learning',
+  'Digital Marketing',
+  'Business Analytics',
+  'Artificial Intelligence',
+  'Graphic Design',
+  'JavaScript',
+  'React',
+  'Vue.js',
+  'Laravel',
+  'Python Django',
+  'Mobile Development',
+  'UI/UX Design',
+  'Cloud Computing',
+  'Cybersecurity',
+  'Blockchain',
+  'DevOps',
+  'SQL Database'
+]);
+
+// Filtered results
+const filteredCourses = computed(() => {
+  if (!searchQuery.value.trim()) {
+    // Show top courses when empty
+    return courses.value.slice(0, 5);
+  }
+
+  const query = searchQuery.value.toLowerCase().trim();
+  return courses.value.filter(course => {
+    return (
+      course.title.toLowerCase().includes(query) ||
+      course.description?.toLowerCase().includes(query) ||
+      course.subject?.toLowerCase().includes(query) ||
+      course.tags?.some(tag => tag.toLowerCase().includes(query))
+    );
+  }).slice(0, 5);
+});
+
+const filteredPopularSearches = computed(() => {
+  if (!searchQuery.value.trim()) {
+    return popularSearches.value.slice(0, 4);
+  }
+
+  const query = searchQuery.value.toLowerCase().trim();
+  return popularSearches.value.filter(search =>
+    search.toLowerCase().includes(query)
+  ).slice(0, 4);
+});
+
+// Search functions
+const handleSearchInput = debounce(async () => {
+  if (searchQuery.value.trim().length >= 2) {
+    isSearching.value = true;
+    try {
+      // Fetch courses from API
+      await fetchCourses(searchQuery.value);
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      isSearching.value = false;
+    }
+  }
+}, 300);
+
+const performSearch = () => {
+  if (searchQuery.value.trim()) {
+    router.visit(route('courses.index', {
+      search: searchQuery.value.trim(),
+      q: searchQuery.value.trim()
+    }), {
+      preserveScroll: false,
+      preserveState: false
+    });
+    showSuggestions.value = false;
+    showMobileSearch.value = false;
+  } else {
+    router.visit(route('courses.index'));
+  }
+};
+
+const selectPopularSearch = (searchTerm) => {
+  searchQuery.value = searchTerm;
+  performSearch();
+};
+
+const goToCourse = (course) => {
+  router.visit(
+  route('courses.show', {
+    id: course.id,
+    slug: course.slug
+  }),
+  {
+    preserveScroll: false,
+    preserveState: false
+  }
+);
+  showSuggestions.value = false;
+  showMobileSearch.value = false;
+};
+
+const onSearchBlur = () => {
+  setTimeout(() => {
+    showSuggestions.value = false;
+  }, 200);
+};
+
+// Fetch courses from API
+const fetchCourses = async (query = '') => {
+  try {
+    const response = await fetch(route('api.courses.search', {
+      search: query,
+      limit: 10,
+      public_only: true
+    }));
+
+    if (response.ok) {
+      const data = await response.json();
+      courses.value = data.courses || data.data || [];
+    }
+  } catch (error) {
+    console.error('Failed to fetch courses:', error);
+    // Fallback to sample data if API fails
+    courses.value = getSampleCourses();
+  }
+};
+
+// Sample courses for demonstration
+const getSampleCourses = () => [
+  {
+    id: 1,
+    title: 'Complete Python Bootcamp: From Zero to Hero',
+    slug: 'complete-python-bootcamp',
+    description: 'Learn Python like a Professional! Start from the basics and go all the way to creating your own applications.',
+    subject: 'Programming',
+    level: 'Beginner',
+    is_free: true,
+    tags: ['python', 'programming', 'beginner']
+  },
+  {
+    id: 2,
+    title: 'Data Science and Machine Learning Bootcamp',
+    slug: 'data-science-ml-bootcamp',
+    description: 'Complete Data Science Training: Mathematics, Statistics, Python, Advanced Statistics in Python, Machine & Deep Learning',
+    subject: 'Data Science',
+    level: 'Intermediate',
+    is_free: false,
+    tags: ['data-science', 'machine-learning', 'python']
+  },
+  {
+    id: 3,
+    title: 'The Complete Web Development Bootcamp',
+    slug: 'complete-web-development',
+    description: 'Become a full-stack web developer with just one course. HTML, CSS, Javascript, Node, React, MongoDB and more!',
+    subject: 'Web Development',
+    level: 'Beginner',
+    is_free: true,
+    tags: ['web-development', 'javascript', 'react', 'node']
+  },
+  {
+    id: 4,
+    title: 'Machine Learning A-Z: Hands-On Python',
+    slug: 'machine-learning-hands-on',
+    description: 'Learn to create Machine Learning Algorithms in Python from two Data Science experts.',
+    subject: 'Machine Learning',
+    level: 'Advanced',
+    is_free: false,
+    tags: ['machine-learning', 'python', 'ai']
+  },
+  {
+    id: 5,
+    title: 'Digital Marketing Masterclass',
+    slug: 'digital-marketing-masterclass',
+    description: 'Get a job in digital marketing, become an influencer, or grow your business. Ultimate digital marketing course.',
+    subject: 'Marketing',
+    level: 'Beginner',
+    is_free: true,
+    tags: ['marketing', 'digital-marketing', 'business']
+  }
+];
+
+// Mobile menu state
+const showMobileSearch = ref(false);
+const showMobileMenu = ref(false);
+
+const toggleMobileSearch = () => {
+  showMobileSearch.value = !showMobileSearch.value;
+  showMobileMenu.value = false;
+  if (showMobileSearch.value) {
+    // Focus the search input when opened on mobile
+    setTimeout(() => {
+      const input = document.querySelector('.lg:hidden input[type="text"]');
+      if (input) input.focus();
+    }, 100);
+  }
+};
+
+const toggleMobileMenu = () => {
+  showMobileMenu.value = !showMobileMenu.value;
+  showMobileSearch.value = false;
+};
 
 // Current year for copyright
 const currentYear = new Date().getFullYear();
 
-// Navigation items
+// Navigation items (unchanged)
 const navItems = [
-    { name: 'Home', route: route('welcome'), component: 'frontpages/Welcome' },
+  { name: 'Home', route: route('welcome'), component: 'frontpages/Welcome' },
   { name: 'Features', route: route('features'), component: 'frontpages/Features' },
   { name: 'Pricing', route: route('pricing'), component: 'frontpages/Pricing' },
-
-
 ];
 
-// Footer links
+// Footer links (unchanged)
 const quickLinks = [
   { name: 'Browse Courses', route: route('courses.index') },
-  { name: 'Learning Paths', route: route('learning-paths') },
-  { name: 'AI Tutor', route: route('ai-tutor') },
-  { name: 'For Teams', route: route('teams') },
+  { name: 'WAEC', route: route('waeclanding') },
+  { name: 'JAMB', route: route('jamblanding') },
+  { name: 'Schools/Organizations', route: route('teams') },
   { name: 'Home', route: route('welcome'), component: 'frontpages/Welcome' },
   { name: 'About', route: route('about'), component: 'frontpages/About' },
 ];
@@ -395,7 +1035,7 @@ const legalLinks = [
   { name: 'GDPR Compliance', route: route('gdpr') },
 ];
 
-// Social media links with icons
+// Social media links (unchanged)
 const socialLinks = [
   {
     name: 'Twitter',
@@ -426,7 +1066,7 @@ const socialLinks = [
   },
 ];
 
-// Newsletter
+// Newsletter (unchanged)
 const newsletterEmail = ref('');
 const newsletterLoading = ref(false);
 
@@ -436,7 +1076,6 @@ const subscribeNewsletter = async () => {
   newsletterLoading.value = true;
   try {
     await new Promise(resolve => setTimeout(resolve, 1500));
-    // In a real app, you would make an API call here
     console.log('Subscribed:', newsletterEmail.value);
     alert('Thank you for subscribing to our newsletter!');
     newsletterEmail.value = '';
@@ -445,62 +1084,6 @@ const subscribeNewsletter = async () => {
   } finally {
     newsletterLoading.value = false;
   }
-};
-
-// Global search
-const globalSearch = ref('');
-const showMobileSearch = ref(false);
-const showSearchSuggestions = ref(false);
-
-// Popular search suggestions
-const popularSearches = computed(() => {
-  const searches = [
-    'Python Programming',
-    'Data Science',
-    'Web Development',
-    'Machine Learning',
-    'Digital Marketing',
-    'Business Analytics',
-    'Artificial Intelligence',
-    'Graphic Design'
-  ];
-
-  if (!globalSearch.value.trim()) return searches.slice(0, 4);
-
-  return searches.filter(search =>
-    search.toLowerCase().includes(globalSearch.value.toLowerCase())
-  ).slice(0, 4);
-});
-
-const handleGlobalSearch = () => {
-  if (globalSearch.value.trim()) {
-    router.visit(route('courses.index', { search: globalSearch.value.trim() }), {
-      preserveScroll: false,
-      preserveState: false
-    });
-  } else {
-    router.visit(route('courses.index'));
-  }
-  showMobileSearch.value = false;
-  showSearchSuggestions.value = false;
-};
-
-const selectSearchSuggestion = (suggestion) => {
-  globalSearch.value = suggestion;
-  handleGlobalSearch();
-};
-
-// Mobile menu
-const showMobileMenu = ref(false);
-
-const toggleMobileSearch = () => {
-  showMobileSearch.value = !showMobileSearch.value;
-  showMobileMenu.value = false;
-};
-
-const toggleMobileMenu = () => {
-  showMobileMenu.value = !showMobileMenu.value;
-  showMobileSearch.value = false;
 };
 
 // Back to top button
@@ -524,15 +1107,104 @@ const isActive = (componentPrefix) => {
   return false;
 };
 
+// Unread notification count
+const unreadNotificationCount = ref(0);
+
+// Logout function
+const logout = () => {
+  router.post(route('logout'));
+};
+
 // Lifecycle hooks
 onMounted(() => {
   window.addEventListener('scroll', checkScrollPosition);
   checkScrollPosition();
+
+  // Load initial courses
+  fetchCourses();
+
+  // Fetch unread notification count if user is authenticated
+  if ($page.props.auth.user) {
+    // Implement API call for notifications
+  }
 });
 
 onUnmounted(() => {
   window.removeEventListener('scroll', checkScrollPosition);
 });
+
+const academicExams = ref([
+  { id: 1, name: 'WAEC Preparation', route: '/course?search=waec' },
+  { id: 2, name: 'JAMB/UTME CBT', route: '/course?search=jamb' },
+  { id: 3, name: 'NECO Exams', route: '/course?search=neco' },
+  { id: 4, name: 'Post-UTME', route: '/course?search=post-utme' },
+  { id: 5, name: 'SAT/TOEFL/IELTS', route: '/course?search=international' },
+]);
+
+const professionalCerts = ref([
+  { id: 1, name: 'ICAN Accounting', route: '/course?search=ican' },
+  { id: 2, name: 'ACCA Certification', route: '/course?search=acca' },
+  { id: 3, name: 'NBA Law School', route: '/course?search=law' },
+  { id: 4, name: 'Medical Licensing', route: '/course?search=medical' },
+  { id: 5, name: 'Project Management', route: '/course?search=project-management' },
+]);
+
+const careerSkills = ref([
+  { id: 1, name: 'Web Development', route: '/course?search=web development' },
+  { id: 2, name: 'Data Science', route: '/course?search=data science' },
+  { id: 3, name: 'Digital Marketing', route: '/course?search=marketing' },
+  { id: 4, name: 'UI/UX Design', route: '/course?search=design' },
+  { id: 5, name: 'Cloud Computing', route: '/course?search=cloud' },
+]);
+
+const popularSubjects = ref([
+  { id: 1, name: 'Mathematics', route: '/course?search=mathematics'  },
+  { id: 2, name: 'English Language', route: '/course?search=english' },
+  { id: 3, name: 'Computer Science', route: '/course?search=computer-science' },
+  { id: 4, name: 'Physics', route: '/course?search=physics'},
+  { id: 5, name: 'Chemistry', route: '/course?search=chemistry' },
+]);
+
+// Explore dropdown methods
+const toggleExploreDropdown = () => {
+  showExploreDropdown.value = !showExploreDropdown.value;
+  if (showExploreDropdown.value) {
+    clearExploreHideTimer();
+  }
+};
+
+const closeExploreDropdown = () => {
+  showExploreDropdown.value = false;
+  clearExploreHideTimer();
+};
+
+const startExploreHideTimer = () => {
+  clearExploreHideTimer();
+  exploreHideTimer = setTimeout(() => {
+    showExploreDropdown.value = false;
+  }, 300); // 300ms delay before hiding
+};
+
+const clearExploreHideTimer = () => {
+  if (exploreHideTimer) {
+    clearTimeout(exploreHideTimer);
+    exploreHideTimer = null;
+  }
+};
+
+// Close dropdown on escape key
+onMounted(() => {
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && showExploreDropdown.value) {
+      closeExploreDropdown();
+    }
+  });
+});
+
+onUnmounted(() => {
+  clearExploreHideTimer();
+});
+
 </script>
 
 <style scoped>
@@ -548,8 +1220,18 @@ onUnmounted(() => {
   }
 }
 
+@keyframes shake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
 .animate-slide-down {
   animation: slide-down 0.3s ease-out;
+}
+
+.shake-animation {
+  animation: shake 0.5s ease-in-out infinite;
 }
 
 /* Custom scrollbar */
@@ -579,5 +1261,39 @@ onUnmounted(() => {
 :focus-visible {
   outline: 2px solid #10b981;
   outline-offset: 2px;
+}
+
+/* Search suggestions custom scrollbar */
+.search-suggestions::-webkit-scrollbar {
+  width: 6px;
+}
+
+.search-suggestions::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 3px;
+}
+
+.search-suggestions::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.search-suggestions::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.2s ease-out;
 }
 </style>

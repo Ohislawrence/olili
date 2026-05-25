@@ -6,6 +6,8 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Services\LoginTrackerService;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\Channels\WebPushChannel;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,6 +22,10 @@ class AppServiceProvider extends ServiceProvider
         // Other services
         $this->app->singleton(\App\Services\ChatService::class, function ($app) {
             return new \App\Services\ChatService($app->make('ai.driver.openai'));
+        });
+
+        $this->app->singleton(\App\Services\ExamPrepGenerationService::class, function ($app) {
+            return new \App\Services\ExamPrepGenerationService($app->make('ai.driver.openai'));
         });
 
         $this->app->singleton(\App\Services\ProgressTrackingService::class);
@@ -38,5 +44,9 @@ class AppServiceProvider extends ServiceProvider
         if (app()->environment('production')) {
             URL::forceHttps();
         }
+
+        Notification::extend('web-push', function ($app) {
+            return new WebPushChannel();
+        });
     }
 }

@@ -27,6 +27,8 @@ class SubscriptionPlan extends Model
         'sort_order',
         'role',
         'tier',
+        'max_flashcard',
+        'max_exam_prep',
     ];
 
     protected $casts = [

@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\ExamBoard;
+use App\Models\Subject;
 use App\Services\CourseGenerationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -179,7 +180,7 @@ class CourseController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'subject' => 'required|string|max:100',
+            'subject_id' => 'required|max:100',
             'description' => 'required|string',
             'level' => 'required|string|in:beginner,intermediate,advanced',
             'exam_board_id' => 'nullable|exists:exam_boards,id',
@@ -194,13 +195,17 @@ class CourseController extends Controller
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:50',
             'target_completion_date' => 'nullable|date|after:today',
+            'has_certificate' => 'boolean',
         ]);
+
+        $subject = Subject::where('id', $validated['subject_id'])->first();
 
         // Prepare course data for generation
         $courseData = [
             'title' => $validated['title'],
             'slug' => Str::slug($validated['title']),
-            'subject' => $validated['subject'],
+            'subject' => $subject->name,
+            'subject_id' => $validated['subject_id'],
             'description' => $validated['description'],
             'level' => $validated['level'],
             'exam_board_id' => $validated['exam_board_id'] ?? null,
@@ -217,6 +222,7 @@ class CourseController extends Controller
             'status' => 'draft',
             'visibility' => 'private',
             'is_public' => false,
+            'has_certificate' => $validated['has_certificate'] ?? false,
         ];
 
         try {
@@ -267,6 +273,7 @@ class CourseController extends Controller
             'is_public' => 'boolean',
             'estimated_duration_hours' => 'required|integer|min:1',
             'target_completion_date' => 'nullable|date|after:today',
+            'has_certificate' => 'boolean',
         ]);
 
         // Update slug if title changed
@@ -434,6 +441,11 @@ class CourseController extends Controller
 
     private function getPopularSubjects()
     {
+        //$subjects = Subject::all();
+        $subjects = Subject::pluck('name', 'id');
+        //dd($subjects);
+        return $subjects;
+        /**
         return [
             'Mathematics',
             'Physics',
@@ -456,6 +468,7 @@ class CourseController extends Controller
             'Music',
             'Art',
         ];
+         */
     }
 
 

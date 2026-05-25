@@ -52,7 +52,7 @@
 
       <!-- catalog -->
       <Link
-        :href="route('student.catalog.index')"
+        :href="route('student.catalog.browse')"
         class="flex flex-col items-center justify-center w-16 h-16 transition-all duration-200 group relative"
         :class="route().current('student.catalog.*') ? 'text-emerald-600' : 'text-gray-600 hover:text-emerald-500'"
       >
@@ -98,23 +98,23 @@
 
       <!-- Profile -->
       <Link
-        :href="route('student.profile.show')"
+        :href="route('student.exam-preps.index')"
         class="flex flex-col items-center justify-center w-16 h-16 transition-all duration-200 group relative"
-        :class="route().current('student.profile.*') ? 'text-emerald-600' : 'text-gray-600 hover:text-emerald-500'"
+        :class="route().current('student.exam-preps.*') ? 'text-emerald-600' : 'text-gray-600 hover:text-emerald-500'"
       >
         <div class="relative">
-          <UserIcon class="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
+          <AcademicCapIcon class="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
           <div
-            v-if="route().current('student.profile.*')"
+            v-if="route().current('student.exam-preps.*')"
             class="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"
           ></div>
         </div>
         <span class="text-xs mt-1 font-medium transition-colors duration-200"
-              :class="route().current('student.profile.*') ? 'text-emerald-600' : 'text-gray-500 group-hover:text-emerald-600'">
-          Profile
+              :class="route().current('student.exam-preps.*') ? 'text-emerald-600' : 'text-gray-500 group-hover:text-emerald-600'">
+          Exam Prep
         </span>
         <div
-          v-if="route().current('student.profile.*')"
+          v-if="route().current('student.exam-preps.*')"
           class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-emerald-500 rounded-full"
         ></div>
       </Link>
@@ -131,6 +131,7 @@ import {
   ClipboardDocumentListIcon,
   RectangleStackIcon,
   UserIcon,
+  AcademicCapIcon,
 } from '@heroicons/vue/24/outline'
 </script>
 

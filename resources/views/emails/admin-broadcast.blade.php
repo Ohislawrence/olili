@@ -6,20 +6,21 @@
         @endcomponent
     @endslot
 
-# {{ $subject ?? 'Notification' }}
+
 
 {!! $message !!}
 
 @component('mail::button', ['url' => config('app.url'), 'color' => 'primary'])
-Visit Platform
+Visit Your Dashboard
 @endcomponent
 
-Thanks,<br>
+Warm regards,<br>
 {{ config('app.name') }}
 
 @slot('footer')
     @component('mail::footer')
-        © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
+        © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.<br>
+        <small>You're receiving this email as a {{ $user->roles->first()?->name ?? 'user' }} of Olilearn.</small>
     @endcomponent
 @endslot
 @endcomponent

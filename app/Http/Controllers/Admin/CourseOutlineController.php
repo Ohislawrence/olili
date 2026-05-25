@@ -30,11 +30,12 @@ class CourseOutlineController extends Controller
     public function generateContent(Course $course, Module $module, CourseOutline $topic)
     {
         // Verify the topic belongs to the module and course
+        /**
         if ($topic->module_id !== $module->id || $module->course_id !== $course->id) {
             return redirect()->back()
                 ->with('error', 'Topic does not belong to this course.');
         }
-
+        */
         try {
             // Generate content based on topic type
             $contentType = 'text'; // Default content type
@@ -83,10 +84,12 @@ class CourseOutlineController extends Controller
     public function generateQuiz(Course $course, Module $module, CourseOutline $topic)
     {
         // Verify the topic belongs to the module and course
+        /**
         if ($topic->module_id !== $module->id || $module->course_id !== $course->id) {
             return redirect()->back()
                 ->with('error', 'Topic does not belong to this course.');
         }
+        */
 
         // Check if topic is quiz-enabled
         if (!$topic->has_quiz && $topic->type !== 'quiz') {
@@ -179,9 +182,12 @@ class CourseOutlineController extends Controller
     public function previewContent(Course $course, Module $module, CourseOutline $topic)
     {
         // Verify the topic belongs to the module and course
+        /**
         if ($topic->module_id !== $module->id || $module->course_id !== $course->id) {
-            abort(403, 'Topic does not belong to this course.');
+            return redirect()->back()
+                ->with('error', 'Topic does not belong to this course.');
         }
+        */
 
         // Get the latest generated content for this topic
         $content = $topic->contents()->latest()->first();

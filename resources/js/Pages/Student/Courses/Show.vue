@@ -9,8 +9,11 @@
           <div class="flex justify-between items-start">
             <div class="flex-1">
               <div class="flex items-center gap-2 mb-3">
-                <span v-if="enrollment" :class="['inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold', getStatusClass(enrollment.status)]">
+                <span v-if="is_enrolled" :class="['inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold', getStatusClass(enrollment.status)]">
                   {{ enrollment.status }}
+                </span>
+                <span v-else-if="was_dropped" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800">
+                  Dropped
                 </span>
                 <span v-else :class="['inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold', getStatusClass(course.status)]">
                   {{ course.status }}
@@ -22,8 +25,11 @@
                   {{ course.exam_board.name }}
                 </span>
                 <span class="text-sm text-gray-500">
-                  <template v-if="enrollment?.started_at">
+                  <template v-if="is_enrolled && enrollment?.started_at">
                     Started {{ formatRelativeDate(enrollment.started_at) }}
+                  </template>
+                  <template v-else-if="was_dropped && dropped_enrollment?.dropped_at">
+                    Dropped {{ formatRelativeDate(dropped_enrollment.dropped_at) }}
                   </template>
                   <template v-else>
                     Not started yet
@@ -38,8 +44,8 @@
                 </span>
               </p>
 
-              <!-- Enrollment Status Banner -->
-              <div v-if="!isEnrolled" class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-4 border border-blue-100">
+              <!-- Enrollment Status Banner - SHOW FOR NON-ENROLLED OR DROPPED STUDENTS -->
+              <div v-if="!is_enrolled" class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-4 border border-blue-100">
                 <div class="flex items-center justify-between">
                   <div>
                     <h3 class="text-lg font-bold text-gray-900 mb-2">
@@ -55,7 +61,9 @@
                       • {{ course.estimated_duration_hours || 0 }} hours
                       • {{ course.current_enrollment || 0 }} students enrolled
                       <template v-if="was_dropped">
-                        <span class="ml-2 text-amber-600 font-semibold">(Previously dropped)</span>
+                        <span class="ml-2 text-amber-600 font-semibold">
+                          Previously completed {{ dropped_enrollment?.progress_percentage || 0 }}%
+                        </span>
                       </template>
                     </p>
                   </div>
@@ -91,8 +99,8 @@
                       </span>
                     </button>
 
-                    <div v-if="!can_enroll && !isEnrolled" class="mt-2 text-sm text-amber-600">
-                      <span v-if="course.isFull">Course is full</span>
+                    <div v-if="!can_enroll" class="mt-2 text-sm text-amber-600">
+                      <span v-if="isFull">Course is full</span>
                       <span v-else-if="course.status !== 'active'">Course is not available for enrollment</span>
                       <span v-else>Cannot enroll at this time</span>
                     </div>
@@ -100,7 +108,7 @@
                 </div>
               </div>
 
-              <!-- Enhanced Progress Overview (Only for enrolled students) -->
+              <!-- Enhanced Progress Overview - ONLY FOR ENROLLED STUDENTS -->
               <div v-else class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-6 mb-4 border border-emerald-100">
                 <div class="flex items-center justify-between mb-4">
                   <div>
@@ -146,8 +154,8 @@
           </div>
         </div>
 
-        <!-- Course Information for Non-Enrolled Students -->
-        <div v-if="!isEnrolled" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Course Information Cards - SHOW FOR DROPPED STUDENTS TOO -->
+        <div v-if="!is_enrolled" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <!-- Course Details Card -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <div class="flex items-center mb-4">
@@ -166,11 +174,11 @@
               </div>
               <div class="flex items-center text-sm text-gray-600">
                 <CheckCircleIcon class="h-4 w-4 text-emerald-500 mr-2" />
-                <span>{{ course.modules?.length || 0 }} modules</span>
+                <span>{{ totalModules }} modules</span>
               </div>
               <div class="flex items-center text-sm text-gray-600">
                 <CheckCircleIcon class="h-4 w-4 text-emerald-500 mr-2" />
-                <span>{{ getTotalTopics() }} topics</span>
+                <span>{{ totalTopics }} topics</span>
               </div>
               <div class="flex items-center text-sm text-gray-600">
                 <CheckCircleIcon class="h-4 w-4 text-emerald-500 mr-2" />
@@ -224,7 +232,7 @@
           </div>
         </div>
 
-        <!-- Enhanced Course Stats (Only for enrolled students) -->
+        <!-- Enhanced Course Stats - ONLY FOR ENROLLED STUDENTS -->
         <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <!-- Progress Card -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
@@ -309,8 +317,8 @@
           </div>
         </div>
 
-        <!-- Completion Timeline (Only for enrolled students) -->
-        <div v-if="isEnrolled" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+        <!-- Completion Timeline - ONLY FOR ENROLLED STUDENTS -->
+        <div v-if="is_enrolled" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
           <h3 class="text-lg font-bold text-gray-900 mb-4">Completion Timeline</h3>
           <div class="flex items-center justify-between mb-4">
             <div class="text-sm text-gray-600">
@@ -341,23 +349,28 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <!-- Course Content -->
-          <div :class="['lg:col-span-2', !isEnrolled ? 'opacity-50' : '']">
+          <!-- Course Content - FULL ACCESS FOR DROPPED STUDENTS TOO -->
+          <div :class="['lg:col-span-2 relative', !is_enrolled && !was_dropped ? 'opacity-50' : '']">
             <div class="bg-white shadow-sm rounded-xl border border-gray-100">
               <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-xl">
                 <div class="flex items-center justify-between">
                   <div>
                     <h2 class="text-lg font-bold text-gray-900">Course Content</h2>
                     <p class="text-sm text-gray-500 mt-1">
-                      {{ course.modules?.length || 0 }} modules • {{ getTotalTopics() }} topics
+                      {{ totalModules }} modules • {{ totalTopics }} topics
                     </p>
                   </div>
-                  <div class="text-right" v-if="isEnrolled">
+                  <div class="text-right" v-if="is_enrolled">
                     <div class="text-sm text-gray-600">
-                      {{ completedTopics }}/{{ getTotalTopics() }} completed
+                      {{ completedTopics }}/{{ totalTopics }} completed
                     </div>
                     <div class="text-xs text-gray-400">
-                      {{ Math.round((completedTopics / getTotalTopics() * 100) || 0) }}% complete
+                      {{ overallCompletionPercentage }}% complete
+                    </div>
+                  </div>
+                  <div class="text-right" v-else-if="was_dropped">
+                    <div class="text-sm text-gray-600">
+                      Previously completed: {{ dropped_enrollment?.progress_percentage || 0 }}%
                     </div>
                   </div>
                 </div>
@@ -384,8 +397,8 @@
                   </div>
                 </div>
 
-                <!-- Enrollment Overlay for Non-Enrolled Students -->
-                <div v-if="!isEnrolled" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl">
+                <!-- Enrollment Overlay - ONLY FOR NEW/NON-DROPPED STUDENTS -->
+                <div v-if="!is_enrolled && !was_dropped" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl">
                   <div class="text-center p-8 max-w-md">
                     <AcademicCapIcon class="h-12 w-12 text-blue-500 mx-auto mb-4" />
                     <h3 class="text-xl font-bold text-gray-900 mb-2">Enroll to Access Content</h3>
@@ -394,10 +407,10 @@
                     </p>
                     <button
                       @click="enrollInCourse"
-                      :disabled="enrollLoading"
+                      :disabled="enrollLoading || !can_enroll"
                       :class="[
                         'px-8 py-3 rounded-lg font-semibold text-white transition-all duration-200',
-                        enrollLoading
+                        enrollLoading || !can_enroll
                           ? 'bg-blue-400 cursor-not-allowed'
                           : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg'
                       ]"
@@ -407,8 +420,8 @@
                   </div>
                 </div>
 
-                <!-- Enhanced Course Structure (Only visible to enrolled students) -->
-                <div v-if="isEnrolled">
+                <!-- Enhanced Course Structure (Visible to enrolled AND dropped students) -->
+                <div v-if="is_enrolled || was_dropped">
                   <h3 class="text-sm font-semibold text-gray-700 mb-4">Course Structure</h3>
                   <div class="space-y-3">
                     <div
@@ -428,7 +441,7 @@
                                 {{ module.order }}
                               </div>
                               <div
-                                v-if="module.is_completed"
+                                v-if="isModuleCompleted(module)"
                                 class="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center"
                               >
                                 <CheckCircleIcon class="h-3 w-3 text-white" />
@@ -440,7 +453,7 @@
                                   {{ module.title }}
                                 </h4>
                                 <span
-                                  v-if="module.is_completed"
+                                  v-if="isModuleCompleted(module)"
                                   class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800"
                                 >
                                   Completed
@@ -462,6 +475,7 @@
                             </div>
                             <button
                               class="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                              @click.stop="toggleModule(module.id)"
                             >
                               <ChevronDownIcon
                                 class="h-4 w-4 text-gray-500 transition-transform duration-200"
@@ -494,12 +508,12 @@
                               <div
                                 :class="[
                                   'w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold mr-3 flex-shrink-0 border-2 transition-colors',
-                                  topic.is_completed
+                                  isTopicCompleted(topic)
                                     ? 'bg-emerald-500 border-emerald-500 text-white'
                                     : 'bg-white border-gray-300 text-gray-400 group-hover:border-emerald-300'
                                 ]"
                               >
-                                <CheckCircleIcon v-if="topic.is_completed" class="h-3 w-3" />
+                                <CheckCircleIcon v-if="isTopicCompleted(topic)" class="h-3 w-3" />
                                 <span v-else>{{ topic.order }}</span>
                               </div>
                               <div class="flex-1">
@@ -522,16 +536,22 @@
                             </div>
                             <div class="flex items-center gap-2 ml-4">
                               <CheckCircleIcon
-                                v-if="topic.is_completed"
+                                v-if="isTopicCompleted(topic)"
                                 class="h-5 w-5 text-emerald-600 flex-shrink-0"
                               />
                               <Link
-                                v-else
+                                v-else-if="is_enrolled"
                                 :href="route('student.courses.learn', { course: course.id, topic: topic.id })"
                                 class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm hover:shadow-md"
                               >
                                 Start
                               </Link>
+                              <span
+                                v-else-if="was_dropped"
+                                class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 rounded-lg"
+                              >
+                                Re-enroll to access
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -549,12 +569,12 @@
             <div class="bg-white rounded-xl shadow-sm border border-gray-100">
               <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-xl">
                 <h2 class="text-lg font-bold text-gray-900">
-                  {{ isEnrolled ? 'Quick Actions' : 'Enrollment Options' }}
+                  {{ is_enrolled ? 'Quick Actions' : was_dropped ? 'Re-enrollment' : 'Enrollment Options' }}
                 </h2>
               </div>
               <div class="p-6 space-y-3">
-                <!-- Enrollment Button for Non-Enrolled Students -->
-                <div v-if="!isEnrolled">
+                <!-- Enrollment Button for Non-Enrolled or Dropped Students -->
+                <div v-if="!is_enrolled">
                   <button
                     @click="enrollInCourse"
                     :disabled="enrollLoading || !can_enroll"
@@ -562,22 +582,29 @@
                       'w-full flex items-center justify-center px-4 py-3 font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md',
                       enrollLoading || !can_enroll
                         ? 'bg-gray-400 text-white cursor-not-allowed'
-                        : course.is_paid
-                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
-                          : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white'
+                        : was_dropped
+                          ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white'
+                          : course.is_paid
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
+                            : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white'
                     ]"
                   >
                     <AcademicCapIcon class="h-4 w-4 mr-2" />
-                    {{ course.is_paid ? `Enroll for $${course.price}` : 'Enroll for Free' }}
+                    <template v-if="was_dropped">
+                      Re-enroll Now
+                    </template>
+                    <template v-else>
+                      {{ course.is_paid ? `Enroll for $${course.price}` : 'Enroll for Free' }}
+                    </template>
                   </button>
 
                   <div v-if="!can_enroll" class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                     <div class="flex items-center">
                       <ExclamationTriangleIcon class="h-5 w-5 text-amber-500 mr-2" />
                       <div class="text-sm text-amber-700">
-                        <span v-if="course.isFull">This course is currently full</span>
+                        <span v-if="isFull">This course is currently full</span>
                         <span v-else-if="course.status !== 'active'">Course is not available for enrollment</span>
-                        <span v-else>Enrollment is currently closed</span>
+                        <span v-else>Cannot enroll at this time</span>
                       </div>
                     </div>
                   </div>
@@ -586,7 +613,7 @@
                 <!-- Actions for Enrolled Students -->
                 <template v-else>
                   <Link
-                    v-if="enrollment?.status === 'active' && next_topic"
+                    v-if="(enrollment?.status === 'active' || enrollment?.status === 'enrolled') && next_topic"
                     :href="route('student.courses.learn', { course: course.id, topic: next_topic.id })"
                     class="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                   >
@@ -594,7 +621,7 @@
                     Continue Learning
                   </Link>
                   <Link
-                    v-else-if="enrollment?.status === 'active'"
+                    v-else-if="enrollment?.status === 'active' || enrollment?.status === 'enrolled'"
                     :href="route('student.courses.learn', course.id)"
                     class="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                   >
@@ -623,7 +650,7 @@
                   <!-- Course Status Actions -->
                   <div class="pt-3 border-t border-gray-200">
                     <button
-                      v-if="enrollment?.status === 'active'"
+                      v-if="enrollment?.status === 'active' || enrollment?.status === 'enrolled'"
                       @click="pauseCourse"
                       :disabled="pauseLoading"
                       class="w-full flex items-center justify-center px-4 py-2.5 border border-emerald-300 text-sm font-semibold rounded-lg text-emerald-700 bg-white hover:bg-emerald-50 transition-colors disabled:opacity-50"
@@ -684,7 +711,7 @@
             </div>
 
             <!-- Module Progress (Only for enrolled students) -->
-            <div v-if="isEnrolled && progressByModule.length" class="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div v-if="is_enrolled && progressByModule.length" class="bg-white rounded-xl shadow-sm border border-gray-100">
               <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-xl">
                 <h2 class="text-lg font-bold text-gray-900">Module Progress</h2>
               </div>
@@ -712,6 +739,33 @@
                     <span>{{ moduleProgress.completed_topics }}/{{ moduleProgress.total_topics }} topics</span>
                     <span>{{ formatStudyTime(moduleProgress.time_spent_minutes) }}</span>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Previous Progress for Dropped Students -->
+            <div v-if="was_dropped" class="bg-white rounded-xl shadow-sm border border-gray-100">
+              <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-xl">
+                <h2 class="text-lg font-bold text-gray-900">Previous Progress</h2>
+              </div>
+              <div class="p-6">
+                <div class="mb-4">
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-medium text-gray-700">Overall Progress</span>
+                    <span class="text-sm font-bold text-amber-600">
+                      {{ dropped_enrollment?.progress_percentage || 0 }}%
+                    </span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div
+                      class="bg-amber-500 h-2.5 rounded-full"
+                      :style="{ width: `${dropped_enrollment?.progress_percentage || 0}%` }"
+                    ></div>
+                  </div>
+                </div>
+                <div class="text-sm text-gray-600">
+                  <p>You dropped this course on {{ formatDate(dropped_enrollment?.dropped_at) }}</p>
+                  <p class="mt-2">Re-enroll to continue from where you left off.</p>
                 </div>
               </div>
             </div>
@@ -767,6 +821,7 @@ const props = defineProps({
     })
   },
   is_enrolled: Boolean,
+  isFull: Boolean,
   was_dropped: Boolean,
   dropped_enrollment: Object,
   enrollment: Object,
@@ -780,15 +835,9 @@ const resumeLoading = ref(false)
 const expandedModules = ref({})
 const showShareModal = ref(false)
 
-// Computed property for enrollment status
-const isEnrolled = computed(() => props.is_enrolled || false)
-
-const canReenroll = computed(() => {
-  return props.was_dropped && props.can_enroll
-})
-
 // Computed properties for safe access
 const overallCompletionPercentage = computed(() => {
+  if (!props.is_enrolled) return 0
   return Math.round(props.course_stats?.overall_completion_percentage || 0)
 })
 
@@ -824,9 +873,9 @@ const progressByModule = computed(() => {
   return props.course_stats?.progress_by_module || []
 })
 
-// Initialize expanded modules
+// Initialize expanded modules for enrolled and dropped students
 onMounted(() => {
-  if (props.course.modules?.length) {
+  if (props.course.modules?.length && (props.is_enrolled || props.was_dropped)) {
     expandedModules.value[props.course.modules[0].id] = true
   }
 })
@@ -838,6 +887,8 @@ const getStatusClass = (status) => {
     active: 'bg-emerald-100 text-emerald-800',
     paused: 'bg-amber-100 text-amber-800',
     completed: 'bg-teal-100 text-teal-800',
+    enrolled: 'bg-blue-100 text-blue-800',
+    dropped: 'bg-red-100 text-red-800',
   }
   return classes[status] || 'bg-gray-100 text-gray-800'
 }
@@ -848,6 +899,8 @@ const getStatusTextClass = (status) => {
     active: 'text-emerald-600',
     paused: 'text-amber-600',
     completed: 'text-teal-600',
+    enrolled: 'text-blue-600',
+    dropped: 'text-red-600',
   }
   return classes[status] || 'text-gray-600'
 }
@@ -911,22 +964,45 @@ const getDaysRemainingClass = (targetDate) => {
 }
 
 const calculateModuleCompletion = (module) => {
-  if (!isEnrolled.value) return 0
-
-  // Use the ProgressTrackingService data if available
-  if (progressByModule.value.length > 0) {
-    const moduleProgress = progressByModule.value.find(
-      mp => mp.module_id === module.id
-    )
-    if (moduleProgress) {
-      return moduleProgress.completion_percentage
+  // For enrolled students, use the actual progress
+  if (props.is_enrolled) {
+    // Use the ProgressTrackingService data if available
+    if (progressByModule.value.length > 0) {
+      const moduleProgress = progressByModule.value.find(
+        mp => mp.module_id === module.id
+      )
+      if (moduleProgress) {
+        return moduleProgress.completion_percentage
+      }
     }
+
+    // Fallback to topic completion checking
+    const completedTopics = module.topics?.filter(topic => isTopicCompleted(topic)).length || 0
+    const totalTopics = module.topics?.length || 0
+    return totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0
   }
 
-  // Fallback to topic completion checking
-  const completedTopics = module.topics?.filter(topic => topic.is_completed).length || 0
-  const totalTopics = module.topics?.length || 0
-  return totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0
+  // For dropped students, we don't have current progress data
+  return 0
+}
+
+const isModuleCompleted = (module) => {
+  return calculateModuleCompletion(module) >= 100
+}
+
+const isTopicCompleted = (topic) => {
+  // For enrolled students, check actual completion
+  if (props.is_enrolled) {
+    return topic.is_completed || false
+  }
+
+  // For dropped students, we don't have current completion status
+  // You might want to check the last viewed topic or previous progress
+  if (props.was_dropped && props.lastViewedTopic) {
+    return topic.id <= props.lastViewedTopic
+  }
+
+  return false
 }
 
 const getModuleNumber = (moduleId) => {
@@ -949,19 +1025,16 @@ const getProgressBarColor = (percentage) => {
 }
 
 const toggleModule = (moduleId) => {
-  if (isEnrolled.value) {
+  if (props.is_enrolled || props.was_dropped) {
     expandedModules.value[moduleId] = !expandedModules.value[moduleId]
   }
 }
 
-const getTotalTopics = () => {
-  return props.course.modules?.reduce((total, module) => total + (module.topics?.length || 0), 0) || 0
-}
-
 const getTotalQuizzes = () => {
-  return props.course.modules?.reduce((total, module) => {
+  if (!props.course.modules) return 0
+  return props.course.modules.reduce((total, module) => {
     return total + (module.topics?.filter(topic => topic.has_quiz).length || 0)
-  }, 0) || 0
+  }, 0)
 }
 
 // Enrollment action
@@ -987,7 +1060,7 @@ const enrollInCourse = async () => {
 
 // Other actions remain the same
 const pauseCourse = async () => {
-  if (!isEnrolled.value) return
+  if (!props.is_enrolled) return
   pauseLoading.value = true
   try {
     await router.post(route('student.courses.pause', props.course.id))
@@ -997,7 +1070,7 @@ const pauseCourse = async () => {
 }
 
 const resumeCourse = async () => {
-  if (!isEnrolled.value) return
+  if (!props.is_enrolled) return
   resumeLoading.value = true
   try {
     await router.post(route('student.courses.resume', props.course.id))
@@ -1007,7 +1080,7 @@ const resumeCourse = async () => {
 }
 
 const openShareModal = () => {
-  if (isEnrolled.value) {
+  if (props.is_enrolled) {
     showShareModal.value = true
   }
 }

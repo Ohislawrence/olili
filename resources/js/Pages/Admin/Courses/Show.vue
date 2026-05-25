@@ -383,25 +383,34 @@
             </div>
 
             <!-- Quick Actions -->
-<div class="bg-white shadow rounded-lg">
-  <div class="px-6 py-4 border-b border-gray-200">
-    <h3 class="text-lg font-semibold text-gray-900">Quick Actions</h3>
-  </div>
-  <div class="p-6 space-y-3">
-    <Link
-      :href="route('admin.courses.modules.create', course.id)"
-      class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-    >
-      <PlusIcon class="h-4 w-4 mr-2" />
-      Add Module
-    </Link>
-    <Link
-  :href="route('admin.courses.outline', course.id)"
-  class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
->
-  <DocumentTextIcon class="h-4 w-4 mr-2" />
-  View Outline
-</Link>
+    <div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">Quick Actions</h3>
+    </div>
+    <div class="p-6 space-y-3">
+        <Link
+        :href="route('admin.courses.modules.create', course.id)"
+        class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+        >
+        <PlusIcon class="h-4 w-4 mr-2" />
+        Add Module
+        </Link>
+        <Link
+        :href="route('admin.courses.outline', course.id)"
+        class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+        >
+        <DocumentTextIcon class="h-4 w-4 mr-2" />
+        View Outline
+        </Link>
+
+        <Link
+        :href="route('admin.courses.enrollments.index', course.id)"
+        class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+        >
+        <DocumentTextIcon class="h-4 w-4 mr-2" />
+        View Enrollments
+        </Link>
+
 
     <!-- Publish/Unpublish Button -->
     <template v-if="course.is_public && course.visibility === 'public'">
