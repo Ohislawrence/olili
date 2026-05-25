@@ -62,6 +62,7 @@ class User extends Authenticatable
         'onboarding_seen_at',
         'onboarding_data',
         'timezone',
+        'push_subscription',
     ];
 
     /**
@@ -109,6 +110,7 @@ class User extends Authenticatable
             'onboarding_skipped_at' => 'datetime',
             'onboarding_seen_at' => 'datetime',
             'onboarding_data' => 'array',
+            'push_subscription' => 'array',
         ];
     }
 

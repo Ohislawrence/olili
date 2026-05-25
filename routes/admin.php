@@ -115,29 +115,29 @@ Route::middleware([
     Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
     Route::get('/courses/create', [CourseController::class, 'create'])->name('courses.create');
     Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
-    Route::get('courses/show/{course}/show', [CourseController::class, 'show'])->name('courses.show');
-    Route::get('/courses/{course}/edit', [CourseController::class, 'edit'])->name('courses.edit');
-    Route::post('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
-    Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->name('courses.destroy');
-    Route::post('/courses/{course}/update-progress', [CourseController::class, 'updateProgress'])->name('courses.update-progress');
-    Route::post('/courses/{course}/regenerate-outline', [CourseController::class, 'regenerateOutline'])->name('courses.regenerate-outline');
-    Route::get('/courses/{course}/analytics', [CourseController::class, 'getCourseAnalytics'])->name('courses.analytics');
-    Route::get('/courses/{course}/flashcards', [CourseController::class, 'flashcards'])->name('courses.flashcards');
-    Route::post('courses/{course}/publish', [CourseController::class, 'publish'])->name('courses.publish');
-    Route::post('courses/{course}/unpublish', [CourseController::class, 'unpublish'])->name('courses.unpublish');
-    Route::get('/courses/outline/{course}/outline', [CourseController::class, 'outline'])->name('courses.outline');
+    Route::get('courses/show/{course:id}/show', [CourseController::class, 'show'])->name('courses.show');
+    Route::get('/courses/{course:id}/edit', [CourseController::class, 'edit'])->name('courses.edit');
+    Route::post('/courses/{course:id}', [CourseController::class, 'update'])->name('courses.update');
+    Route::delete('/courses/{course:id}', [CourseController::class, 'destroy'])->name('courses.destroy');
+    Route::post('/courses/{course:id}/update-progress', [CourseController::class, 'updateProgress'])->name('courses.update-progress');
+    Route::post('/courses/{course:id}/regenerate-outline', [CourseController::class, 'regenerateOutline'])->name('courses.regenerate-outline');
+    Route::get('/courses/{course:id}/analytics', [CourseController::class, 'getCourseAnalytics'])->name('courses.analytics');
+    Route::get('/courses/{course:id}/flashcards', [CourseController::class, 'flashcards'])->name('courses.flashcards');
+    Route::post('courses/{course:id}/publish', [CourseController::class, 'publish'])->name('courses.publish');
+    Route::post('courses/{course:id}/unpublish', [CourseController::class, 'unpublish'])->name('courses.unpublish');
+    Route::get('/courses/outline/{course:id}/outline', [CourseController::class, 'outline'])->name('courses.outline');
 
         //modules
-    Route::get('/courses/modules/{course}/outline/mod', [CourseController::class, 'outline'])->name('quizzes.create');
-    Route::get('/courses/modules/{course}/outline/mo', [CourseController::class, 'outline'])->name('courses.modules.edit');
-    Route::get('/courses/modules/{course}/outline', [CourseController::class, 'outline'])->name('courses.modules.topics.create');
-    Route::get('/courses/modules/edit/{course}/outline', [CourseController::class, 'outline'])->name('courses.modules.topics.edit');
+    Route::get('/courses/modules/{course:id}/outline/mod', [CourseController::class, 'outline'])->name('quizzes.create');
+    Route::get('/courses/modules/{course:id}/outline/mo', [CourseController::class, 'outline'])->name('courses.modules.edit');
+    Route::get('/courses/modules/{course:id}/outline', [CourseController::class, 'outline'])->name('courses.modules.topics.create');
+    Route::get('/courses/modules/edit/{course:id}/outline', [CourseController::class, 'outline'])->name('courses.modules.topics.edit');
 
 
-    Route::get('/courses/modules/{course}/edit', [CourseController::class, 'edit'])->name('courses.modules.create');
+    Route::get('/courses/modules/{course:id}/edit', [CourseController::class, 'edit'])->name('courses.modules.create');
 
     //generate content this
-    Route::prefix('courses/{course}/modules/{module}/topics/{topic}')->group(function () {
+    Route::prefix('courses/{course:id}/modules/{module}/topics/{topic}')->group(function () {
         // Generate topic content
         Route::post('/content/generate', [CourseOutlineController::class, 'generateContent'])
             ->name('courses.modules.topics.content.generate');
@@ -154,7 +154,7 @@ Route::middleware([
             ->name('courses.modules.topics.content.preview');
     });
     // Course-wide generation routes
-    Route::prefix('courses/{course}')->group(function () {
+    Route::prefix('courses/{course:id}')->group(function () {
         // Generate all pending content
         Route::post('/content/generate-all', [CourseController::class, 'generateAllContent'])
             ->name('courses.content.generate-all');
@@ -168,11 +168,11 @@ Route::middleware([
             ->name('courses.outline.regenerate');
     });
 
-    Route::get('/courses/{course}/batch/{batch}/progress', [CourseController::class, 'batchProgress'])
+    Route::get('/courses/{course:id}/batch/{batch}/progress', [CourseController::class, 'batchProgress'])
     ->name('courses.batch.progress');
 
     // Enrollment management for courses
-    Route::prefix('courses/{course}/enrollments')->name('courses.enrollments.')->group(function () {
+    Route::prefix('courses/{course:id}/enrollments')->name('courses.enrollments.')->group(function () {
         Route::get('/', [EnrollmentController::class, 'index'])->name('index');
         Route::get('/create', [EnrollmentController::class, 'create'])->name('create');
         Route::post('/', [EnrollmentController::class, 'store'])->name('store');
@@ -197,9 +197,9 @@ Route::middleware([
             ->name('courses.mass-enrollment.index');
         Route::post('/mass-enrollment', [MassEnrollmentController::class, 'store'])
             ->name('courses.mass-enrollment.store');
-        Route::get('/{course}/mass-enrollment/eligible-students', [MassEnrollmentController::class, 'getEligibleStudents'])
+        Route::get('/{course:id}/mass-enrollment/eligible-students', [MassEnrollmentController::class, 'getEligibleStudents'])
             ->name('courses.mass-enrollment.get-eligible-students');
-        Route::get('/{course}/mass-enrollment/stats', [MassEnrollmentController::class, 'getEnrollmentStats'])
+        Route::get('/{course:id}/mass-enrollment/stats', [MassEnrollmentController::class, 'getEnrollmentStats'])
             ->name('courses.mass-enrollment.stats');
         Route::post('/mass-enrollment/upload-csv', [MassEnrollmentController::class, 'uploadCsv'])
             ->name('courses.mass-enrollment.upload-csv');
@@ -306,13 +306,13 @@ Route::middleware([
                                         'edit' => 'catalog.courses.edit',
                                         'update' => 'catalog.courses.update',
                                         'destroy' => 'catalog.courses.destroy',
-                                    ]);
-    Route::get('catelog/courses/{course}/enrollments', [CoursesController::class, 'enrollments'])->name('catalog.courses.enrollments');
-    Route::post('catelog/courses/{course}/toggle-enrollment', [CoursesController::class, 'toggleEnrollment'])->name('catalog.courses.toggle-enrollment');
+                                    ])->scoped(['course' => 'id']);
+    Route::get('catelog/courses/{course:id}/enrollments', [CoursesController::class, 'enrollments'])->name('catalog.courses.enrollments');
+    Route::post('catelog/courses/{course:id}/toggle-enrollment', [CoursesController::class, 'toggleEnrollment'])->name('catalog.courses.toggle-enrollment');
     Route::post('catalog/students/search', [CoursesController::class, 'search'])->name('catalog.search.student');
-    Route::post('catalog/courses/{course}/bulk-enroll', [CoursesController::class, 'bulkEnroll'])->name('catalog.bulk.enroll');
+    Route::post('catalog/courses/{course:id}/bulk-enroll', [CoursesController::class, 'bulkEnroll'])->name('catalog.bulk.enroll');
     Route::put('catalog/enrollments/{enrollment}', [CoursesController::class, 'update'])->name('catalog.update.enrollment');
-    Route::post('/catelog/courses/{course}/regenerate', [CoursesController::class, 'regenerate'])->name('catalog.courses.regenerate');
+    Route::post('/catelog/courses/{course:id}/regenerate', [CoursesController::class, 'regenerate'])->name('catalog.courses.regenerate');
 
     // Exam Prep Routes
     Route::prefix('exam-preps')->name('exam-preps.')->group(function () {
@@ -348,8 +348,8 @@ Route::middleware([
 
     // Course Management
     Route::post('/specializations/{specialization}/courses', [SpecializationController::class, 'addCourse'])->name('specializations.add-course');
-    Route::delete('/specializations/{specialization}/courses/{course}', [SpecializationController::class, 'removeCourse'])->name('specializations.remove-course');
-    Route::put('/specializations/{specialization}/courses/{course}', [SpecializationController::class, 'updateCourseSettings'])->name('specializations.update-course-settings');
+    Route::delete('/specializations/{specialization}/courses/{course:id}', [SpecializationController::class, 'removeCourse'])->name('specializations.remove-course');
+    Route::put('/specializations/{specialization}/courses/{course:id}', [SpecializationController::class, 'updateCourseSettings'])->name('specializations.update-course-settings');
     Route::put('/specializations/{specialization}/courses-order', [SpecializationController::class, 'updateCourseOrder'])->name('specializations.update-course-order');
 
     // Resource Management
