@@ -170,7 +170,10 @@
         </div>
       </div>
       <div class="flex flex-col w-0 flex-1 overflow-hidden">
-        <div class="lg:hidden bg-white border-b border-gray-200 shadow-sm">
+        <div
+          v-if="!(activeTab === 'quiz' && quizState === 'active')"
+          class="lg:hidden bg-white border-b border-gray-200 shadow-sm sticky top-0 z-20"
+        >
           <div class="flex items-center justify-between px-4 py-3">
             <div class="flex items-center space-x-3">
               <button
@@ -247,36 +250,36 @@
               </div>
             </div>
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div class="border-b border-gray-200">
-                <div class="overflow-x-auto scrollbar-hide">
-                  <nav class="flex min-w-max px-4 sm:px-6" aria-label="Tabs">
+              <div class="border-b border-gray-200 sticky top-0 z-10 bg-white">
+                <div class="overflow-x-auto scrollbar-hide flex justify-start lg:justify-center">
+                  <nav class="flex min-w-max px-2 sm:px-6" aria-label="Tabs">
                     <button
                       v-for="tab in filteredTabs"
                       :key="tab.id"
                       @click="switchTab(tab.id)"
                       :class="[
-                        'flex-shrink-0 py-4 px-4 sm:px-6 border-b-2 font-medium text-sm transition-colors duration-200 whitespace-nowrap',
+                        'flex-shrink-0 py-4 px-4 sm:px-6 border-b-2 font-bold text-sm transition-all duration-200 whitespace-nowrap flex items-center',
                         activeTab === tab.id
-                          ? 'border-emerald-500 text-emerald-600'
+                          ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
                           : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                       ]"
                     >
-                      <div class="flex items-center">
-                        <component :is="tab.icon" class="h-4 w-4 mr-2" />
+                      <component :is="tab.icon" class="h-5 w-5 mr-2" :class="activeTab === tab.id ? 'text-emerald-600' : 'text-gray-400'" />
+                      <span class="relative">
                         {{ tab.name }}
                         <span
                           v-if="tab.badge && tab.id !== 'content'"
-                          class="ml-2 py-0.5 px-2 text-xs rounded-full"
-                          :class="tab.badgeClass"
+                          class="ml-1.5 py-0.5 px-2 text-[10px] rounded-full font-bold uppercase tracking-wider"
+                          :class="activeTab === tab.id ? 'bg-emerald-600 text-white' : tab.badgeClass"
                         >
                           {{ tab.badge }}
                         </span>
-                      </div>
+                      </span>
                     </button>
                   </nav>
                 </div>
               </div>
-              <div class="p-6">
+              <div class="p-4 sm:p-6">
                 <div v-if="activeTab === 'content'" class="prose prose-lg max-w-none">
                   <div v-if="current_topic.contents?.length" class="mb-6">
                     <div class="flex items-center justify-between p-4 bg-emerald-50 rounded-lg border border-emerald-200">
@@ -1094,6 +1097,13 @@ const filteredTabs = computed(() => {
   return tabs
 })
 
+// Watch for props tab changes
+watch(() => props.active_tab, (newTab) => {
+  if (newTab) {
+    activeTab.value = newTab
+  }
+})
+
 // Watch for topic changes and reset active tab to first available
 watch(() => props.current_topic, (newTopic) => {
   if (newTopic && filteredTabs.value.length > 0) {
@@ -1257,14 +1267,23 @@ const selectTopic = async (topic) => {
 const switchTab = (tabId) => {
   activeTab.value = tabId
 
-  // Update URL with the active tab
-  router.visit(route('student.courses.learn', {
+  // Smooth scroll to top of content area on mobile
+  if (window.innerWidth < 1024) {
+    mainScrollContainer.value?.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    })
+  }
+
+  // Update URL silently if possible or using visit with preserveScroll
+  router.replace(route('student.courses.learn', {
     course: props.course.id,
     topic: props.current_topic.id,
     tab: tabId !== 'content' ? tabId : undefined
   }), {
     preserveScroll: true,
-    preserveState: true
+    preserveState: true,
+    only: ['active_tab']
   })
 }
 
@@ -1337,6 +1356,11 @@ const startQuiz = async () => {
 
   quizLoading.value = true
   try {
+    // Scroll to top of content area for better quiz view on mobile
+    if (window.innerWidth < 1024) {
+      mainScrollContainer.value?.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
     const response = await fetch(route('student.quizzes.start', props.current_topic.quiz.id), {
       method: 'POST',
       headers: {
@@ -1854,6 +1878,29 @@ const loadChatSession = async () => {
   }
 }
 </script>
+
+<style scoped>
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Ensure sticky tabs work well on mobile */
+.sticky {
+  position: -webkit-sticky;
+  position: sticky;
+}
+
+@media (max-width: 1024px) {
+  .max-w-6xl {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+</style>
 
 <style scoped>
 .prose {
