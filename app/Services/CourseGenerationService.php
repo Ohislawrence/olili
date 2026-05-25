@@ -25,6 +25,14 @@ class CourseGenerationService
     }
 
     /**
+     * Generate an admin course (alias for generateCourse)
+     */
+    public function generateAdminCourse(array $courseData): Course
+    {
+        return $this->generateCourse($courseData);
+    }
+
+    /**
      * Generate a course for admin/public use only
      */
     public function generateCourse(array $courseData): Course
