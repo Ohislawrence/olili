@@ -56,10 +56,12 @@ class User extends Authenticatable
         'last_login_ip',
         'login_count',
         'last_failed_login_at',
+        'onboarding_completed',
         'onboarding_completed_at',
         'onboarding_skipped_at',
         'onboarding_seen_at',
         'onboarding_data',
+        'timezone',
     ];
 
     /**
@@ -98,6 +100,7 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'preferences' => 'array',
             'is_active' => 'boolean',
+            'onboarding_completed' => 'boolean',
             'consecutive_login_days' => 'integer',
             'failed_login_attempts' => 'integer',
             'account_locked_until' => 'datetime',

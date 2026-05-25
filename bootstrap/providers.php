@@ -10,6 +10,5 @@ return [
     App\Providers\WebPushServiceProvider::class,
     Lab404\Impersonate\ImpersonateServiceProvider::class,
     Laravel\Socialite\SocialiteServiceProvider::class,
-    App\Providers\WebPushServiceProvider::class,
     NotificationChannels\WebPush\WebPushServiceProvider::class,
 ];
