@@ -1275,15 +1275,15 @@ const switchTab = (tabId) => {
     })
   }
 
-  // Update URL silently if possible or using visit with preserveScroll
+  // Update URL silently to preserve state and avoid unnecessary re-fetches
+  // but still keep the URL in sync for SEO/Reloads
   router.replace(route('student.courses.learn', {
     course: props.course.id,
     topic: props.current_topic.id,
     tab: tabId !== 'content' ? tabId : undefined
   }), {
     preserveScroll: true,
-    preserveState: true,
-    only: ['active_tab']
+    preserveState: true
   })
 }
 
