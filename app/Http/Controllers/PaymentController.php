@@ -98,6 +98,7 @@ class PaymentController extends Controller
         $metadata = [
             'billing_cycle' => 'monthly', // Default, can be made dynamic
             'user_role' => $user->getRoleNames()->first(),
+            'tracking_code' => session('affiliate_tracking_code'),
         ];
 
         $result = $this->paystackService->initializeSubscriptionPayment($user, $plan, $metadata);
@@ -122,12 +123,17 @@ class PaymentController extends Controller
 
         $user = $request->user();
 
+        $metadata = $request->metadata ?? [];
+        if (session('affiliate_tracking_code')) {
+            $metadata['tracking_code'] = session('affiliate_tracking_code');
+        }
+
 
         $result = $this->paystackService->initializeOneTimePayment(
             $user,
             $request->amount,
             $request->description,
-            $request->metadata ?? []
+            $metadata
         );
 
         if (!$result['success']) {

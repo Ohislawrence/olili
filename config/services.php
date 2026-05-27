@@ -60,4 +60,8 @@ return [
         'redirect' => env('FACEBOOK_REDIRECT_URL'),
     ],
 
+    'clicksintel' => [
+        'token' => env('CLICKSINTEL_POSTBACK_TOKEN'),
+    ],
+
 ];

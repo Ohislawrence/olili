@@ -205,6 +205,12 @@ class CheckSubscription
     protected function checkRoleSpecificLimits($user, $subscription, string $feature): bool
     {
         if (!$subscription) {
+            // If no subscription, check if it is a free feature
+            $freeFeatures = $this->getFreeFeaturesByRole($user);
+            if (in_array($feature, $freeFeatures)) {
+                // Apply fallback limits for free features when no subscription exists
+                return $this->checkBaseFeatureLimits($user, $feature);
+            }
             return false;
         }
 
@@ -219,6 +225,34 @@ class CheckSubscription
         }
 
         return $this->checkOrganizationLimits($user, $plan, $feature);
+    }
+
+    /**
+     * Check base limits for features that are free by default
+     */
+    protected function checkBaseFeatureLimits($user, string $feature): bool
+    {
+        switch ($feature) {
+            case 'enroll_in_courses':
+                // Allow up to 3 courses for completely free users
+                return $user->courseEnrollments()->count() < 3;
+
+            case 'ai_request':
+                // Limited AI usage for non-subscribers
+                $monthlyUsage = $user->aiUsageLogs()
+                    ->where('created_at', '>=', now()->startOfMonth())
+                    ->count();
+                return $monthlyUsage < 10;
+
+            case 'create_flashcard':
+                return $user->flashcards()->count() < 20;
+
+            case 'take_exam_prep':
+                // Free users can only take 1 exam prep attempt
+                return $user->enrolledExamPreps()->count() < 1;
+        }
+
+        return true;
     }
 
     /**

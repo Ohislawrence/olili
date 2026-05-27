@@ -271,6 +271,9 @@ class PaystackService
                     'paystack_data' => json_encode($response['data']),
                 ]);
 
+                // Fire ClicksIntel Postback
+                $this->fireClicksIntelPostback($payment);
+
                 // Handle subscription activation if this is a subscription payment
                 if ($payment->subscription_plan_id) {
                     Log::info("This is a subscription payment, activating subscription for plan: {$payment->subscription_plan_id}");
@@ -728,5 +731,36 @@ class PaystackService
 
         // Example: Allow upgrade if new plan is more expensive
         return $newPlan->price >= $currentPlan->price;
+    }
+
+    /**
+     * Send postback to ClicksIntel
+     */
+    protected function fireClicksIntelPostback(Payment $payment): void
+    {
+        try {
+            $metadata = $payment->metadata;
+            $trackingCode = $metadata['tracking_code'] ?? null;
+            $token = config('services.clicksintel.token');
+
+            if ($trackingCode && $token) {
+                Log::info("Firing ClicksIntel postback for payment: {$payment->reference}");
+
+                $response = Http::post('https://clicksintel.com/api/postback', [
+                    'tracking_code' => $trackingCode,
+                    'token' => $token,
+                    'conversion_value' => (float)$payment->amount,
+                    'transaction_id' => (string)$payment->id,
+                    'customer_id' => (string)$payment->user_id,
+                ]);
+
+                Log::info("ClicksIntel postback response:", [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('ClicksIntel postback failed: ' . $e->getMessage());
+        }
     }
 }
